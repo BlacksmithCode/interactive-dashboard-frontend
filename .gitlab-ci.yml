@@ -1,0 +1,64 @@
+stages:
+  - lint
+  - build
+  - deploy
+
+variables:
+  DEPLOY_PATH: /home/team_user/frontend
+
+# 1. Линтинг 
+lint:
+  stage: lint
+  image: node:20-alpine
+  script:
+    - npm ci
+    - npm run lint
+    - npx tsc --noEmit
+  only:
+    - merge_requests
+    - main
+    - develop
+
+# 2. Сборка 
+build:
+  stage: build
+  image: node:20-alpine
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+  only:
+    - main
+    - develop
+
+# 3. Деплой — доставляем dist/ на сервер и запускаем
+deploy:
+  stage: deploy
+  image: alpine:latest
+  dependencies:
+    - build          # <-- явно берём артефакт из build
+  before_script:
+    - apk add --no-cache openssh-client rsync
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - ssh-keyscan -H $DEPLOY_SERVER >> ~/.ssh/known_hosts
+  script:
+    # Создаём директорию на сервере
+    - ssh team_user@$DEPLOY_SERVER "mkdir -p $DEPLOY_PATH"
+    
+    # Копируем собранные файлы (rsync эффективнее scp)
+    - rsync -avz --delete dist/ team_user@$DEPLOY_SERVER:$DEPLOY_PATH/
+    
+    # Запускаем/перезапускаем сервер
+    # Python встроенный сервер (порт 8080)
+    - ssh team_user@$DEPLOY_SERVER "
+        pkill -f 'python3 -m http.server' || true;
+        cd $DEPLOY_PATH && nohup python3 -m http.server 8080 > /dev/null 2>&1 &"
+    
+  only:
+    - main
+    - develop
