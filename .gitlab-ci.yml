@@ -34,12 +34,11 @@ build:
     - main
     - develop
 
-# 3. Деплой — доставляем dist/ на сервер и запускаем
 deploy:
   stage: deploy
   image: alpine:latest
   dependencies:
-    - build          # <-- явно берём артефакт из build
+    - build
   before_script:
     - apk add --no-cache openssh-client rsync
     - eval $(ssh-agent -s)
@@ -47,17 +46,16 @@ deploy:
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
     - ssh-keyscan -H $DEPLOY_SERVER >> ~/.ssh/known_hosts
   script:
-    # Создаём директорию на сервере
+    # Создаём директорию (на всякий случай)
     - ssh team_user@$DEPLOY_SERVER "mkdir -p $DEPLOY_PATH"
     
-    # Копируем собранные файлы (rsync эффективнее scp)
+    # Копируем файлы
     - rsync -avz --delete dist/ team_user@$DEPLOY_SERVER:$DEPLOY_PATH/
     
-    # Запускаем/перезапускаем сервер
-    # Python встроенный сервер (порт 8080)
-    - ssh team_user@$DEPLOY_SERVER "
-        pkill -f 'python3 -m http.server' || true;
-        cd $DEPLOY_PATH && nohup python3 -m http.server 8080 > /dev/null 2>&1 &"
+    # Останавливаем старый сервер (если был)
+    - ssh team_user@$DEPLOY_SERVER "pkill -f 'python3 -m http.server' || true"
+    
+    - ssh team_user@$DEPLOY_SERVER "cd $DEPLOY_PATH && python3 -m http.server 8080 &> /dev/null & disown"
     
   only:
     - main
