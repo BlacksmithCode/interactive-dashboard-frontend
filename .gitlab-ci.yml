@@ -33,7 +33,7 @@ build:
   only:
     - main
     - develop
-	
+
 # 3. Деплой через Docker
 deploy:
   stage: deploy
