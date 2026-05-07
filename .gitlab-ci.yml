@@ -34,30 +34,25 @@ build:
     - main
     - develop
 
-# 3. Деплой через Docker
+# 3. Деплой через Docker (На сервере!)
 deploy:
   stage: deploy
-  needs: ["build"]   # <-- новая строка
-  image: docker:latest
-  services:
-    - docker:dind
-  variables:
-    DOCKER_TLS_CERTDIR: ""
+  image: alpine:latest  
   before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
     - apk add --no-cache openssh-client
     - mkdir -p ~/.ssh
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+    - echo "$DEPLOY_SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan -H $DEPLOY_SERVER >> ~/.ssh/known_hosts 2>/dev/null
+    - ssh-keyscan -H $DEPLOY_SERVER_IP >> ~/.ssh/known_hosts 2>/dev/null
   script:
-    - docker build -t $DOCKER_IMAGE .
-    - docker push $DOCKER_IMAGE
-    - ssh $DEPLOY_USER@$DEPLOY_SERVER "
-        docker pull $DOCKER_IMAGE &&
+    - scp -r . $DEPLOY_USER@$DEPLOY_SERVER_IP:/tmp/frontend-build
+    - ssh "$DEPLOY_USER@$DEPLOY_SERVER_IP" "
+        cd /tmp/frontend-build &&
+        docker build -t frontend-app:latest . &&
         docker stop frontend-app || true &&
         docker rm frontend-app || true &&
-        docker run -d --name frontend-app --restart unless-stopped -p 80:80 $DOCKER_IMAGE
+        docker run -d --name frontend-app --restart unless-stopped -p 80:80 frontend-app:latest &&
+        rm -rf /tmp/frontend-build
       "
   only:
     - main
