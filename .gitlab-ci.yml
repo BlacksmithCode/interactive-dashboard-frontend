@@ -1,12 +1,11 @@
 stages:
   - lint
   - build
-  - deploy
 
 variables:
   DEPLOY_PATH: /home/team_user/frontend
 
-# 1. Линтинг 
+# 1. Проверка синтаксиса
 lint:
   stage: lint
   image: node:20-alpine
@@ -30,31 +29,6 @@ build:
     paths:
       - dist/
     expire_in: 1 hour
-  only:
-    - main
-    - develop
-
-deploy:
-  stage: deploy
-  image: alpine:latest
-  dependencies:
-    - build
-  before_script:
-    - apk add --no-cache openssh-client rsync
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -H $DEPLOY_SERVER >> ~/.ssh/known_hosts
-  script:
-    # 1. Создаём папку
-    - ssh team_user@$DEPLOY_SERVER "mkdir -p $DEPLOY_PATH"
-    
-    # 2. Копируем файлы
-    - rsync -avz --delete dist/ team_user@$DEPLOY_SERVER:$DEPLOY_PATH/
-    
-    # 3. Перезапускаем сервер 
-    - ssh team_user@$DEPLOY_SERVER "cd $DEPLOY_PATH && pkill -f 'python3 -m http.server' 2>/dev/null; nohup python3 -m http.server 8080 > /dev/null 2>&1 < /dev/null & sleep 1; exit 0"
-    
   only:
     - main
     - develop
