@@ -54,8 +54,6 @@ deploy:
         docker run -d --name frontend-app --restart unless-stopped -p 80:80 frontend-app:latest &&
         rm -rf /tmp/frontend-build
       "
-    - apk add --no-cache curl
-    - curl -v http://$DEPLOY_SERVER_IP:22 2>&1 | head -20
   only:
     - main
   when: manual
