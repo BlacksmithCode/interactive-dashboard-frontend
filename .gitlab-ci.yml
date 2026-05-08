@@ -17,7 +17,9 @@ lint:
   only:
     - merge_requests
     - main
-    - develop
+    - /^feature\/.*/
+    - /^fix\/.*/
+    - /^hotfix\/.*/
 
 # 2. Сборка 
 build:
@@ -32,7 +34,7 @@ build:
     expire_in: 1 hour
   only:
     - main
-    - develop
+    - merge_requests
 
 # 3. Деплой через Docker (На сервере!)
 deploy:
