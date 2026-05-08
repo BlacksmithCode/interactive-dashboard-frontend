@@ -20,6 +20,7 @@ lint:
     - /^feature\/.*/
     - /^fix\/.*/
     - /^hotfix\/.*/
+    - /^refactor\/.*/
 
 # 2. Сборка 
 build:
