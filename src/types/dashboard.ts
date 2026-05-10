@@ -46,3 +46,40 @@ export interface MergedCellMeta {
   label: string;
   description: string;
 }
+
+// ---------- Дашборд 2: руководители и преемники ----------
+
+/** Краткая информация о руководителе (для списка поиска) */
+export interface LeaderSummary {
+  id: number;
+  fullName: string;
+  position: string;
+  grade: number;
+  domain: string;
+}
+
+/** Информация о подчинённом / члене команды */
+export interface TeamMember {
+  fullName: string;
+  position: string;
+  potential: string;          // "A" | "B" | "C"
+  potentialValue: number;     // числовое значение потенциала
+  performance: string;        // "A" | "B" | "C" | "D" | "E"
+  performanceValue: number;   // числовое значение результативности
+  box: string;                // например "AB"
+  boxInterpretation: string;  // "Звезда", "Профессионал" и т.д.
+  evaluationYear: number;     // год последней оценки
+}
+
+/** Информация о преемнике (аналогична подчинённому + кто заявил) */
+export interface Successor extends TeamMember {
+  declaredBy: string;          // ФИО руководителя, который заявил
+  declarationDate: string;     // дата назначения
+}
+
+/** Полная информация о руководителе (детали + команда + преемники) */
+export interface LeaderDetails {
+  leader: LeaderSummary;
+  team: TeamMember[];
+  successors: Successor[];
+}

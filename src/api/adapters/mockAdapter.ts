@@ -46,3 +46,53 @@ export async function fetchNineBox(_params: DashboardFilters): Promise<NineBoxRe
   await delay(200);
   return mockNineBox;
 }
+
+// ---------- Дашборд 2: руководители и преемники ----------
+import type { LeaderSummary, LeaderDetails } from "../../types/dashboard";
+
+const mockLeaders: LeaderSummary[] = [
+  { id: 1, fullName: "Иванов Иван Иванович", position: "Директор департамента", grade: 21, domain: "Иннотех" },
+  { id: 2, fullName: "Петров Пётр Петрович", position: "Руководитель отдела", grade: 19, domain: "Код" },
+  { id: 3, fullName: "Сидорова Анна Сергеевна", position: "Team Lead", grade: 18, domain: "Искусственный интеллект" },
+];
+
+const mockTeam: Record<number, LeaderDetails> = {
+  1: {
+    leader: mockLeaders[0],
+    team: [
+      { fullName: "Смирнов Алексей", position: "Разработчик", potential: "B", potentialValue: 75, performance: "B", performanceValue: 80, box: "BB", boxInterpretation: "Эксперт", evaluationYear: 2024 },
+      { fullName: "Кузнецова Мария", position: "Аналитик", potential: "A", potentialValue: 90, performance: "A", performanceValue: 95, box: "AA", boxInterpretation: "Звезда", evaluationYear: 2024 },
+    ],
+    successors: [
+      { fullName: "Кузнецова Мария", position: "Аналитик", potential: "A", potentialValue: 90, performance: "A", performanceValue: 95, box: "AA", boxInterpretation: "Звезда", evaluationYear: 2024, declaredBy: "Иванов И.И.", declarationDate: "2024-12-01" },
+    ],
+  },
+  2: {
+    leader: mockLeaders[1],
+    team: [
+      { fullName: "Волков Дмитрий", position: "Инженер", potential: "C", potentialValue: 50, performance: "C", performanceValue: 60, box: "CC", boxInterpretation: "Профессионал", evaluationYear: 2024 },
+    ],
+    successors: [],
+  },
+  3: {
+    leader: mockLeaders[2],
+    team: [],
+    successors: [],
+  },
+};
+
+export async function fetchLeaders(search?: string): Promise<LeaderSummary[]> {
+  await delay(200);
+  if (!search) return mockLeaders;
+  const lower = search.toLowerCase();
+  return mockLeaders.filter(
+    (l) => l.fullName.toLowerCase().includes(lower) || l.position.toLowerCase().includes(lower)
+  );
+}
+
+export async function fetchLeaderDetails(id: number): Promise<LeaderDetails> {
+  await delay(300);
+  const details = mockTeam[id];
+  if (!details) throw new Error("Руководитель не найден");
+  return details;
+}
