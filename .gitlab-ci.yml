@@ -8,7 +8,7 @@ variables:
 
 # 1. Проверка синтаксиса
 compile:
-  stage: lint
+  stage: compile
   image: node:20-alpine
   script:
     - npm ci
