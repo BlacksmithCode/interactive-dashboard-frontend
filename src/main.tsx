@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "./context/AuthProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,7 +25,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>

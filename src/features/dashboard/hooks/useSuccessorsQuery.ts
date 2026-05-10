@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchLeaderDetails } from "../../../api/dashboardApi";
+import { fetchManagerSuccessors } from "../../../api/dashboardApi";
+import type { Successor } from "../../../types/dashboard";
 
-export function useSuccessorsQuery(leaderId: number | undefined) {
-  return useQuery({
-    queryKey: ["successors", leaderId],
-    queryFn: () => fetchLeaderDetails(leaderId!),
-    enabled: leaderId !== undefined,
-    select: (data) => data.successors, // выбираем только преемников
+export function useSuccessorsQuery(fullName: string | undefined) {
+  return useQuery<Successor[]>({
+    queryKey: ["successors", fullName],
+    queryFn: () => fetchManagerSuccessors(fullName!),
+    enabled: !!fullName,
   });
 }
