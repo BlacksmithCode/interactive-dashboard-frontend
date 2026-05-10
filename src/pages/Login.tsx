@@ -1,7 +1,7 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
+// src/pages/Login.tsx
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthProvider";
+import { useAuth } from "../context/useAuth";
 import { TextField, Button, Box, Typography, Alert } from "@mui/material";
 
 export default function Login() {

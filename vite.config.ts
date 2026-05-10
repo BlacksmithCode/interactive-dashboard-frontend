@@ -12,12 +12,6 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      // Прокси для эндпоинта входа, который находится вне /api
-      '/login': {
-        target: 'http://10.10.146.56:8080',
-        changeOrigin: true,
-        secure: false,
-      },
     },
   },
 });
