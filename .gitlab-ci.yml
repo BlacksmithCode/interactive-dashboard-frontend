@@ -1,5 +1,5 @@
 stages:
-  - lint
+  - compile
   - build
   - deploy
 
@@ -7,7 +7,7 @@ variables:
   DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
 
 # 1. Проверка синтаксиса
-lint:
+compile:
   stage: lint
   image: node:20-alpine
   script:
