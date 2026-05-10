@@ -6,6 +6,7 @@ import { useMergedCells } from "../../features/dashboard/hooks/useMergedCells";
 import { KpiCard } from "../../features/dashboard/components/KpiCard";
 import { NineBoxMatrix } from "../../features/dashboard/components/NineBoxMatrix";
 import { SummaryStatsSkeleton } from "../../features/dashboard/components/LoadingSkeleton";
+import { DomainInsightsPanel } from "../../features/dashboard/components/DomainInsightsPanel";
 
 /** Панель сводной статистики: KPI-карточки + матрица 9-box */
 export default function SummaryStats() {
@@ -37,15 +38,10 @@ export default function SummaryStats() {
 
   return (
     <Box>
+      <DomainInsightsPanel totalManagers={totalManagers} />
       {/* KPI-карточки */}
       {stats && (
         <Grid container spacing={2} sx={{ mb: 4 }}>
-          <KpiCard
-            title="Всего руководителей"
-            value={totalManagers}
-            total={totalManagers}
-            percentValue={stats.managersWithSuccessors}
-          />
           <KpiCard
             title="С преемниками"
             value={stats.managersWithSuccessors}
@@ -77,7 +73,6 @@ export default function SummaryStats() {
           />
         </Grid>
       )}
-
       {/* Матрица 9-box */}
       {mergedCells && <NineBoxMatrix mergedCells={mergedCells} />}
     </Box>

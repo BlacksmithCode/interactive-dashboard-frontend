@@ -8,4 +8,4 @@ export function useAuth(): AuthContextProps {
     throw new Error("useAuth must be used within AuthProvider");
   }
   return ctx;
-}
+}   

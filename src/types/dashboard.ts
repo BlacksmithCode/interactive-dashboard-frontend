@@ -75,3 +75,9 @@ export interface Successor {
   approvedBy: string;
   approvalDate: string;
 }
+
+export interface DomainGistDto {
+  domain: string;
+  managersWithSuccessors: number;
+  managersWithoutSuccessors: number;
+}

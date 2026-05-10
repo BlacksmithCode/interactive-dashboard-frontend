@@ -1,7 +1,7 @@
 // src/api/adapters/httpAdapter.ts
 
 import { api } from "../apiClient";
-import type { DashboardFilters, StatsResponse, NineBoxResponse, ManagerListItem, Successor } from "../../types/dashboard";
+import type { DashboardFilters, StatsResponse, NineBoxResponse, ManagerListItem, Successor, DomainGistDto } from "../../types/dashboard";
 
 export async function fetchStats(params: DashboardFilters): Promise<StatsResponse> {
   const { data } = await api.get<StatsResponse>("/api/dashboard/stats", { params });
@@ -28,4 +28,9 @@ export async function fetchManagerSuccessors(fullName: string): Promise<Successo
     `/api/managers/${encodeURIComponent(fullName)}/successors`
   );
   return data ?? [];
+}
+
+export async function fetchDomainGist(params: { gradeMin?: number }): Promise<DomainGistDto[]> {
+  const { data } = await api.get<DomainGistDto[]>("/api/dashboard/gist", { params });
+  return data;
 }
