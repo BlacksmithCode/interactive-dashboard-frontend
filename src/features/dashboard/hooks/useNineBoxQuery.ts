@@ -1,0 +1,18 @@
+import { useQuery } from "@tanstack/react-query";
+import { fetchNineBox } from "../../../api/dashboardApi";
+import type { DashboardFilters } from "../../../types/dashboard";
+
+/**
+ * Хук запроса данных матрицы 9-box.
+ * Автоматически перезапрашивает данные при изменении фильтров.
+ */
+export function useNineBoxQuery(filters: DashboardFilters) {
+  return useQuery({
+    queryKey: ["nineBox", filters.gradeMin, filters.domain],
+    queryFn: () =>
+      fetchNineBox({
+        gradeMin: filters.gradeMin === undefined ? undefined : filters.gradeMin,
+        domain: filters.domain || undefined,
+      }),
+  });
+}
