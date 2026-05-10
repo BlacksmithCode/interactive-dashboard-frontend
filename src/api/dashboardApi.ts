@@ -3,7 +3,7 @@ import axios from "axios";
 // ----- ВРЕМЕННЫЕ ЗАГЛУШКИ (MOCK) -----
 const USE_MOCK = true; // переключите на false, когда появится бэкенд
 
-const mockStats = {
+const mockStats: StatsResponse = {
   managersWithSuccessors: 45,
   managersWithoutSuccessors: 12,
   criticalRoles: 28,
@@ -14,7 +14,7 @@ const mockStats = {
   nonCriticalRolesWithoutSuccessors: 2,
 };
 
-const mockNineBox = {
+const mockNineBox: NineBoxResponse = {
   totalManagers: 125,
   cells: {
     AA: { managers: 12, successors: 18, nonSuccessors: 0 },
@@ -70,7 +70,7 @@ const api = axios.create({
 export async function fetchStats(params: {
   gradeMin?: number;
   domain?: string;
-}) {
+}): Promise<StatsResponse> {
   if (USE_MOCK) {
     await delay(200);
     return mockStats;
@@ -83,7 +83,7 @@ export async function fetchStats(params: {
 export async function fetchNineBox(params: {
   gradeMin?: number;
   domain?: string;
-}) {
+}): Promise<NineBoxResponse> {
   if (USE_MOCK) {
     await delay(200);
     return mockNineBox;
