@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { fetchStats } from "../../../api/dashboardApi";
 import type { DashboardFilters } from "../../../types/dashboard";
 
@@ -9,10 +9,7 @@ import type { DashboardFilters } from "../../../types/dashboard";
 export function useStatsQuery(filters: DashboardFilters) {
   return useQuery({
     queryKey: ["stats", filters.gradeMin, filters.domain],
-    queryFn: () =>
-      fetchStats({
-        gradeMin: filters.gradeMin === undefined ? undefined : filters.gradeMin,
-        domain: filters.domain || undefined,
-      }),
+    queryFn: () => fetchStats({ ...filters }),
+    placeholderData: keepPreviousData,  // ← вот это
   });
 }

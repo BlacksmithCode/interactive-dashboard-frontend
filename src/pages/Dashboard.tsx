@@ -1,7 +1,6 @@
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Box, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { DashboardFiltersProvider } from "../features/dashboard/context/DashboardFiltersProvider";
-import { FiltersBar } from "../features/dashboard/components/FiltersBar";
 
 type PanelType = "summary" | "leaders";
 
@@ -38,10 +37,6 @@ export default function Dashboard() {
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>
-
-        {/* Общая панель фильтров для всех вкладок */}
-        <FiltersBar />
-
         <Outlet />
       </Box>
     </DashboardFiltersProvider>
