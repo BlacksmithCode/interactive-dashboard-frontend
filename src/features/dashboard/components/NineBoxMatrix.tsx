@@ -2,13 +2,15 @@ import { Box, Typography } from "@mui/material";
 import { rowsOrder, potentialLabels, performanceLabels } from "../config/nineBoxMeta";
 import { BoxCell } from "./BoxCell";
 import type { MergedCells } from "../hooks/useMergedCells";
+import { MERGE_RULES } from "../hooks/useMergedCells"; // <-- добавляем импорт
+import type { NineBoxResponse } from "../../../types/dashboard";
 
 interface NineBoxMatrixProps {
   mergedCells: MergedCells;
+  nineBox: NineBoxResponse;
 }
 
-export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
-  // Вычисляем общее количество руководителей по всем ячейкам
+export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
   const totalManagers = Object.values(mergedCells).reduce(
     (sum, cell) => sum + (cell?.managers ?? 0),
     0
@@ -19,8 +21,6 @@ export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
       <Typography variant="h6" gutterBottom>
         Матрица потенциала
       </Typography>
-
-      {/* Ось результативности сверху */}
       <Box sx={{ display: "flex", pl: "80px" }}>
         <Box sx={{ flex: 1, textAlign: "center" }}>
           <Typography variant="caption" sx={{ fontWeight: "bold" }}>
@@ -28,9 +28,7 @@ export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
           </Typography>
         </Box>
       </Box>
-
       <Box sx={{ display: "flex", alignItems: "stretch" }}>
-        {/* Вертикальная ось слева */}
         <Box
           sx={{
             width: "80px",
@@ -43,19 +41,12 @@ export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
         >
           <Typography
             variant="caption"
-            sx={{
-              fontWeight: "bold",
-              transform: "rotate(-90deg)",
-              whiteSpace: "nowrap",
-            }}
+            sx={{ fontWeight: "bold", transform: "rotate(-90deg)", whiteSpace: "nowrap" }}
           >
             Потенциал (первая оценка)
           </Typography>
         </Box>
-
-        {/* Таблица ячеек */}
         <Box sx={{ flex: 1 }}>
-          {/* Заголовки столбцов */}
           <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, mb: 0.5 }}>
             {performanceLabels.map((label) => (
               <Typography key={label} variant="caption" align="center">
@@ -63,25 +54,21 @@ export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
               </Typography>
             ))}
           </Box>
-
-          {/* Строки с ячейками */}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {rowsOrder.map((row, rowIndex) => (
               <Box key={rowIndex} sx={{ display: "flex", alignItems: "stretch" }}>
-                {/* Метка потенциала слева */}
                 <Box sx={{ width: "80px", display: "flex", alignItems: "center", mr: 1 }}>
-                  <Typography variant="caption">
-                    {potentialLabels[rowIndex]}
-                  </Typography>
+                  <Typography variant="caption">{potentialLabels[rowIndex]}</Typography>
                 </Box>
-                {/* Ячейки строки */}
                 <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, width: "100%" }}>
                   {row.map((code) => (
                     <BoxCell
                       key={code}
                       code={code}
                       {...mergedCells[code]}
-                      totalManagers={totalManagers}   // <-- передаём общее количество
+                      totalManagers={totalManagers}
+                      sourceKeys={MERGE_RULES[code]}
+                      rawCells={nineBox.cells}
                     />
                   ))}
                 </Box>
