@@ -1,4 +1,4 @@
-import { Box, Grid, Alert, Button } from "@mui/material";
+import { Box, Grid, Alert, Button, LinearProgress } from "@mui/material";
 import { useDashboardFilters } from "../../features/dashboard/hooks/useDashboardFilters";
 import { useStatsQuery } from "../../features/dashboard/hooks/useStatsQuery";
 import { useNineBoxQuery } from "../../features/dashboard/hooks/useNineBoxQuery";
@@ -11,32 +11,38 @@ import { DomainInsightsPanel } from "../../features/dashboard/components/DomainI
 import { CriticalRolesPanel } from "../../features/dashboard/components/CriticalRolesPanel";
 import { useMemo } from "react";
 
-/** Панель сводной статистики: KPI-карточки + матрица 9-box */
 export default function SummaryStats() {
   const { filters } = useDashboardFilters();
-
   const { data: stats, isLoading: sLoading, isError: sError, refetch: refetchStats } = useStatsQuery(filters);
   const { data: nineBox, isLoading: nLoading, isError: nError, refetch: refetchNineBox } = useNineBoxQuery(filters);
   const mergedCells = useMergedCells(nineBox);
 
-  // получаем всех руководителей для вычисления минимального грейда
-  const { data: allManagers } = useLeadersQuery({}); // без фильтров – весь список
-  
+  const { data: allManagers } = useLeadersQuery({});
+
   const minGrade = useMemo(() => {
     if (!allManagers || allManagers.length === 0) return undefined;
-    return Math.min(...allManagers.map(m => m.grade));
-    }, [allManagers]);
+    return Math.min(...allManagers.map((m) => m.grade));
+  }, [allManagers]);
 
   const maxGrade = useMemo(() => {
     if (!allManagers || allManagers.length === 0) return undefined;
-    return Math.max(...allManagers.map(m => m.grade));
-    }, [allManagers]);
+    return Math.max(...allManagers.map((m) => m.grade));
+  }, [allManagers]);
 
-  if (sLoading || nLoading) return <SummaryStatsSkeleton />;
+  // Показываем скелетон только если данных ещё нет и идёт первая загрузка
+  if (!stats && !nineBox && (sLoading || nLoading)) {
+    return <SummaryStatsSkeleton />;
+  }
+
   if (sError || nError) {
     return (
-      <Alert severity="error"
-        action={<Button color="inherit" size="small" onClick={() => { refetchStats(); refetchNineBox(); }}>Повторить</Button>}
+      <Alert
+        severity="error"
+        action={
+          <Button color="inherit" size="small" onClick={() => { refetchStats(); refetchNineBox(); }}>
+            Повторить
+          </Button>
+        }
       >
         Ошибка загрузки данных
       </Alert>
@@ -49,14 +55,16 @@ export default function SummaryStats() {
 
   return (
     <Box>
-      {/* передаём минимальный грейд по умолчанию */}
+      {/* Индикатор перезагрузки не удаляет панель */}
+      {(sLoading || nLoading) && <LinearProgress />}
+
       <DomainInsightsPanel
         totalManagers={totalManagers}
         defaultMinGrade={minGrade}
         minPossibleGrade={minGrade}
         maxPossibleGrade={maxGrade}
       />
-      {/* KPI-карточки */}
+
       {stats && (
         <Grid container spacing={2} sx={{ mb: 4 }}>
           <KpiCard title="Критические роли" value={stats.criticalRoles} total={totalManagers} />
@@ -64,8 +72,9 @@ export default function SummaryStats() {
           <KpiCard title="Крит. без преемника" value={stats.criticalRolesWithoutSuccessors} total={totalManagers} color="error.light" />
         </Grid>
       )}
+
       <CriticalRolesPanel />
-      {/* Матрица 9-box */}
+
       {mergedCells && <NineBoxMatrix mergedCells={mergedCells} />}
     </Box>
   );

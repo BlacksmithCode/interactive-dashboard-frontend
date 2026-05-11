@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { fetchNineBox } from "../../../api/dashboardApi";
 import type { DashboardFilters } from "../../../types/dashboard";
 
@@ -9,10 +9,7 @@ import type { DashboardFilters } from "../../../types/dashboard";
 export function useNineBoxQuery(filters: DashboardFilters) {
   return useQuery({
     queryKey: ["nineBox", filters.gradeMin, filters.domain],
-    queryFn: () =>
-      fetchNineBox({
-        gradeMin: filters.gradeMin === undefined ? undefined : filters.gradeMin,
-        domain: filters.domain || undefined,
-      }),
+    queryFn: () => fetchNineBox({ ...filters }),
+    placeholderData: keepPreviousData,  // ← вот это
   });
 }

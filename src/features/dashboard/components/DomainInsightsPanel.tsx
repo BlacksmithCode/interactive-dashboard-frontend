@@ -1,5 +1,5 @@
 import { 
-    Box, Grid, Typography, Card, TextField, Chip, MenuItem, Select,
+    Box, Grid, Typography, Card, Chip, MenuItem, Select,
     FormControl, IconButton, InputLabel, OutlinedInput, useTheme } from "@mui/material";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
@@ -9,6 +9,8 @@ import { PieChart } from "@mui/x-charts/PieChart";
 import { useDashboardFilters } from "../hooks/useDashboardFilters";
 import { useDomainGistQuery } from "../hooks/useDomainGistQuery";
 import { useMemo, useState } from "react";
+import { GradeFilterInput } from "./GradeFilterInput"; // или путь, куда положили
+
 
 interface DomainInsightsPanelProps {
   totalManagers: number;
@@ -26,64 +28,6 @@ export function DomainInsightsPanel({
   const theme = useTheme();
   const { filters, setGradeMin } = useDashboardFilters();
   const { data: gist, isLoading, isError } = useDomainGistQuery({ gradeMin: filters.gradeMin });
-
-  // Инициализация из defaultMinGrade (однократно)
-  const [gradeInput, setGradeInput] = useState<string>(
-    defaultMinGrade?.toString() ?? ""
-  );
-  const [error, setError] = useState<string>("");
-
-  // Обработчик изменения грейда (только цифры, проверка границ)
-  const handleGradeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, ""); // только цифры
-
-    if (raw === "") {
-      setGradeInput("");
-      setError("");
-      setGradeMin(undefined);
-      return;
-    }
-
-    // Удаляем ведущие нули
-    const cleaned = raw.replace(/^0+/, "");
-    const final = cleaned === "" ? "" : cleaned;
-
-    if (final === "") {
-      setGradeInput("0"); // показать 0 с ошибкой
-      setError("Введите целое положительное число");
-      setGradeMin(undefined);
-      return;
-    }
-
-    const num = Number(final);
-
-    // Проверка на положительность
-    if (num <= 0) {
-      setGradeInput(final);
-      setError("Введите целое положительное число");
-      setGradeMin(undefined);
-      return;
-    }
-
-    // Проверка min/max границ
-    if (minPossibleGrade !== undefined && num < minPossibleGrade) {
-      setGradeInput(final);
-      setError(`Минимальный грейд: ${minPossibleGrade}`);
-      setGradeMin(undefined);
-      return;
-    }
-    if (maxPossibleGrade !== undefined && num > maxPossibleGrade) {
-      setGradeInput(final);
-      setError(`Максимальный грейд: ${maxPossibleGrade}`);
-      setGradeMin(undefined);
-      return;
-    }
-
-    // Валидное значение
-    setError("");
-    setGradeInput(final);
-    setGradeMin(num);
-  };
 
   const allDomains = useMemo(() => {
     if (!gist) return [];
@@ -144,17 +88,19 @@ export function DomainInsightsPanel({
             <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 1 }}>
               Всего руководителей ≥ грейда
             </Typography>
-            <TextField
-              type="number"
-              //inputMode="numeric"
-              value={gradeInput}
-              onChange={handleGradeChange}
-              error={!!error}
-              helperText={error || ""}
-              placeholder="без фильтра"
-              size="small"
-              sx={{ width: 100, mb: 1 }}
+            {defaultMinGrade !== undefined ? (
+            <GradeFilterInput
+              value={filters.gradeMin}
+              onChange={setGradeMin}
+              defaultMinGrade={defaultMinGrade}
+              minPossibleGrade={minPossibleGrade}
+              maxPossibleGrade={maxPossibleGrade}
             />
+            ) : (
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Загрузка...
+              </Typography>
+            )}
             <Typography variant="h2" sx={{ fontWeight: "bold" }}>
               {totalManagers}
             </Typography>
@@ -264,12 +210,12 @@ export function DomainInsightsPanel({
             </Box>
             <Box sx={{ mt: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: theme.palette.success.main }} />
-                <Typography variant="caption">С преемниками: {chartData.totalWith}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: theme.palette.error.main }} />
                 <Typography variant="caption">Без преемников: {chartData.totalWithout}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: theme.palette.success.main }} />
+                <Typography variant="caption">С преемниками: {chartData.totalWith}</Typography>
               </Box>
             </Box>
           </Box>
