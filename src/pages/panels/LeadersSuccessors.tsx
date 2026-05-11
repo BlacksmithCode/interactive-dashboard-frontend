@@ -14,6 +14,7 @@ import {
   Autocomplete,
 } from "@mui/material";
 import { DataGrid, type GridRowParams, type GridColDef } from "@mui/x-data-grid";
+import { useSearchParams } from "react-router-dom";
 import { useLeadersQuery } from "../../features/dashboard/hooks/useLeadersQuery";
 import { useTeamQuery } from "../../features/dashboard/hooks/useTeamQuery";
 import { useSuccessorsQuery } from "../../features/dashboard/hooks/useSuccessorsQuery";
@@ -80,9 +81,18 @@ const getRowClassName = (params: GridRowParams<ManagerListItem>) =>
   params.row.hasSuccessor ? "" : "row-without-successor";
 
 export default function LeadersSuccessors() {
-  // Локальные фильтры грейда и домена (независимые от других дашбордов)
-  const [gradeMin, setGradeMin] = useState<number | undefined>(undefined);
-  const [domain, setDomain] = useState<string | undefined>(undefined);
+  const [searchParams] = useSearchParams();
+  
+  // Инициализация из URL
+  const initialGradeMin = searchParams.get("gradeMin");
+  const initialDomain = searchParams.get("domain");
+
+  const [gradeMin, setGradeMin] = useState<number | undefined>(
+    initialGradeMin ? parseInt(initialGradeMin) : undefined
+  );
+  const [domain, setDomain] = useState<string | undefined>(
+    initialDomain || undefined
+  );
 
   // Локальные фильтры
   const [searchName, setSearchName] = useState("");
