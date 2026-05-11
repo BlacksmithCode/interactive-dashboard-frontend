@@ -94,7 +94,7 @@ function SummaryStatsContent() {
           totalManagers={totalManagers}
         />
       )}
-      {mergedCells && <NineBoxMatrix mergedCells={mergedCells} />}
+      {mergedCells && nineBox && <NineBoxMatrix mergedCells={mergedCells} nineBox={nineBox} />}
 
       <Box sx={{ mt: 3, textAlign: "center" }}>
         <Link

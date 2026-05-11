@@ -3,7 +3,7 @@ import type { NineBoxResponse, MergedKey, NineBoxCell } from "../../../types/das
 import { sumCells } from "../utils/sumCells";
 
 /** Правила объединения: ключ MergedKey → массив исходных ключей NineBox */
-const MERGE_RULES: Record<MergedKey, readonly string[]> = {
+export const MERGE_RULES: Record<MergedKey, readonly string[]> = {
   AD_AE: ["AD", "AE"],
   AC:    ["AC"],
   AA_AB: ["AA", "AB"],
