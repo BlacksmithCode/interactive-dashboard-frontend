@@ -1,14 +1,13 @@
-import { Box, Grid, Alert, Button, LinearProgress } from "@mui/material";
+import { Box, Alert, Button, LinearProgress } from "@mui/material";
 import { useDashboardFilters } from "../../features/dashboard/hooks/useDashboardFilters";
 import { useStatsQuery } from "../../features/dashboard/hooks/useStatsQuery";
 import { useNineBoxQuery } from "../../features/dashboard/hooks/useNineBoxQuery";
 import { useMergedCells } from "../../features/dashboard/hooks/useMergedCells";
 import { useLeadersQuery } from "../../features/dashboard/hooks/useLeadersQuery";
-import { KpiCard } from "../../features/dashboard/components/KpiCard";
+import { RoleSuccessionOverview } from "../../features/dashboard/components/RoleSuccessionOverview";
 import { NineBoxMatrix } from "../../features/dashboard/components/NineBoxMatrix";
 import { SummaryStatsSkeleton } from "../../features/dashboard/components/LoadingSkeleton";
 import { DomainInsightsPanel } from "../../features/dashboard/components/DomainInsightsPanel";
-import { CriticalRolesPanel } from "../../features/dashboard/components/CriticalRolesPanel";
 import { useMemo } from "react";
 
 export default function SummaryStats() {
@@ -18,6 +17,11 @@ export default function SummaryStats() {
   const mergedCells = useMergedCells(nineBox);
 
   const { data: allManagers } = useLeadersQuery({});
+  const { data: criticalLeaders = [] } = useLeadersQuery({ 
+  critical: true, 
+  gradeMin: filters.gradeMin, 
+  domain: filters.domain 
+});
 
   const minGrade = useMemo(() => {
     if (!allManagers || allManagers.length === 0) return undefined;
@@ -66,15 +70,12 @@ export default function SummaryStats() {
       />
 
       {stats && (
-        <Grid container spacing={2} sx={{ mb: 4 }}>
-          <KpiCard title="Критические роли" value={stats.criticalRoles} total={totalManagers} />
-          <KpiCard title="Крит. с преемниками" value={stats.criticalRolesWithSuccessors} total={totalManagers} color="success.light" />
-          <KpiCard title="Крит. без преемника" value={stats.criticalRolesWithoutSuccessors} total={totalManagers} color="error.light" />
-        </Grid>
+        <RoleSuccessionOverview 
+          stats={stats}
+          criticalLeaders={criticalLeaders}
+          totalManagers={totalManagers}
+        />
       )}
-
-      <CriticalRolesPanel />
-
       {mergedCells && <NineBoxMatrix mergedCells={mergedCells} />}
     </Box>
   );

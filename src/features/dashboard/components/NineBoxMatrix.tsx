@@ -7,15 +7,17 @@ interface NineBoxMatrixProps {
   mergedCells: MergedCells;
 }
 
-/**
- * Матрица 9-box 3×3 с осями «Потенциал» и «Результативность».
- * Принимает предварительно агрегированные данные (MergedCells).
- */
 export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
+  // Вычисляем общее количество руководителей по всем ячейкам
+  const totalManagers = Object.values(mergedCells).reduce(
+    (sum, cell) => sum + (cell?.managers ?? 0),
+    0
+  );
+
   return (
     <Box sx={{ mt: 2 }}>
       <Typography variant="h6" gutterBottom>
-        Матрица 9‑box
+        Матрица потенциала
       </Typography>
 
       {/* Ось результативности сверху */}
@@ -79,6 +81,7 @@ export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
                       key={code}
                       code={code}
                       {...mergedCells[code]}
+                      totalManagers={totalManagers}   // <-- передаём общее количество
                     />
                   ))}
                 </Box>
