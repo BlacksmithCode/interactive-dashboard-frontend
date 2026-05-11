@@ -8,9 +8,19 @@ import { RoleSuccessionOverview } from "../../features/dashboard/components/Role
 import { NineBoxMatrix } from "../../features/dashboard/components/NineBoxMatrix";
 import { SummaryStatsSkeleton } from "../../features/dashboard/components/LoadingSkeleton";
 import { DomainInsightsPanel } from "../../features/dashboard/components/DomainInsightsPanel";
+import { DashboardFiltersProvider } from "../../features/dashboard/context/DashboardFiltersProvider";
 import { useMemo } from "react";
 
 export default function SummaryStats() {
+  return (
+    <DashboardFiltersProvider>
+      <SummaryStatsContent />
+    </DashboardFiltersProvider>
+  );
+}
+
+
+function SummaryStatsContent() {
   const { filters } = useDashboardFilters();
   const { data: stats, isLoading: sLoading, isError: sError, refetch: refetchStats } = useStatsQuery(filters);
   const { data: nineBox, isLoading: nLoading, isError: nError, refetch: refetchNineBox } = useNineBoxQuery(filters);

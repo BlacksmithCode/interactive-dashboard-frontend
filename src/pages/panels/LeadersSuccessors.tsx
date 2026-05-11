@@ -1,19 +1,27 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   Box,
   Typography,
   Alert,
   Button,
   Chip,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Stack,
+  Autocomplete,
 } from "@mui/material";
 import { DataGrid, type GridRowParams, type GridColDef } from "@mui/x-data-grid";
 import { useLeadersQuery } from "../../features/dashboard/hooks/useLeadersQuery";
 import { useTeamQuery } from "../../features/dashboard/hooks/useTeamQuery";
 import { useSuccessorsQuery } from "../../features/dashboard/hooks/useSuccessorsQuery";
-import { useDashboardFilters } from "../../features/dashboard/hooks/useDashboardFilters";
+import { GradeFilterInput } from "../../features/dashboard/components/GradeFilterInput";
+import { useDomainGistQuery } from "../../features/dashboard/hooks/useDomainGistQuery";
 import type { ManagerListItem, Successor } from "../../types/dashboard";
 
-// ── Колонки таблицы руководителей ──────────────────────────────
+// ─── Колонки таблицы руководителей ──────────────────────────────
 const leaderColumns: GridColDef<ManagerListItem>[] = [
   { field: "fullName", headerName: "ФИО", flex: 1, minWidth: 180 },
   { field: "position", headerName: "Должность", flex: 1, minWidth: 200 },
@@ -37,7 +45,7 @@ const leaderColumns: GridColDef<ManagerListItem>[] = [
   },
 ];
 
-// ── Колонки таблицы команды ────────────────────────────────────
+// ─── Колонки таблицы команды ─────────────────────────────────────
 const teamColumns: GridColDef[] = [
   { field: "fullName", headerName: "ФИО", flex: 1, minWidth: 160 },
   { field: "grade", headerName: "Грейд", width: 80 },
@@ -48,7 +56,7 @@ const teamColumns: GridColDef[] = [
   { field: "developmentProgram", headerName: "Программа развития", flex: 1 },
 ];
 
-// ── Колонки таблицы преемников ─────────────────────────────────
+// ─── Колонки таблицы преемников ──────────────────────────────────
 const successorColumns: GridColDef<Successor>[] = [
   { field: "fullName", headerName: "ФИО преемника", flex: 1, minWidth: 180 },
   { field: "queue", headerName: "Очередь", width: 80 },
@@ -67,24 +75,78 @@ const successorColumns: GridColDef<Successor>[] = [
   { field: "approvalDate", headerName: "Дата согласования", width: 130 },
 ];
 
-// ── Подсветка строк без преемника ──────────────────────────────
+// ─── Подсветка строк без преемника ───────────────────────────────
 const getRowClassName = (params: GridRowParams<ManagerListItem>) =>
   params.row.hasSuccessor ? "" : "row-without-successor";
 
 export default function LeadersSuccessors() {
-  const { filters } = useDashboardFilters();
+  // Локальные фильтры грейда и домена (независимые от других дашбордов)
+  const [gradeMin, setGradeMin] = useState<number | undefined>(undefined);
+  const [domain, setDomain] = useState<string | undefined>(undefined);
+
+  // Локальные фильтры
+  const [searchName, setSearchName] = useState("");
+  const [positionFilter, setPositionFilter] = useState("");
+  const [criticalFilter, setCriticalFilter] = useState<boolean | undefined>(undefined);
+  const [successorFilter, setSuccessorFilter] = useState<boolean | undefined>(undefined);
 
   const [selectedLeader, setSelectedLeader] = useState<ManagerListItem | null>(null);
 
-  // загрузка списка руководителей
+  // Загрузка всех руководителей для определения границ грейда и списка должностей
+  const { data: allManagers } = useLeadersQuery({});
+
+  const minGrade = useMemo(() => {
+    if (!allManagers || allManagers.length === 0) return undefined;
+    return Math.min(...allManagers.map((m) => m.grade));
+  }, [allManagers]);
+
+  const maxGrade = useMemo(() => {
+    if (!allManagers || allManagers.length === 0) return undefined;
+    return Math.max(...allManagers.map((m) => m.grade));
+  }, [allManagers]);
+
+  // Уникальные должности для автодополнения
+  const uniquePositions = useMemo(() => {
+    if (!allManagers) return [];
+    return [...new Set(allManagers.map((m) => m.position))].sort();
+  }, [allManagers]);
+
+  // Запрос с передачей фильтров, поддерживаемых API
+  // Запрос с передачей всех фильтров
   const {
     data: leaders = [],
     isLoading: leadersLoading,
     isError: leadersError,
     refetch: refetchLeaders,
-  } = useLeadersQuery({ gradeMin: filters.gradeMin, domain: filters.domain });
+  } = useLeadersQuery({
+    gradeMin,
+    domain: domain || undefined,
+    critical: criticalFilter,
+    hasSuccessor: successorFilter,
+  });
 
-  // команда и преемники выбранного руководителя
+  const { data: domainGist = [] } = useDomainGistQuery({});
+  const availableDomains = useMemo(
+    () => [...new Set(domainGist.map((d) => d.domain))].sort(),
+    [domainGist]
+  );
+
+
+  // Локальная фильтрация по ФИО и должности
+  const filteredLeaders = useMemo(() => {
+    let result = leaders;
+    if (searchName.trim()) {
+      const lower = searchName.trim().toLowerCase();
+      result = result.filter((l) => l.fullName.toLowerCase().includes(lower));
+    }
+    if (positionFilter.trim()) {
+      const lower = positionFilter.trim().toLowerCase();
+      result = result.filter((l) => l.position.toLowerCase().includes(lower));
+    }
+    return result;
+  }, [leaders, searchName, positionFilter]);
+
+  // Данные по выбранному руководителю
   const {
     data: team = [],
     isLoading: teamLoading,
@@ -108,7 +170,85 @@ export default function LeadersSuccessors() {
 
   return (
     <Box>
-      {/* Ошибка загрузки руководителей */}
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        sx={{ mb: 3, flexWrap: "wrap", alignItems: "center" }}
+        useFlexGap
+      >
+        <TextField
+          label="Поиск по ФИО"
+          size="small"
+          value={searchName}
+          onChange={(e) => setSearchName(e.target.value)}
+          sx={{ minWidth: 200 }}
+        />
+        <Autocomplete
+          freeSolo
+          openOnFocus={false}
+          options={uniquePositions}
+          value={positionFilter}
+          onInputChange={(_, newValue) => setPositionFilter(newValue)}
+          onChange={(_, newValue) => setPositionFilter(newValue ?? "")}
+          size="small"
+          sx={{ minWidth: 200 }}
+          renderInput={(params) => <TextField {...params} label="Должность" />}
+        />
+        <GradeFilterInput
+          value={gradeMin}
+          onChange={setGradeMin}
+          defaultMinGrade={minGrade}
+          minPossibleGrade={minGrade}
+          maxPossibleGrade={maxGrade}
+        />
+        <TextField
+          label="Домен"
+          select
+          size="small"
+          value={domain ?? ""}
+          onChange={(e) => setDomain(e.target.value || undefined)}
+          sx={{ minWidth: 160 }}
+        >
+      <MenuItem value="">Все домены</MenuItem>
+        {availableDomains.map((d) => (
+          <MenuItem key={d} value={d}>
+            {d}
+          </MenuItem>
+        ))}
+        </TextField>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>Критичность</InputLabel>
+          <Select
+            value={criticalFilter === undefined ? "all" : criticalFilter.toString()}
+            label="Критичность"
+            onChange={(e) => {
+              const val = e.target.value;
+              setCriticalFilter(val === "all" ? undefined : val === "true");
+            }}
+          >
+            <MenuItem value="all">Все</MenuItem>
+            <MenuItem value="true">Критические</MenuItem>
+            <MenuItem value="false">Некритические</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel>Преемник</InputLabel>
+          <Select
+            value={successorFilter === undefined ? "all" : successorFilter.toString()}
+            label="Преемник"
+            onChange={(e) => {
+              const val = e.target.value;
+              setSuccessorFilter(val === "all" ? undefined : val === "true");
+            }}
+          >
+            <MenuItem value="all">Все</MenuItem>
+            <MenuItem value="true">Есть преемник</MenuItem>
+            <MenuItem value="false">Нет преемника</MenuItem>
+          </Select>
+        </FormControl>
+      </Stack>
+
+      {/* Ошибка загрузки */}
       {leadersError && (
         <Alert
           severity="error"
@@ -126,7 +266,7 @@ export default function LeadersSuccessors() {
       {/* Таблица руководителей */}
       <Box sx={{ width: "100%", height: 400, mb: 4 }}>
         <DataGrid
-          rows={leaders}
+          rows={filteredLeaders}
           columns={leaderColumns}
           loading={leadersLoading}
           getRowId={(row) => row.fullName}
@@ -172,7 +312,7 @@ export default function LeadersSuccessors() {
             </Button>
           </Box>
 
-          {/* Статусные чипы */}
+          {/* Статусные чипсы */}
           <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
             <Chip label={`Домен: ${selectedLeader.domain}`} size="small" variant="outlined" />
             <Chip label={`Грейд: ${selectedLeader.grade}`} size="small" variant="outlined" />
@@ -182,7 +322,7 @@ export default function LeadersSuccessors() {
               color={selectedLeader.hasSuccessor ? "success" : "error"}
             />
             {selectedLeader.critical && (
-              <Chip label="Критичная роль" size="small" color="warning" />
+              <Chip label="Критическая роль" size="small" color="warning" />
             )}
           </Box>
 

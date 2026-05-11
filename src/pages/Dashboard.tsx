@@ -1,6 +1,6 @@
+// Dashboard.tsx
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Box, ToggleButton, ToggleButtonGroup } from "@mui/material";
-import { DashboardFiltersProvider } from "../features/dashboard/context/DashboardFiltersProvider";
 
 type PanelType = "summary" | "leaders";
 
@@ -20,25 +20,23 @@ export default function Dashboard() {
   };
 
   return (
-    <DashboardFiltersProvider>
-      <Box>
-        <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
-          <ToggleButtonGroup
-            value={activePanel}
-            exclusive
-            onChange={handleChange}
-            aria-label="выбор дашборда"
-          >
-            <ToggleButton value="summary" sx={{ px: 3, py: 1 }}>
-              Сводная статистика
-            </ToggleButton>
-            <ToggleButton value="leaders" sx={{ px: 3, py: 1 }}>
-              Руководители и преемники
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
-        <Outlet />
+    <Box>
+      <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
+        <ToggleButtonGroup
+          value={activePanel}
+          exclusive
+          onChange={handleChange}
+          aria-label="выбор дашборда"
+        >
+          <ToggleButton value="summary" sx={{ px: 3, py: 1 }}>
+            Сводная статистика
+          </ToggleButton>
+          <ToggleButton value="leaders" sx={{ px: 3, py: 1 }}>
+            Руководители и преемники
+          </ToggleButton>
+        </ToggleButtonGroup>
       </Box>
-    </DashboardFiltersProvider>
+      <Outlet />
+    </Box>
   );
 }
