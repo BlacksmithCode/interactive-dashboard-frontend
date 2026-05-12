@@ -51,7 +51,7 @@ export function CriticalRolesPanel() {
   return (
     <Box sx={{ mt: 4 }}>
       <Typography variant="h6" gutterBottom>
-        Критические роли
+        Критичные роли
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Всего критичных ролей: {summary.total}, из них без преемников: {summary.without}
