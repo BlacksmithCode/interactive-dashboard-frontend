@@ -4,6 +4,7 @@ import { DashboardFiltersContext, type DashboardFiltersState } from "./Dashboard
 export function DashboardFiltersProvider({ children }: { children: ReactNode }) {
   const [gradeMin, setGradeMinRaw] = useState<number | undefined>(undefined);
   const [domain, setDomainRaw] = useState<string | undefined>(undefined);
+  
 
   const setGradeMin = useCallback((value: number | undefined) => {
     setGradeMinRaw(value);

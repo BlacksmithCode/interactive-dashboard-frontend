@@ -1,17 +1,17 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Grid, TextField, MenuItem } from "@mui/material";
 import { useDashboardFilters } from "../hooks/useDashboardFilters";
+import { useDomainGistQuery } from "../hooks/useDomainGistQuery";
 
-const DOMAINS = ["", "Иннотех", "Искусственный интеллект", "Код"];
-
-/**
- * Панель фильтров дашборда.
- * Читает и обновляет фильтры через DashboardFiltersContext.
- */
 export function FiltersBar() {
   const { filters, setGradeMin, setDomain } = useDashboardFilters();
 
-  // Локальное состояние для контролируемого ввода (пустая строка ↔ undefined)
+  const { data: domainGist = [] } = useDomainGistQuery({});
+  const availableDomains = useMemo(
+    () => [...new Set(domainGist.map((d) => d.domain))].sort(),
+    [domainGist]
+  );
+
   const [gradeMinInput, setGradeMinInput] = useState<string>(
     filters.gradeMin?.toString() ?? ""
   );
@@ -45,10 +45,8 @@ export function FiltersBar() {
           fullWidth
         >
           <MenuItem value="">Все домены</MenuItem>
-          {DOMAINS.filter(Boolean).map((d) => (
-            <MenuItem key={d} value={d}>
-              {d}
-            </MenuItem>
+          {availableDomains.map((d) => (
+            <MenuItem key={d} value={d}>{d}</MenuItem>
           ))}
         </TextField>
       </Grid>
