@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { fetchDomainGist } from "../../../api/dashboardApi";
 import type { DomainGistDto } from "../../../types/dashboard";
 
@@ -6,5 +6,6 @@ export function useDomainGistQuery(filters: { gradeMin?: number }) {
   return useQuery<DomainGistDto[]>({
     queryKey: ["domainGist", filters.gradeMin],
     queryFn: () => fetchDomainGist({ gradeMin: filters.gradeMin }),
+    placeholderData: keepPreviousData,
   });
 }
