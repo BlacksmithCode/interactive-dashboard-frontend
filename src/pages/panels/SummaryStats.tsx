@@ -10,7 +10,6 @@ import { NineBoxMatrix } from "../../features/dashboard/components/NineBoxMatrix
 import { SummaryStatsSkeleton } from "../../features/dashboard/components/LoadingSkeleton";
 import { DomainInsightsPanel } from "../../features/dashboard/components/DomainInsightsPanel";
 import { DashboardFiltersProvider } from "../../features/dashboard/context/DashboardFiltersProvider";
-import { FiltersBar } from "../../features/dashboard/components/FiltersBar";
 import { useMemo } from "react";
 
 export default function SummaryStats() {
@@ -77,7 +76,6 @@ function SummaryStatsContent() {
 
   return (
     <Box>
-      <FiltersBar />
       {(sLoading || nLoading) && <LinearProgress />}
 
       <DomainInsightsPanel

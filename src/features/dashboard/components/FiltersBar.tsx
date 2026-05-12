@@ -2,8 +2,14 @@ import { useState, useMemo } from "react";
 import { Grid, TextField, MenuItem } from "@mui/material";
 import { useDashboardFilters } from "../hooks/useDashboardFilters";
 import { useDomainGistQuery } from "../hooks/useDomainGistQuery";
+import { GradeFilterInput } from "./GradeFilterInput";
 
-export function FiltersBar() {
+interface FiltersBarProps {
+  minPossibleGrade?: number;
+  maxPossibleGrade?: number;
+}
+
+export function FiltersBar({ minPossibleGrade, maxPossibleGrade }: FiltersBarProps) {
   const { filters, setGradeMin, setDomain } = useDashboardFilters();
 
   const { data: domainGist = [] } = useDomainGistQuery({});
@@ -12,24 +18,18 @@ export function FiltersBar() {
     [domainGist]
   );
 
-  const [gradeMinInput, setGradeMinInput] = useState<string>(
-    filters.gradeMin?.toString() ?? ""
-  );
   const [domainInput, setDomainInput] = useState(filters.domain ?? "");
 
   return (
-    <Grid container spacing={2} sx={{ mb: 3 }}>
+    <Grid container spacing={2} sx={{ mb: 3 , alignItems: "center"}}>
       <Grid size={{ xs: 12, sm: 4 }}>
-        <TextField
-          label="Минимальный грейд"
-          type="number"
-          value={gradeMinInput}
-          onChange={(e) => {
-            const raw = e.target.value;
-            setGradeMinInput(raw);
-            setGradeMin(raw === "" ? undefined : parseInt(raw));
-          }}
-          fullWidth
+        <GradeFilterInput
+          label="Грейд"
+          value={filters.gradeMin}
+          onChange={setGradeMin}
+          defaultMinGrade={minPossibleGrade}
+          minPossibleGrade={minPossibleGrade}
+          maxPossibleGrade={maxPossibleGrade}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 4 }}>
@@ -43,6 +43,7 @@ export function FiltersBar() {
             setDomain(raw || undefined);
           }}
           fullWidth
+          size="small"
         >
           <MenuItem value="">Все домены</MenuItem>
           {availableDomains.map((d) => (

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, memo } from "react";
-import { TextField } from "@mui/material";
+import { TextField, Tooltip } from "@mui/material";
 
 interface GradeFilterInputProps {
   value: number | undefined;
@@ -7,6 +7,7 @@ interface GradeFilterInputProps {
   defaultMinGrade?: number;
   minPossibleGrade?: number;
   maxPossibleGrade?: number;
+  label?: string;
 }
 
 export const GradeFilterInput = memo(function GradeFilterInput({
@@ -15,6 +16,7 @@ export const GradeFilterInput = memo(function GradeFilterInput({
   defaultMinGrade,
   minPossibleGrade,
   maxPossibleGrade,
+  label,
 }: GradeFilterInputProps) {
   const fallbackGrade = minPossibleGrade ?? defaultMinGrade;
 
@@ -26,7 +28,6 @@ export const GradeFilterInput = memo(function GradeFilterInput({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const hadFocus = useRef(false);
 
-  // При первом рендере: если фильтр не задан, а минимальный грейд известен – применяем его
   useEffect(() => {
     if (value === undefined && fallbackGrade !== undefined) {
       setInput(fallbackGrade.toString());
@@ -35,7 +36,6 @@ export const GradeFilterInput = memo(function GradeFilterInput({
     }
   }, [fallbackGrade, value, onChange]);
 
-  // Синхронизация поля с внешним фильтром
   useEffect(() => {
     if (value !== lastEmittedValue.current) {
       const newVal = value !== undefined ? value.toString() : (fallbackGrade?.toString() ?? "");
@@ -45,7 +45,6 @@ export const GradeFilterInput = memo(function GradeFilterInput({
     }
   }, [value, fallbackGrade]);
 
-  // Восстановление фокуса после перерисовок
   useEffect(() => {
     if (hadFocus.current && inputRef.current) {
       const timer = setTimeout(() => inputRef.current?.focus(), 0);
@@ -55,8 +54,6 @@ export const GradeFilterInput = memo(function GradeFilterInput({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
-
-    // Если стёрли всё — поле визуально пустое, но фильтр = минимальный грейд
     if (raw === "") {
       setInput("");
       setError("");
@@ -101,7 +98,8 @@ export const GradeFilterInput = memo(function GradeFilterInput({
 
   const handleBlur = () => {
     hadFocus.current = false;
-    // При потере фокуса, если поле пустое — заполняем минимальным грейдом
+
+    // Коррекция выхода за границы при потере фокуса
     if (input === "" && fallbackGrade !== undefined) {
       setInput(fallbackGrade.toString());
       setError("");
@@ -109,6 +107,23 @@ export const GradeFilterInput = memo(function GradeFilterInput({
         onChange(fallbackGrade);
         lastEmittedValue.current = fallbackGrade;
       }
+      return;
+    }
+
+    const raw = input.replace(/\D/g, "");
+    if (raw === "") return;
+
+    const num = Number(raw);
+    if (minPossibleGrade !== undefined && num < minPossibleGrade) {
+      setInput(String(minPossibleGrade));
+      setError("");
+      onChange(minPossibleGrade);
+      lastEmittedValue.current = minPossibleGrade;
+    } else if (maxPossibleGrade !== undefined && num > maxPossibleGrade) {
+      setInput(String(maxPossibleGrade));
+      setError("");
+      onChange(maxPossibleGrade);
+      lastEmittedValue.current = maxPossibleGrade;
     }
   };
 
@@ -117,6 +132,11 @@ export const GradeFilterInput = memo(function GradeFilterInput({
       "Backspace", "Delete", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
       "Tab", "Home", "End",
     ];
+    if (e.key === "Enter") {
+      e.preventDefault();
+      inputRef.current?.blur();
+      return;
+    }
     if (e.ctrlKey || e.metaKey) return;
     if (/^\d$/.test(e.key)) return;
     if (!allowedKeys.includes(e.key)) {
@@ -125,27 +145,29 @@ export const GradeFilterInput = memo(function GradeFilterInput({
   };
 
   return (
-    <TextField
-      type="number"
-      value={input}
-      onChange={handleChange}
-      onKeyDown={handleKeyDown}
-      onBlur={handleBlur}
-      error={!!error}
-      helperText={error || ""}
-      placeholder={fallbackGrade?.toString() ?? "без фильтра"}
-      size="small"
-      sx={{ width: 100, mb: 1 }}
-      inputRef={inputRef}
-      onFocus={() => { hadFocus.current = true; }}
-      slotProps={{
-        htmlInput: {
-          inputMode: "numeric",
-          pattern: "[0-9]*",
-          min: minPossibleGrade ?? 0,
-          max: maxPossibleGrade ?? undefined,
-        },
-      }}
-    />
+    <Tooltip title={error || ""} arrow open={!!error} placement="top">
+      <TextField
+        label={label ?? "Грейд"}
+        type="number"
+        value={input}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        onBlur={handleBlur}
+        error={!!error}
+        placeholder={fallbackGrade?.toString() ?? "без фильтра"}
+        size="small"
+        sx={{ width: 100 }}
+        inputRef={inputRef}
+        onFocus={() => { hadFocus.current = true; }}
+        slotProps={{
+          htmlInput: {
+            inputMode: "numeric",
+            pattern: "[0-9]*",
+            min: minPossibleGrade ?? 0,
+            max: maxPossibleGrade ?? undefined,
+          },
+        }}
+      />
+    </Tooltip>
   );
 });

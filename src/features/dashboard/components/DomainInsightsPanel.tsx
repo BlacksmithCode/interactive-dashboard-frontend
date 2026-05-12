@@ -1,4 +1,4 @@
-import { Box, Grid, Typography, Card, useTheme } from "@mui/material";
+import { Box, Grid, Typography, Card, useTheme, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
@@ -22,38 +22,32 @@ export function DomainInsightsPanel({
   maxPossibleGrade,
 }: DomainInsightsPanelProps) {
   const theme = useTheme();
-  const { filters, setGradeMin } = useDashboardFilters();
+  const { filters, setGradeMin, setDomain } = useDashboardFilters();
   const { data: gist, isLoading, isError } = useDomainGistQuery({ gradeMin: filters.gradeMin });
+
+  const availableDomains = useMemo(() => {
+    if (!gist) return [];
+    return [...new Set(gist.map((d) => d.domain))].sort();
+  }, [gist]);
 
   const filteredGist = useMemo(() => {
     if (!gist) return [];
     if (filters.domain) {
-      return gist.filter(d => d.domain === filters.domain);
+      return gist.filter((d) => d.domain === filters.domain);
     }
     return gist;
   }, [gist, filters.domain]);
 
   const chartData = useMemo(() => {
-    if (!filteredGist.length) return {
-      barSeriesSuccess: [], barSeriesFail: [],
-      barXLabels: [], barXLabelsShort: [],
-      totalWith: 0, totalWithout: 0, overallPercent: 0,
-    };
-
-    const barSeriesSuccess = filteredGist.map(d => d.managersWithSuccessors);
-    const barSeriesFail = filteredGist.map(d => d.managersWithoutSuccessors);
-    const barXLabels = filteredGist.map(d => d.domain);
-    const barXLabelsShort = barXLabels.map(label =>
-      label.length > 10 ? label.slice(0, 9) + '…' : label
-    );
-
-    const totalWith = barSeriesSuccess.reduce((a, b) => a + b, 0);
-    const totalWithout = barSeriesFail.reduce((a, b) => a + b, 0);
-    const overallPercent = (totalWith + totalWithout) > 0
-      ? Math.round((totalWith / (totalWith + totalWithout)) * 100)
-      : 0;
-
-    return { barSeriesSuccess, barSeriesFail, barXLabels, barXLabelsShort, totalWith, totalWithout, overallPercent };
+    if (!filteredGist.length) {
+      return {
+        totalWith: 0,
+        totalWithout: 0,
+      };
+    }
+    const totalWith = filteredGist.reduce((sum, d) => sum + d.managersWithSuccessors, 0);
+    const totalWithout = filteredGist.reduce((sum, d) => sum + d.managersWithoutSuccessors, 0);
+    return { totalWith, totalWithout };
   }, [filteredGist]);
 
   return (
@@ -84,35 +78,47 @@ export function DomainInsightsPanel({
           </Box>
         </Grid>
 
-        {/* Гистограмма */}
+        {/* Выпадающий список доменов + гистограмма */}
         <Grid size={{ xs: 12, md: 5 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel id="domain-select-label">Домен</InputLabel>
+              <Select
+                labelId="domain-select-label"
+                value={filters.domain ?? ''}
+                label="Домен"
+                onChange={(e) => setDomain(e.target.value || undefined)}
+              >
+                <MenuItem value="">Все домены</MenuItem>
+                {availableDomains.map((d) => (
+                  <MenuItem key={d} value={d}>{d}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+          
+          {/* Сама гистограмма */}
           {isLoading ? (
             <Typography>Загрузка данных по доменам…</Typography>
           ) : isError ? (
             <Typography color="error">Ошибка загрузки доменов</Typography>
           ) : (
-            <>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                {filters.domain 
-                  ? `Домен: ${filters.domain}` 
-                  : 'Все домены'}
-              </Typography>
-              <Box sx={{ width: '100%', height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={filteredGist} margin={{ top: 20, right: 10, left: 0, bottom: 80 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="domain" interval={0} angle={-25} textAnchor="end" tick={{ fontSize: 12 }} />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend wrapperStyle={{ bottom: 0 }} />
-                    <Bar dataKey="managersWithSuccessors" name="С преемниками" fill={theme.palette.success.main} />
-                    <Bar dataKey="managersWithoutSuccessors" name="Без преемников" fill={theme.palette.error.main} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Box>
-            </>
+            <Box sx={{ width: '100%', height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={filteredGist} margin={{ top: 20, right: 10, left: 0, bottom: 80 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="domain" interval={0} angle={-25} textAnchor="end" tick={{ fontSize: 12 }} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ bottom: 0 }} />
+                  <Bar dataKey="managersWithSuccessors" name="С преемниками" fill={theme.palette.success.main} />
+                  <Bar dataKey="managersWithoutSuccessors" name="Без преемников" fill={theme.palette.error.main} />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
           )}
         </Grid>
+
 
         {/* Кольцевая диаграмма */}
         <Grid size={{ xs: 12, md: 3 }}>
