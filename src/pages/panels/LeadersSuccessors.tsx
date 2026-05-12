@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import {
   Box,
   Typography,
@@ -24,10 +24,10 @@ import type { ManagerListItem, Successor } from "../../types/dashboard";
 
 // ─── Колонки таблицы руководителей ──────────────────────────────
 const leaderColumns: GridColDef<ManagerListItem>[] = [
-  { field: "fullName", headerName: "ФИО", flex: 1, minWidth: 180 },
-  { field: "position", headerName: "Должность", flex: 1, minWidth: 200 },
-  { field: "domain", headerName: "Домен", width: 160 },
-  { field: "grade", headerName: "Грейд", width: 80, align: "center", headerAlign: "center" },
+  { field: "fullName", headerName: "ФИО", flex: 1, minWidth: 180, filterable: false },
+  { field: "position", headerName: "Должность", flex: 1, minWidth: 200, filterable: false },
+  { field: "domain", headerName: "Домен", width: 160, filterable: false },
+  { field: "grade", headerName: "Грейд", width: 80, align: "center", headerAlign: "center", filterable: false },
   {
     field: "hasSuccessor",
     headerName: "Преемник",
@@ -35,6 +35,7 @@ const leaderColumns: GridColDef<ManagerListItem>[] = [
     align: "center",
     headerAlign: "center",
     valueFormatter: (params) => (params ? "Да" : "Нет"),
+    filterable: false
   },
   {
     field: "critical",
@@ -43,6 +44,7 @@ const leaderColumns: GridColDef<ManagerListItem>[] = [
     align: "center",
     headerAlign: "center",
     valueFormatter: (params) => (params ? "Да" : "Нет"),
+    filterable: false
   },
 ];
 
@@ -82,7 +84,7 @@ const getRowClassName = (params: GridRowParams<ManagerListItem>) =>
 
 export default function LeadersSuccessors() {
   const [searchParams] = useSearchParams();
-  
+
   // Инициализация из URL
   const initialGradeMin = searchParams.get("gradeMin");
   const initialDomain = searchParams.get("domain");
@@ -101,6 +103,10 @@ export default function LeadersSuccessors() {
   const [successorFilter, setSuccessorFilter] = useState<boolean | undefined>(undefined);
 
   const [selectedLeader, setSelectedLeader] = useState<ManagerListItem | null>(null);
+
+  // Refs для Enter на автокомплитах
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const positionInputRef = useRef<HTMLInputElement>(null);
 
   // Загрузка всех руководителей для определения границ грейда и списка должностей
   const { data: allManagers } = useLeadersQuery({});
@@ -122,7 +128,6 @@ export default function LeadersSuccessors() {
   }, [allManagers]);
 
   // Запрос с передачей фильтров, поддерживаемых API
-  // Запрос с передачей всех фильтров
   const {
     data: leaders = [],
     isLoading: leadersLoading,
@@ -141,6 +146,20 @@ export default function LeadersSuccessors() {
     [domainGist]
   );
 
+  // Фильтрованные варианты для автодополнения ФИО
+const filteredNameOptions = useMemo(() => {
+  const names = allManagers?.map((m) => m.fullName) ?? [];
+  if (!searchName.trim()) return names;
+  const lower = searchName.trim().toLowerCase();
+  return names.filter((name) => name.toLowerCase().includes(lower));
+}, [allManagers, searchName]);
+
+// Фильтрованные варианты для автодополнения должности
+const filteredPositionOptions = useMemo(() => {
+  if (!positionFilter.trim()) return uniquePositions;
+  const lower = positionFilter.trim().toLowerCase();
+  return uniquePositions.filter((pos) => pos.toLowerCase().includes(lower));
+}, [uniquePositions, positionFilter]);
 
   // Локальная фильтрация по ФИО и должности
   const filteredLeaders = useMemo(() => {
@@ -178,6 +197,15 @@ export default function LeadersSuccessors() {
 
   const handleResetSelection = () => setSelectedLeader(null);
 
+  const resetAllFilters = useCallback(() => {
+    setGradeMin(initialGradeMin ? parseInt(initialGradeMin) : undefined);
+    setDomain(initialDomain || undefined);
+    setSearchName("");
+    setPositionFilter("");
+    setCriticalFilter(undefined);
+    setSuccessorFilter(undefined);
+  }, [initialGradeMin, initialDomain]);
+
   return (
     <Box>
       <Stack
@@ -186,25 +214,86 @@ export default function LeadersSuccessors() {
         sx={{ mb: 3, flexWrap: "wrap", alignItems: "center" }}
         useFlexGap
       >
-        <TextField
-          label="Поиск по ФИО"
-          size="small"
-          value={searchName}
-          onChange={(e) => setSearchName(e.target.value)}
-          sx={{ minWidth: 200 }}
-        />
+        {/* Поле поиска по ФИО */}
         <Autocomplete
           freeSolo
-          openOnFocus={false}
-          options={uniquePositions}
-          value={positionFilter}
-          onInputChange={(_, newValue) => setPositionFilter(newValue)}
-          onChange={(_, newValue) => setPositionFilter(newValue ?? "")}
+          disableClearable={false}
+          clearOnBlur={false}
+          selectOnFocus={true}
+          openOnFocus={true}
+          options={filteredNameOptions}
+          value={searchName}
+          inputValue={searchName}
+          onInputChange={(_, newValue) => {
+            const cleaned = newValue.replace(/[^а-яА-ЯёЁa-zA-Z \-.]/g, "");
+            setSearchName(cleaned);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const input = (e.target as HTMLElement)
+                .closest('.MuiAutocomplete-root')
+                ?.querySelector('input');
+              if (input) input.blur();
+              return;
+            }
+            const allowed = [
+              "Backspace", "Delete", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
+              "Tab", "Home", "End", "Escape",
+            ];
+            if (allowed.includes(e.key)) return;
+            if (/^[a-zA-Zа-яА-ЯёЁ \-.]$/.test(e.key)) return;
+            e.preventDefault();
+          }}
           size="small"
           sx={{ minWidth: 200 }}
-          renderInput={(params) => <TextField {...params} label="Должность" />}
+          clearIcon={searchName ? undefined : null}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Поиск по ФИО"
+              inputRef={searchInputRef}
+              onPaste={(e) => {
+                e.preventDefault();
+                const pasted = e.clipboardData.getData("text");
+                const cleaned = pasted.replace(/[^а-яА-ЯёЁa-zA-Z \-.]/g, "");
+                setSearchName((prev) => prev + cleaned);
+              }}
+            />
+          )}
         />
+
+        {/* Поле должности */}
+        <Autocomplete
+          freeSolo
+          disableClearable={false}
+          clearOnBlur={false}
+          selectOnFocus={true}
+          openOnFocus={true}
+          options={filteredPositionOptions}
+          value={positionFilter}
+          inputValue={positionFilter}
+          onInputChange={(_, newValue) => setPositionFilter(newValue)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const input = (e.target as HTMLElement)
+                .closest('.MuiAutocomplete-root')
+                ?.querySelector('input');
+              if (input) input.blur();
+              return;
+            }
+          }}
+          size="small"
+          sx={{ minWidth: 200 }}
+          clearIcon={positionFilter ? undefined : null}
+          renderInput={(params) => (
+            <TextField {...params} label="Должность" inputRef={positionInputRef} />
+          )}
+        />
+
         <GradeFilterInput
+          label="Грейд"
           value={gradeMin}
           onChange={setGradeMin}
           defaultMinGrade={minGrade}
@@ -219,12 +308,12 @@ export default function LeadersSuccessors() {
           onChange={(e) => setDomain(e.target.value || undefined)}
           sx={{ minWidth: 160 }}
         >
-      <MenuItem value="">Все домены</MenuItem>
-        {availableDomains.map((d) => (
-          <MenuItem key={d} value={d}>
-            {d}
-          </MenuItem>
-        ))}
+          <MenuItem value="">Все домены</MenuItem>
+          {availableDomains.map((d) => (
+            <MenuItem key={d} value={d}>
+              {d}
+            </MenuItem>
+          ))}
         </TextField>
         <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>Критичность</InputLabel>
@@ -256,6 +345,15 @@ export default function LeadersSuccessors() {
             <MenuItem value="false">Нет преемника</MenuItem>
           </Select>
         </FormControl>
+  
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={resetAllFilters}
+          sx={{ minWidth: 140 }}
+        >
+          Сбросить фильтры
+        </Button>
       </Stack>
 
       {/* Ошибка загрузки */}

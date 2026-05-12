@@ -1,8 +1,7 @@
-import { Card, CardContent, Typography, Box, Tooltip } from "@mui/material"; // добавлен Tooltip
+import { Card, CardContent, Typography, Box, Tooltip } from "@mui/material";
 import type { MergedKey, NineBoxCell } from "../../../types/dashboard";
 import { boxMeta, categoryColor } from "../config/nineBoxMeta";
 
-// Словари для расшифровки букв в тултипе
 const PERF_MAP: Record<string, string> = {
   A: "Высшая",
   B: "Высокая",
@@ -16,12 +15,11 @@ const POT_MAP: Record<string, string> = {
   C: "Низкий",
 };
 
-
 interface BoxCellProps extends NineBoxCell {
   code: MergedKey;
   totalManagers?: number;
-  sourceKeys?: readonly string[];  // исходные ключи, образующие эту ячейку
-  rawCells?: Record<string, NineBoxCell>; // полный ответ от API (15 клеток)
+  sourceKeys?: readonly string[];
+  rawCells?: Record<string, NineBoxCell>;
 }
 
 export function BoxCell({
@@ -41,12 +39,10 @@ export function BoxCell({
   const nonSuccPercent = total > 0 ? Math.round((nonSuccessors / total) * 100) : 0;
   const managerPercent =
     totalManagers > 0 ? Math.round((managers / totalManagers) * 100) : 0;
-
   const showPercent = totalManagers > 0;
 
-  const tooltipTitle = `${meta.label}: ${meta.description}`;
-
-let tooltipContent: React.ReactNode = `${meta.label}: ${meta.description}`;
+  // Содержимое тултипа
+  let tooltipContent: React.ReactNode = `${meta.label}: ${meta.description}`;
   if (sourceKeys && rawCells) {
     const perfCounts = new Map<string, number>();
     const potCounts = new Map<string, number>();
@@ -67,7 +63,7 @@ let tooltipContent: React.ReactNode = `${meta.label}: ${meta.description}`;
         </Typography>
         <Box sx={{ display: "flex", gap: 2 }}>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" fontWeight="bold" mb={0.5}>
+            <Typography variant="body2" sx={{ fontWeight: "bold", mb: 0.5 }}>
               Результативность
             </Typography>
             {Array.from(perfCounts.entries()).map(([letter, count]) => (
@@ -75,14 +71,14 @@ let tooltipContent: React.ReactNode = `${meta.label}: ${meta.description}`;
                 <Typography variant="body2">
                   {letter} ({PERF_MAP[letter] ?? letter})
                 </Typography>
-                <Typography variant="body2" fontWeight="bold" ml={1}>
+                <Typography variant="body2" sx={{ fontWeight: "bold", ml: 1 }}>
                   {count}
                 </Typography>
               </Box>
             ))}
           </Box>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" fontWeight="bold" mb={0.5}>
+            <Typography variant="body2" sx={{ fontWeight: "bold", mb: 0.5 }}>
               Потенциал
             </Typography>
             {Array.from(potCounts.entries()).map(([letter, count]) => (
@@ -90,7 +86,7 @@ let tooltipContent: React.ReactNode = `${meta.label}: ${meta.description}`;
                 <Typography variant="body2">
                   {letter} ({POT_MAP[letter] ?? letter})
                 </Typography>
-                <Typography variant="body2" fontWeight="bold" ml={1}>
+                <Typography variant="body2" sx={{ fontWeight: "bold", ml: 1 }}>
                   {count}
                 </Typography>
               </Box>
@@ -100,7 +96,6 @@ let tooltipContent: React.ReactNode = `${meta.label}: ${meta.description}`;
       </Box>
     );
   }
-
 
   return (
     <Tooltip title={tooltipContent} arrow placement="top">
@@ -118,7 +113,7 @@ let tooltipContent: React.ReactNode = `${meta.label}: ${meta.description}`;
           <Typography variant="caption" sx={{ alignSelf: "flex-start", fontWeight: "bold" }}>
             {code.replace("_", " + ")}
           </Typography>
-          <Typography variant="subtitle2" sx={{ mt: 0.5 }}>
+          <Typography variant="subtitle2" sx={{ mt: 0.5, fontWeight: "bold" }}>
             {meta.label}
           </Typography>
           <Typography variant="caption" sx={{ mb: 0.5 }}>
