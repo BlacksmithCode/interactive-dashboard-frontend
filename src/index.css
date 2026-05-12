@@ -1,0 +1,13 @@
+.MuiTablePagination-root .MuiTablePagination-selectLabel {
+  visibility: hidden;
+  position: relative;
+}
+.MuiTablePagination-root .MuiTablePagination-selectLabel::after {
+  content: "Строк на странице:";
+  visibility: visible;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
