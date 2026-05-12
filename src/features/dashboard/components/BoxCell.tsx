@@ -35,10 +35,22 @@ export function BoxCell({
   const bg = categoryColor[code] ?? "#fff";
 
   const total = managers || 0;
-  const succPercent = total > 0 ? Math.round((successors / total) * 100) : 0;
-  const nonSuccPercent = total > 0 ? Math.round((nonSuccessors / total) * 100) : 0;
-  const managerPercent =
-    totalManagers > 0 ? Math.round((managers / totalManagers) * 100) : 0;
+  let succPercent = 0;
+  let nonSuccPercent = 0;
+  if (total > 0) {
+    succPercent = Math.round((successors / total) * 100);
+    nonSuccPercent = Math.round((nonSuccessors / total) * 100);
+    const diff = 100 - (succPercent + nonSuccPercent);
+    if (diff !== 0) {
+      // Корректируем большее значение, чтобы не трогать маленькое
+      if (succPercent >= nonSuccPercent) {
+        succPercent += diff;
+      } else {
+        nonSuccPercent += diff;
+      }
+    }
+  }
+  const managerPercent = totalManagers > 0 ? Math.round((managers / totalManagers) * 100) : 0;
   const showPercent = totalManagers > 0;
 
   // Содержимое тултипа
@@ -131,7 +143,7 @@ export function BoxCell({
                 <Typography variant="body2">{successors}</Typography>
                 <Typography variant="body2">{nonSuccessors}</Typography>
               </Box>
-              {showPercent ? (
+              {showPercent && (
                 <Box
                   sx={{
                     borderLeft: "1px solid",
@@ -146,8 +158,6 @@ export function BoxCell({
                   <Typography variant="body2">{succPercent}%</Typography>
                   <Typography variant="body2">{nonSuccPercent}%</Typography>
                 </Box>
-              ) : (
-                <Box sx={{ pl: 1 }} />
               )}
             </Box>
           </Box>
