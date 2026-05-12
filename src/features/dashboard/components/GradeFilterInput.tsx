@@ -165,6 +165,33 @@ export const GradeFilterInput = memo(function GradeFilterInput({
             pattern: "[0-9]*",
             min: minPossibleGrade ?? 0,
             max: maxPossibleGrade ?? undefined,
+            onPaste: (e: React.ClipboardEvent<HTMLInputElement>) => {
+              e.preventDefault();
+              const pasted = e.clipboardData.getData('text');
+              const cleaned = pasted.replace(/\D/g, '');
+              if (cleaned) {
+                const num = Number(cleaned);
+                let finalValue = cleaned;
+                if (minPossibleGrade !== undefined && num < minPossibleGrade) {
+                  finalValue = String(minPossibleGrade);
+                } else if (maxPossibleGrade !== undefined && num > maxPossibleGrade) {
+                  finalValue = String(maxPossibleGrade);
+                }
+                setInput(finalValue);
+                onChange(Number(finalValue));
+                lastEmittedValue.current = Number(finalValue);
+              } else {
+                if (fallbackGrade !== undefined) {
+                  setInput(fallbackGrade.toString());
+                  onChange(fallbackGrade);
+                  lastEmittedValue.current = fallbackGrade;
+                } else {
+                  setInput('');
+                  onChange(undefined);
+                  lastEmittedValue.current = undefined;
+                }
+              }
+            }
           },
         }}
       />
