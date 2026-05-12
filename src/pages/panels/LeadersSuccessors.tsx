@@ -1,3 +1,5 @@
+// src/pages/panels/LeadersSuccessors.tsx
+
 import { useState, useCallback, useMemo, useRef } from "react";
 import {
   Box,
@@ -18,14 +20,20 @@ import { useSearchParams } from "react-router-dom";
 import { useLeadersQuery } from "../../features/dashboard/hooks/useLeadersQuery";
 import { useTeamQuery } from "../../features/dashboard/hooks/useTeamQuery";
 import { useSuccessorsQuery } from "../../features/dashboard/hooks/useSuccessorsQuery";
+import { useManagerDetailQuery } from "../../features/dashboard/hooks/useManagerDetailQuery"; // новый хук
 import { GradeFilterInput } from "../../features/dashboard/components/GradeFilterInput";
 import { useDomainGistQuery } from "../../features/dashboard/hooks/useDomainGistQuery";
 import type { ManagerListItem, Successor } from "../../types/dashboard";
 
-// ─── Колонки таблицы руководителей ──────────────────────────────
+const capitalizeFirstLetter = (str: string) => {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
+// ─── Колонки таблицы руководителей (без изменений) ─────────────────
 const leaderColumns: GridColDef<ManagerListItem>[] = [
   { field: "fullName", headerName: "ФИО", flex: 1, minWidth: 180, filterable: false },
-  { field: "position", headerName: "Должность", flex: 1, minWidth: 200, filterable: false },
+  { field: "position", headerName: "Должность", flex: 1, minWidth: 200, filterable: false, valueFormatter: (params) => capitalizeFirstLetter(params),},
   { field: "domain", headerName: "Домен", width: 160, filterable: false },
   { field: "grade", headerName: "Грейд", width: 80, align: "center", headerAlign: "center", filterable: false },
   {
@@ -48,44 +56,40 @@ const leaderColumns: GridColDef<ManagerListItem>[] = [
   },
 ];
 
-// ─── Колонки таблицы команды ─────────────────────────────────────
+// ─── Колонки таблицы команды (без изменений) ─────────────────────
 const teamColumns: GridColDef[] = [
   { field: "fullName", headerName: "ФИО", flex: 1, minWidth: 160 },
   { field: "grade", headerName: "Грейд", width: 80 },
   { field: "assessment360", headerName: "Оценка 360", width: 120 },
   { field: "performance", headerName: "Результат-ть", width: 130 },
   { field: "potential", headerName: "Потенциал", width: 100 },
-  { field: "era", headerName: "Эра", width: 80 },
+  { field: "era", headerName: "ЭРА", width: 80 },
   { field: "developmentProgram", headerName: "Программа развития", flex: 1 },
 ];
 
-// ─── Колонки таблицы преемников ──────────────────────────────────
+// ─── Колонки таблицы преемников (обновлены) ──────────────────────
 const successorColumns: GridColDef<Successor>[] = [
   { field: "fullName", headerName: "ФИО преемника", flex: 1, minWidth: 180 },
   { field: "queue", headerName: "Очередь", width: 80 },
-  { field: "readiness", headerName: "Готовность", width: 120 },
-  { field: "successorStatus", headerName: "Статус", width: 130 },
-  { field: "declarant", headerName: "Заявитель", width: 180 },
   { field: "assessment360", headerName: "Оценка 360", width: 120 },
   { field: "performance", headerName: "Результат-ть", width: 140 },
   { field: "potential", headerName: "Потенциал", width: 100 },
-  { field: "era", headerName: "Эра", width: 100 },
+  { field: "era", headerName: "ЭРА", width: 100 },
   { field: "developmentProgram", headerName: "Программа развития", width: 180 },
-  { field: "comments", headerName: "Комментарии", width: 200 },
-  { field: "careerStage", headerName: "Карьерный этап", width: 140 },
+  { field: "declarantFullName", headerName: "Заявитель", width: 180 },
   { field: "isApproved", headerName: "Согласован", width: 110 },
   { field: "approvedBy", headerName: "Кем согласован", width: 150 },
   { field: "approvalDate", headerName: "Дата согласования", width: 130 },
 ];
 
-// ─── Подсветка строк без преемника ───────────────────────────────
+// ─── Подсветка строк без преемника ──────────────────────────────
 const getRowClassName = (params: GridRowParams<ManagerListItem>) =>
   params.row.hasSuccessor ? "" : "row-without-successor";
 
 export default function LeadersSuccessors() {
   const [searchParams] = useSearchParams();
 
-  // Инициализация из URL
+  // Инициализация фильтров из URL
   const initialGradeMin = searchParams.get("gradeMin");
   const initialDomain = searchParams.get("domain");
 
@@ -121,13 +125,12 @@ export default function LeadersSuccessors() {
     return Math.max(...allManagers.map((m) => m.grade));
   }, [allManagers]);
 
-  // Уникальные должности для автодополнения
   const uniquePositions = useMemo(() => {
     if (!allManagers) return [];
-    return [...new Set(allManagers.map((m) => m.position))].sort();
+    return [...new Set(allManagers.map((m) => capitalizeFirstLetter(m.position)))].sort();
   }, [allManagers]);
 
-  // Запрос с передачей фильтров, поддерживаемых API
+  // Запрос списка руководителей с фильтрами, поддерживаемыми API
   const {
     data: leaders = [],
     isLoading: leadersLoading,
@@ -146,20 +149,20 @@ export default function LeadersSuccessors() {
     [domainGist]
   );
 
-  // Фильтрованные варианты для автодополнения ФИО
-const filteredNameOptions = useMemo(() => {
-  const names = allManagers?.map((m) => m.fullName) ?? [];
-  if (!searchName.trim()) return names;
-  const lower = searchName.trim().toLowerCase();
-  return names.filter((name) => name.toLowerCase().includes(lower));
-}, [allManagers, searchName]);
+  // Автодополнение ФИО
+  const filteredNameOptions = useMemo(() => {
+    const names = allManagers?.map((m) => m.fullName) ?? [];
+    if (!searchName.trim()) return names;
+    const lower = searchName.trim().toLowerCase();
+    return names.filter((name) => name.toLowerCase().includes(lower));
+  }, [allManagers, searchName]);
 
-// Фильтрованные варианты для автодополнения должности
-const filteredPositionOptions = useMemo(() => {
-  if (!positionFilter.trim()) return uniquePositions;
-  const lower = positionFilter.trim().toLowerCase();
-  return uniquePositions.filter((pos) => pos.toLowerCase().includes(lower));
-}, [uniquePositions, positionFilter]);
+  // Автодополнение должности
+  const filteredPositionOptions = useMemo(() => {
+    if (!positionFilter.trim()) return uniquePositions;
+    const lower = positionFilter.trim().toLowerCase();
+    return uniquePositions.filter((pos) => pos.toLowerCase().includes(lower));
+  }, [uniquePositions, positionFilter]);
 
   // Локальная фильтрация по ФИО и должности
   const filteredLeaders = useMemo(() => {
@@ -189,6 +192,13 @@ const filteredPositionOptions = useMemo(() => {
     isError: succError,
     refetch: refetchSucc,
   } = useSuccessorsQuery(selectedLeader?.fullName);
+
+  // Детальная информация о руководителе (новый хук)
+  const {
+    data: managerDetail,
+    isLoading: detailLoading,
+    isError: detailError,
+  } = useManagerDetailQuery(selectedLeader?.fullName);
 
   const handleRowClick = useCallback(
     (params: GridRowParams<ManagerListItem>) => setSelectedLeader(params.row),
@@ -356,7 +366,7 @@ const filteredPositionOptions = useMemo(() => {
         </Button>
       </Stack>
 
-      {/* Ошибка загрузки */}
+      {/* Ошибка загрузки руководителей */}
       {leadersError && (
         <Alert
           severity="error"
@@ -413,7 +423,7 @@ const filteredPositionOptions = useMemo(() => {
             }}
           >
             <Typography variant="h6">
-              {selectedLeader.fullName} – {selectedLeader.position}
+              {selectedLeader.fullName} – {capitalizeFirstLetter(selectedLeader.position)}
             </Typography>
             <Button variant="outlined" size="small" onClick={handleResetSelection}>
               Сбросить выбор
@@ -421,14 +431,29 @@ const filteredPositionOptions = useMemo(() => {
           </Box>
 
           {/* Статусные чипсы */}
-          <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+          <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap", alignItems: "center" }}>
             <Chip label={`Домен: ${selectedLeader.domain}`} size="small" variant="outlined" />
             <Chip label={`Грейд: ${selectedLeader.grade}`} size="small" variant="outlined" />
-            <Chip
-              label={selectedLeader.hasSuccessor ? "Есть преемник" : "Нет преемника"}
-              size="small"
-              color={selectedLeader.hasSuccessor ? "success" : "error"}
-            />
+            {detailLoading ? (
+              <Chip label="Загрузка..." size="small" color="default" />
+            ) : detailError ? (
+              <Chip label="Ошибка загрузки деталей" size="small" color="error" />
+            ) : managerDetail ? (
+              <>
+                <Chip
+                  label={`Преемников: ${managerDetail.successorsCount}`}
+                  size="small"
+                  color={managerDetail.successorsCount > 0 ? "success" : "error"}
+                />
+                {managerDetail.readiness && (
+                  <Chip
+                    label={`Готовность: ${managerDetail.readiness}`}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+              </>
+            ) : null}
             {selectedLeader.critical && (
               <Chip label="Критическая роль" size="small" color="warning" />
             )}
