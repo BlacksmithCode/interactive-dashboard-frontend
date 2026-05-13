@@ -57,24 +57,32 @@ export interface ManagerListItem {
   hasSuccessor: boolean;
 }
 
+export interface ManagerDetail {
+  fullName: string;
+  domain: string;
+  position: string;
+  grade: number;
+  critical: boolean;
+  hasSuccessor: boolean;
+  successorsCount: number;
+  readiness: string | null;
+}
+
 /** Преемник (с /api/managers/{fullName}/successors) */
 export interface Successor {
   fullName: string;
   queue: number;
-  readiness: string;
-  successorStatus: string;
-  declarant: string;
   assessment360: string;
   performance: string;
   potential: string;
   era: string;
   developmentProgram: string;
-  comments: string;
-  careerStage: string;
   isApproved: boolean;
   approvedBy: string;
   approvalDate: string;
+  declarantFullName: string; // вместо declarant
 }
+
 
 export interface DomainGistDto {
   domain: string;
