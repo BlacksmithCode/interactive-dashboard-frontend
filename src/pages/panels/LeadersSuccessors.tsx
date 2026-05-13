@@ -336,8 +336,8 @@ export default function LeadersSuccessors() {
             }}
           >
             <MenuItem value="all">Все</MenuItem>
-            <MenuItem value="true">Критические</MenuItem>
-            <MenuItem value="false">Некритические</MenuItem>
+            <MenuItem value="true">Критичные</MenuItem>
+            <MenuItem value="false">Некритичные</MenuItem>
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 160 }}>
@@ -455,7 +455,7 @@ export default function LeadersSuccessors() {
               </>
             ) : null}
             {selectedLeader.critical && (
-              <Chip label="Критическая роль" size="small" color="warning" />
+              <Chip label="Критичная роль" size="small" color="warning" />
             )}
           </Box>
 

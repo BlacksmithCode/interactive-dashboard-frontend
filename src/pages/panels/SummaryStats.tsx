@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Box, Alert, Button, LinearProgress, Link } from "@mui/material";
+import { Box, Alert, Button, LinearProgress, Link, Typography } from "@mui/material";
 import { useDashboardFilters } from "../../features/dashboard/hooks/useDashboardFilters";
 import { useStatsQuery } from "../../features/dashboard/hooks/useStatsQuery";
 import { useNineBoxQuery } from "../../features/dashboard/hooks/useNineBoxQuery";
@@ -92,7 +92,16 @@ function SummaryStatsContent() {
           totalManagers={totalManagers}
         />
       )}
-      {mergedCells && nineBox && <NineBoxMatrix mergedCells={mergedCells} nineBox={nineBox} />}
+
+      {mergedCells && nineBox ? (
+        <NineBoxMatrix mergedCells={mergedCells} nineBox={nineBox} />
+      ) : (
+        <Box sx={{ mt: 2, p: 2, border: '1px dashed grey.300', borderRadius: 1, textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            Нет данных для матрицы потенциала
+          </Typography>
+        </Box>
+      )}
 
       <Box sx={{ mt: 3, textAlign: "center" }}>
         <Link

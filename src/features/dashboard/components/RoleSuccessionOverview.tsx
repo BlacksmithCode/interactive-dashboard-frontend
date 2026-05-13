@@ -87,7 +87,7 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
         {/* Левая часть: гистограммы */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            Критические роли
+            Критичные роли
           </Typography>
           <HorizontalBar
             label="Руководителей"
@@ -109,7 +109,7 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
           />
 
           <Typography variant="subtitle1" sx={{ mt: 4, mb: 1 }}>
-            Некритические роли
+            Некритичные роли
           </Typography>
           <HorizontalBar
             label="Руководителей"
@@ -131,10 +131,10 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
           />
         </Grid>
 
-        {/* Правая часть: таблица критических должностей */}
+        {/* Правая часть: таблица критичных должностей */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="h6" gutterBottom>
-            Критические должности
+            Критичные должности
           </Typography>
           <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
             <Table size="small">

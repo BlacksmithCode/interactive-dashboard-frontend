@@ -50,6 +50,11 @@ export function DomainInsightsPanel({
     return { totalWith, totalWithout };
   }, [filteredGist]);
 
+  const pieData = [
+  { id: "with", value: chartData.totalWith || 0, color: theme.palette.success.main },
+  { id: "without", value: chartData.totalWithout || 0, color: theme.palette.error.light },
+  ];
+
   return (
     <Card variant="outlined" sx={{ mb: 4 }}>
       <Grid container spacing={3} sx={{ p: 3 }}>
@@ -130,7 +135,7 @@ export function DomainInsightsPanel({
               <Box sx={{ textAlign: 'center', minWidth: 50 }}>
                 <Typography variant="body2" color="text.secondary" />
                 <Typography variant="h6" sx={{ color: theme.palette.error.main, fontWeight: 'bold' }}>
-                  {chartData.totalWithout > 0
+                  {chartData.totalWith + chartData.totalWithout > 0
                     ? Math.round((chartData.totalWithout / (chartData.totalWith + chartData.totalWithout)) * 100)
                     : 0}%
                 </Typography>
@@ -138,10 +143,7 @@ export function DomainInsightsPanel({
               <Box sx={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                 <PieChart
                   series={[{
-                    data: [
-                      { id: "with", value: chartData.totalWith, color: theme.palette.success.main },
-                      { id: "without", value: chartData.totalWithout, color: theme.palette.error.light },
-                    ],
+                    data: pieData,
                     innerRadius: 60,
                     outerRadius: 80,
                   }]}
@@ -152,7 +154,7 @@ export function DomainInsightsPanel({
               <Box sx={{ textAlign: 'center', minWidth: 50 }}>
                 <Typography variant="body2" color="text.secondary" />
                 <Typography variant="h6" sx={{ color: theme.palette.success.main, fontWeight: 'bold' }}>
-                  {chartData.totalWithout > 0
+                  {chartData.totalWith + chartData.totalWithout > 0
                     ? Math.round((chartData.totalWith / (chartData.totalWith + chartData.totalWithout)) * 100)
                     : 0}%
                 </Typography>
