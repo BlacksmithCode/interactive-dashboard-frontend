@@ -24,6 +24,7 @@ import { useManagerDetailQuery } from "../../features/dashboard/hooks/useManager
 import { GradeFilterInput } from "../../features/dashboard/components/GradeFilterInput";
 import { useDomainGistQuery } from "../../features/dashboard/hooks/useDomainGistQuery";
 import type { ManagerListItem, Successor } from "../../types/dashboard";
+import { gridLocaleRu } from "../../locales/gridLocaleRu";
 
 const capitalizeFirstLetter = (str: string) => {
   if (!str) return str;
@@ -391,6 +392,7 @@ export default function LeadersSuccessors() {
           getRowClassName={getRowClassName}
           onRowClick={handleRowClick}
           pageSizeOptions={[10, 25, 50]}
+          localeText={gridLocaleRu}
           initialState={{
             pagination: { paginationModel: { pageSize: 25 } },
           }}
@@ -483,6 +485,7 @@ export default function LeadersSuccessors() {
                 columns={teamColumns}
                 getRowId={(row) => row.fullName}
                 pageSizeOptions={[5, 10]}
+                localeText={gridLocaleRu }
                 initialState={{
                   pagination: { paginationModel: { pageSize: 5 } },
                 }}
@@ -514,6 +517,7 @@ export default function LeadersSuccessors() {
                 columns={successorColumns}
                 getRowId={(row) => `${row.fullName}_${row.queue}`}
                 pageSizeOptions={[5, 10]}
+                localeText={gridLocaleRu}
                 initialState={{
                   pagination: { paginationModel: { pageSize: 5 } },
                 }}
