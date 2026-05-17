@@ -17,10 +17,10 @@ compile:
   only:
     - merge_requests
     - main
-    - /^feature\/.*/
+    - /^feat\/.*/
     - /^fix\/.*/
     - /^hotfix\/.*/
-    - /^refactor\/.*/
+    - /^chore\/.*/
 
 # 2. Сборка 
 build:
