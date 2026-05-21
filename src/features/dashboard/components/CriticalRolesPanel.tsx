@@ -2,8 +2,7 @@ import { useMemo } from "react";
 import { gridLocaleRu } from "../../../locales/gridLocaleRu";
 import { Box, Typography, Alert, Button } from "@mui/material";
 import { DataGrid, type GridColDef, type GridRowParams } from "@mui/x-data-grid";
-import { useLeadersQuery } from "../hooks/useLeadersQuery";
-import { useDashboardFilters } from "../hooks/useDashboardFilters";
+import { useLeadersQuery, useDashboardFilters } from "../hooks";
 import type { ManagerListItem } from "../../../types/dashboard";
 
 const columns: GridColDef<ManagerListItem>[] = [

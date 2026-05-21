@@ -30,13 +30,23 @@ function normalizeError(error: AxiosError<ApiErrorResponse>): NormalizedError {
 // в production — из переменной окружения.
 const baseURL = import.meta.env.PROD && import.meta.env.VITE_API_BASE_URL
   ? import.meta.env.VITE_API_BASE_URL
-  : "";   // в dev‑режиме запросы идут через прокси Vite, который настроен на /api → http://10.10.146.56:8080
+  : "";
 
 export const api = axios.create({
   baseURL,
   timeout: 15_000,
   headers: { "Content-Type": "application/json" },
 });
+
+// ─── Обработчик неавторизованного доступа (401) ──────────────────────────
+// Позволяет внешнему коду (AuthProvider) подписаться на события 401,
+// не создавая жёсткой связки apiClient с роутингом или React-контекстом.
+let onUnauthorizedHandler: (() => void) | null = null;
+
+/** Установить callback для обработки 401 (вызывается из AuthProvider) */
+export function setOnUnauthorizedHandler(handler: (() => void) | null) {
+  onUnauthorizedHandler = handler;
+}
 
 // Перехватчик запросов — добавляем Basic Auth заголовок
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
@@ -53,9 +63,9 @@ api.interceptors.response.use(
   (error: AxiosError<ApiErrorResponse>) => {
     const normalized = normalizeError(error);
 
-    // Централизованная обработка 401
+    // Централизованная обработка 401 через внешний callback
     if (normalized.statusCode === 401) {
-      window.location.href = "/login";
+      onUnauthorizedHandler?.();
     }
 
     return Promise.reject(normalized);

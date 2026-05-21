@@ -2,8 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
-import SummaryStats from "./pages/panels/SummaryStats";
-import LeadersSuccessors from "./pages/panels/LeadersSuccessors";
+import { SummaryStats, LeadersSuccessors } from "./features/dashboard/widgets";
 import Login from "./pages/Login";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 

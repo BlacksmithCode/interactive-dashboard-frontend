@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { Grid, TextField, MenuItem } from "@mui/material";
-import { useDashboardFilters } from "../hooks/useDashboardFilters";
-import { useDomainGistQuery } from "../hooks/useDomainGistQuery";
+import { useDashboardFilters, useDomainGistQuery } from "../hooks";
 import { GradeFilterInput } from "./GradeFilterInput";
 
 interface FiltersBarProps {
