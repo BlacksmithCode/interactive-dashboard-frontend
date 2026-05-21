@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { gridLocaleRu } from "../../../locales/gridLocaleRu";
 import { Box, Typography, Alert, Button } from "@mui/material";
 import { DataGrid, type GridColDef, type GridRowParams } from "@mui/x-data-grid";
 import { useLeadersQuery } from "../hooks/useLeadersQuery";
@@ -63,6 +64,7 @@ export function CriticalRolesPanel() {
           getRowId={(row) => row.fullName}
           getRowClassName={getRowClassName}
           pageSizeOptions={[10, 25, 50]}
+          localeText={gridLocaleRu}
           initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
           sx={{
             "& .critical-row--no-successor": {

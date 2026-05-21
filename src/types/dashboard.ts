@@ -89,3 +89,13 @@ export interface DomainGistDto {
   managersWithSuccessors: number;
   managersWithoutSuccessors: number;
 }
+
+export interface TeamMemberDto {
+  fullName: string;
+  grade?: number;        
+  assessment360?: string;
+  performance?: string;
+  potential?: string;
+  era?: string;
+  developmentProgram?: string;
+}

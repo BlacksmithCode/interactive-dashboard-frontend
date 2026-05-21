@@ -9,7 +9,7 @@ export function useManagerDetailQuery(fullName: string | undefined) {
     queryFn: async () => {
       if (!fullName) throw new Error("fullName is required");
       const { data } = await api.get<ManagerDetail>(
-        `/api/managers/${encodeURIComponent(fullName)}`
+        `/api/employees/${encodeURIComponent(fullName)}`
       );
       return data;
     },

@@ -4,7 +4,7 @@ import type { ManagerListItem } from "../../../types/dashboard";
 
 /**
  * Хук для получения команды руководителя по его полному имени.
- * Эндпоинт: /api/managers/{fullName}/team
+ * Эндпоинт: /api/employees/{fullName}/team
  */
 export function useTeamQuery(fullName: string | undefined) {
   return useQuery<ManagerListItem[]>({
@@ -12,7 +12,7 @@ export function useTeamQuery(fullName: string | undefined) {
     queryFn: async () => {
       if (!fullName) return [];
       const { data } = await api.get<ManagerListItem[]>(
-        `/api/managers/${encodeURIComponent(fullName)}/team`
+        `/api/employees/${encodeURIComponent(fullName)}/team`
       );
       return data;
     },
