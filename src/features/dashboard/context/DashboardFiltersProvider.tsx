@@ -1,13 +1,32 @@
 import { useState, useCallback, useMemo, type ReactNode } from "react";
 import { DashboardFiltersContext, type DashboardFiltersState } from "./DashboardFiltersContext";
-import { useDomainGistQuery } from "../hooks/useDomainGistQuery";
+import { useDomainGistQuery, useManagerMeta } from "../hooks";
 
-export function DashboardFiltersProvider({ children }: { children: ReactNode }) {
-  const [gradeMin, setGradeMinRaw] = useState<number | undefined>(undefined);
-  const [domain, setDomainRaw] = useState<string | undefined>(undefined);
+export interface DashboardFiltersProviderProps {
+  children: ReactNode;
+  /** Начальное значение gradeMin (из URL-параметров) */
+  initialGradeMin?: number;
+  /** Начальное значение domain (из URL-параметров) */
+  initialDomain?: string;
+}
+
+export function DashboardFiltersProvider({
+  children,
+  initialGradeMin,
+  initialDomain,
+}: DashboardFiltersProviderProps) {
+  const [gradeMin, setGradeMinRaw] = useState<number | undefined>(initialGradeMin);
+  const [domain, setDomainRaw] = useState<string | undefined>(initialDomain);
 
   const { data: domainGist = [] } = useDomainGistQuery({ gradeMin });
 
+  // Метаданные из useManagerMeta (единый источник для minGrade, maxGrade, availableDomains)
+  const {
+    minGrade,
+    maxGrade,
+  } = useManagerMeta();
+
+  // Домены из domainGist (зависят от выбранного gradeMin)
   const availableDomains = useMemo(
     () => [...new Set(domainGist.map((d) => d.domain))].sort(),
     [domainGist]
@@ -34,6 +53,10 @@ export function DashboardFiltersProvider({ children }: { children: ReactNode }) 
     },
     setGradeMin,
     setDomain,
+    // Метаданные для UI
+    minGrade,
+    maxGrade,
+    availableDomains,
   };
 
   return (

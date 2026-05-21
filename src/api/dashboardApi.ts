@@ -1,2 +1,1 @@
-export { fetchStats, fetchNineBox } from "./endpoints/dashboardEndpoints";
-export { fetchLeaders, fetchManagerSuccessors, fetchDomainGist } from "./adapters/httpAdapter";
+export { fetchStats, fetchNineBox, fetchLeaders, fetchManagerSuccessors, fetchDomainGist } from "./adapters/httpAdapter";

@@ -8,6 +8,7 @@ interface GradeFilterInputProps {
   minPossibleGrade?: number;
   maxPossibleGrade?: number;
   label?: string;
+  autoSetDefault?: boolean;
 }
 
 export const GradeFilterInput = memo(function GradeFilterInput({
@@ -17,11 +18,14 @@ export const GradeFilterInput = memo(function GradeFilterInput({
   minPossibleGrade,
   maxPossibleGrade,
   label,
+  autoSetDefault = true,
 }: GradeFilterInputProps) {
   const fallbackGrade = minPossibleGrade ?? defaultMinGrade;
 
   const [input, setInput] = useState<string>(
-    value !== undefined ? value.toString() : (fallbackGrade?.toString() ?? "")
+    value !== undefined 
+      ? value.toString() 
+      : (autoSetDefault && fallbackGrade !== undefined ? fallbackGrade.toString() : "")
   );
   const [error, setError] = useState("");
   const lastEmittedValue = useRef(value);
@@ -29,21 +33,21 @@ export const GradeFilterInput = memo(function GradeFilterInput({
   const hadFocus = useRef(false);
 
   useEffect(() => {
-    if (value === undefined && fallbackGrade !== undefined) {
+    if (autoSetDefault && value === undefined && fallbackGrade !== undefined) {
       setInput(fallbackGrade.toString());
       onChange(fallbackGrade);
       lastEmittedValue.current = fallbackGrade;
     }
-  }, [fallbackGrade, value, onChange]);
+  }, [autoSetDefault, fallbackGrade, value, onChange]);
 
   useEffect(() => {
     if (value !== lastEmittedValue.current) {
-      const newVal = value !== undefined ? value.toString() : (fallbackGrade?.toString() ?? "");
+      const newVal = value !== undefined ? value.toString() : "";
       setInput(newVal);
       setError("");
       lastEmittedValue.current = value;
     }
-  }, [value, fallbackGrade]);
+  }, [value]);
 
   useEffect(() => {
     if (hadFocus.current && inputRef.current) {
@@ -57,12 +61,17 @@ export const GradeFilterInput = memo(function GradeFilterInput({
     if (raw === "") {
       setInput("");
       setError("");
-      if (fallbackGrade !== undefined) {
-        onChange(fallbackGrade);
-        lastEmittedValue.current = fallbackGrade;
+      if (autoSetDefault && fallbackGrade !== undefined) {
+        setInput(fallbackGrade.toString());
+        if (lastEmittedValue.current !== fallbackGrade) {
+          onChange(fallbackGrade);
+          lastEmittedValue.current = fallbackGrade;
+        }
       } else {
-        onChange(undefined);
-        lastEmittedValue.current = undefined;
+        if (lastEmittedValue.current !== undefined) {
+          onChange(undefined);
+          lastEmittedValue.current = undefined;
+        }
       }
       return;
     }
@@ -100,12 +109,20 @@ export const GradeFilterInput = memo(function GradeFilterInput({
     hadFocus.current = false;
 
     // Коррекция выхода за границы при потере фокуса
-    if (input === "" && fallbackGrade !== undefined) {
-      setInput(fallbackGrade.toString());
-      setError("");
-      if (lastEmittedValue.current !== fallbackGrade) {
-        onChange(fallbackGrade);
-        lastEmittedValue.current = fallbackGrade;
+    if (input === "") {
+      if (autoSetDefault && fallbackGrade !== undefined) {
+        setInput(fallbackGrade.toString());
+        setError("");
+        if (lastEmittedValue.current !== fallbackGrade) {
+          onChange(fallbackGrade);
+          lastEmittedValue.current = fallbackGrade;
+        }
+      } else {
+        // Оставляем пустым, onChange не вызываем, если значение уже undefined
+        if (lastEmittedValue.current !== undefined) {
+          onChange(undefined);
+          lastEmittedValue.current = undefined;
+        }
       }
       return;
     }

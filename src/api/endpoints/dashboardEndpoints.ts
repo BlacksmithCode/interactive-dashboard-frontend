@@ -1,1 +1,0 @@
-export { fetchStats, fetchNineBox, fetchLeaders, fetchManagerSuccessors } from "../adapters/httpAdapter";

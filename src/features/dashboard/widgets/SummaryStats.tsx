@@ -1,16 +1,19 @@
 import { useNavigate } from "react-router-dom";
 import { Box, Alert, Button, LinearProgress, Link, Typography } from "@mui/material";
-import { useDashboardFilters } from "../../features/dashboard/hooks/useDashboardFilters";
-import { useStatsQuery } from "../../features/dashboard/hooks/useStatsQuery";
-import { useNineBoxQuery } from "../../features/dashboard/hooks/useNineBoxQuery";
-import { useMergedCells } from "../../features/dashboard/hooks/useMergedCells";
-import { useLeadersQuery } from "../../features/dashboard/hooks/useLeadersQuery";
-import { RoleSuccessionOverview } from "../../features/dashboard/components/RoleSuccessionOverview";
-import { NineBoxMatrix } from "../../features/dashboard/components/NineBoxMatrix";
-import { SummaryStatsSkeleton } from "../../features/dashboard/components/LoadingSkeleton";
-import { DomainInsightsPanel } from "../../features/dashboard/components/DomainInsightsPanel";
-import { DashboardFiltersProvider } from "../../features/dashboard/context/DashboardFiltersProvider";
-import { useMemo } from "react";
+import {
+  useDashboardFilters,
+  useStatsQuery,
+  useNineBoxQuery,
+  useMergedCells,
+  useLeadersQuery,
+} from "../hooks";
+import {
+  RoleSuccessionOverview,
+  NineBoxMatrix,
+  SummaryStatsSkeleton,
+  DomainInsightsPanel,
+} from "../components";
+import { DashboardFiltersProvider } from "../context/DashboardFiltersProvider";
 
 export default function SummaryStats() {
   return (
@@ -22,27 +25,16 @@ export default function SummaryStats() {
 
 function SummaryStatsContent() {
   const navigate = useNavigate();
-  const { filters } = useDashboardFilters();  // убрали setGradeMin
+  const { filters, minGrade, maxGrade } = useDashboardFilters();
   const { data: stats, isLoading: sLoading, isError: sError, refetch: refetchStats } = useStatsQuery(filters);
   const { data: nineBox, isLoading: nLoading, isError: nError, refetch: refetchNineBox } = useNineBoxQuery(filters);
   const mergedCells = useMergedCells(nineBox);
 
-  const { data: allManagers } = useLeadersQuery({});
-  const { data: criticalLeaders = [] } = useLeadersQuery({ 
-    critical: true, 
-    gradeMin: filters.gradeMin, 
-    domain: filters.domain 
+  const { data: criticalLeaders = [] } = useLeadersQuery({
+    critical: true,
+    gradeMin: filters.gradeMin,
+    domain: filters.domain,
   });
-
-  const minGrade = useMemo(() => {
-    if (!allManagers || allManagers.length === 0) return undefined;
-    return Math.min(...allManagers.map((m) => m.grade));
-  }, [allManagers]);
-
-  const maxGrade = useMemo(() => {
-    if (!allManagers || allManagers.length === 0) return undefined;
-    return Math.max(...allManagers.map((m) => m.grade));
-  }, [allManagers]);
 
   if (!stats && !nineBox && (sLoading || nLoading)) {
     return <SummaryStatsSkeleton />;
@@ -80,13 +72,12 @@ function SummaryStatsContent() {
 
       <DomainInsightsPanel
         totalManagers={totalManagers}
-        defaultMinGrade={minGrade}
         minPossibleGrade={minGrade}
         maxPossibleGrade={maxGrade}
       />
 
       {stats && (
-        <RoleSuccessionOverview 
+        <RoleSuccessionOverview
           stats={stats}
           criticalLeaders={criticalLeaders}
           totalManagers={totalManagers}

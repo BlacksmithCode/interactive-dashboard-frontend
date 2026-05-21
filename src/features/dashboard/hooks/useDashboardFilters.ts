@@ -1,16 +1,12 @@
 import { useContext } from "react";
 import { DashboardFiltersContext } from "../context/DashboardFiltersContext";
-import type { DashboardFilters } from "../../../types/dashboard";
+import type { DashboardFiltersState } from "../context/DashboardFiltersContext";
 
 /**
  * Хук доступа к фильтрам дашборда.
- * Предоставляет текущие фильтры и сеттеры из DashboardFiltersContext.
+ * Предоставляет текущие фильтры, сеттеры и метаданные (minGrade, maxGrade, availableDomains).
  */
-export function useDashboardFilters(): {
-  filters: DashboardFilters;
-  setGradeMin: (value: number | undefined) => void;
-  setDomain: (value: string | undefined) => void;
-} {
+export function useDashboardFilters(): DashboardFiltersState {
   const ctx = useContext(DashboardFiltersContext);
   if (!ctx) {
     throw new Error(

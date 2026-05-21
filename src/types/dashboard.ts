@@ -71,16 +71,17 @@ export interface ManagerDetail {
 /** Преемник (с /api/managers/{fullName}/successors) */
 export interface Successor {
   fullName: string;
-  queue: number;
+  grade: string;
   assessment360: string;
   performance: string;
   potential: string;
   era: string;
   developmentProgram: string;
+  successorStatus: string,
+  readiness: string,
   isApproved: boolean;
   approvedBy: string;
   approvalDate: string;
-  declarantFullName: string; // вместо declarant
 }
 
 
@@ -92,7 +93,7 @@ export interface DomainGistDto {
 
 export interface TeamMemberDto {
   fullName: string;
-  grade?: number;        
+  grade?: string;        
   assessment360?: string;
   performance?: string;
   potential?: string;

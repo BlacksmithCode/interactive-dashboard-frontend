@@ -3,32 +3,24 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { PieChart } from "@mui/x-charts/PieChart";
-import { useDashboardFilters } from "../hooks/useDashboardFilters";
-import { useDomainGistQuery } from "../hooks/useDomainGistQuery";
+import { useDashboardFilters, useDomainGistQuery } from "../hooks";
 import { useMemo } from "react";
 import { GradeFilterInput } from "./GradeFilterInput";
 
 interface DomainInsightsPanelProps {
   totalManagers: number;
-  defaultMinGrade?: number;
   minPossibleGrade?: number;
   maxPossibleGrade?: number;
 }
 
 export function DomainInsightsPanel({
   totalManagers,
-  defaultMinGrade,
   minPossibleGrade,
   maxPossibleGrade,
 }: DomainInsightsPanelProps) {
   const theme = useTheme();
-  const { filters, setGradeMin, setDomain } = useDashboardFilters();
+  const { filters, setGradeMin, setDomain, availableDomains } = useDashboardFilters();
   const { data: gist, isLoading, isError } = useDomainGistQuery({ gradeMin: filters.gradeMin });
-
-  const availableDomains = useMemo(() => {
-    if (!gist) return [];
-    return [...new Set(gist.map((d) => d.domain))].sort();
-  }, [gist]);
 
   const filteredGist = useMemo(() => {
     if (!gist) return [];
@@ -64,11 +56,11 @@ export function DomainInsightsPanel({
             <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 1 }}>
               Всего руководителей ≥ грейда
             </Typography>
-            {defaultMinGrade !== undefined ? (
+            {minPossibleGrade !== undefined ? (
               <GradeFilterInput
                 value={filters.gradeMin}
                 onChange={setGradeMin}
-                defaultMinGrade={defaultMinGrade}
+                defaultMinGrade={minPossibleGrade}
                 minPossibleGrade={minPossibleGrade}
                 maxPossibleGrade={maxPossibleGrade}
               />
