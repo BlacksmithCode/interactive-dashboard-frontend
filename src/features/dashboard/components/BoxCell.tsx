@@ -119,16 +119,17 @@ export function BoxCell({
           flexDirection: "column",
           textAlign: "center",
           cursor: "help",
+          color: "white",
         }}
       >
         <CardContent sx={{ flexGrow: 1, p: 1, display: "flex", flexDirection: "column" }}>
-          <Typography variant="caption" sx={{ alignSelf: "flex-start", fontWeight: "bold" }}>
+          <Typography variant="caption" sx={{ alignSelf: "flex-start", fontWeight: "bold", color: "white" }}>
             {code.replace("_", " + ")}
           </Typography>
-          <Typography variant="subtitle2" sx={{ mt: 0.5, fontWeight: "bold" }}>
+          <Typography variant="subtitle2" sx={{ mt: 0.5, fontWeight: "bold", color: "white" }}>
             {meta.label}
           </Typography>
-          <Typography variant="caption" sx={{ mb: 0.5 }}>
+          <Typography variant="caption" sx={{ mb: 0.5, color: "white" }}>
             {meta.description}
           </Typography>
           <Box sx={{ mt: "auto", display: "flex", justifyContent: "space-between" }}>
@@ -147,7 +148,7 @@ export function BoxCell({
                 <Box
                   sx={{
                     borderLeft: "1px solid",
-                    borderColor: "divider",
+                    borderColor: "white",
                     pl: 1,
                     display: "flex",
                     flexDirection: "column",

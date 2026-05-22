@@ -17,17 +17,17 @@ export const boxMeta = {
 
 /** Цвета фона для каждой объединённой ячейки */
 export const categoryColor = {
-  AD_AE: "#ffe0b2", // оранжевый
-  AC:    "#c8e6c9",
-  AA_AB: "#c8e6c9", // зелёный
+  AD_AE: "#ff953f", // оранжевый
+  AC:    "#2f9d76",
+  AA_AB: "#2f9d76", // зелёный
 
-  BD_BE: "#ffcdd2",
-  BC:    "#ffe0b2",
-  BA_BB: "#c8e6c9",
+  BD_BE: "#ee5d48",
+  BC:    "#ff953f",
+  BA_BB: "#2f9d76",
 
-  CD_CE: "#ffcdd2", // красный
-  CB_CC: "#ffcdd2",
-  CA:    "#ffe0b2",
+  CD_CE: "#ee5d48", // красный
+  CB_CC: "#ee5d48",
+  CA:    "#ff953f",
 } as const satisfies Record<MergedKey, string>;
 
 /** Порядок ячеек для рендеринга матрицы 3×3 */
