@@ -1,5 +1,13 @@
 import { useState, useRef, useEffect, memo } from "react";
-import { TextField, Tooltip } from "@mui/material";
+import {
+  TextField,
+  IconButton,
+  Tooltip,
+  InputAdornment,
+  Box,
+} from "@mui/material";
+import { KeyboardArrowUp, KeyboardArrowDown } from "@mui/icons-material";
+import type { SxProps, Theme } from "@mui/material";
 
 interface GradeFilterInputProps {
   value: number | undefined;
@@ -9,6 +17,7 @@ interface GradeFilterInputProps {
   maxPossibleGrade?: number;
   label?: string;
   autoSetDefault?: boolean;
+  sx?: SxProps<Theme>;
 }
 
 export const GradeFilterInput = memo(function GradeFilterInput({
@@ -17,44 +26,40 @@ export const GradeFilterInput = memo(function GradeFilterInput({
   defaultMinGrade,
   minPossibleGrade,
   maxPossibleGrade,
-  label,
+  label = "Грейд",
   autoSetDefault = true,
+  sx,
 }: GradeFilterInputProps) {
   const fallbackGrade = minPossibleGrade ?? defaultMinGrade;
 
   const [input, setInput] = useState<string>(
-    value !== undefined 
-      ? value.toString() 
-      : (autoSetDefault && fallbackGrade !== undefined ? fallbackGrade.toString() : "")
+    value !== undefined
+      ? value.toString()
+      : autoSetDefault && fallbackGrade !== undefined
+      ? fallbackGrade.toString()
+      : ""
   );
   const [error, setError] = useState("");
   const lastEmittedValue = useRef(value);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const hadFocus = useRef(false);
 
-  useEffect(() => {
-    if (autoSetDefault && value === undefined && fallbackGrade !== undefined) {
-      setInput(fallbackGrade.toString());
-      onChange(fallbackGrade);
-      lastEmittedValue.current = fallbackGrade;
+  const applyValue = (num: number | undefined) => {
+    if (num === undefined) {
+      setInput("");
+      onChange(undefined);
+      lastEmittedValue.current = undefined;
+      return;
     }
-  }, [autoSetDefault, fallbackGrade, value, onChange]);
-
-  useEffect(() => {
-    if (value !== lastEmittedValue.current) {
-      const newVal = value !== undefined ? value.toString() : "";
-      setInput(newVal);
-      setError("");
-      lastEmittedValue.current = value;
-    }
-  }, [value]);
-
-  useEffect(() => {
-    if (hadFocus.current && inputRef.current) {
-      const timer = setTimeout(() => inputRef.current?.focus(), 0);
-      return () => clearTimeout(timer);
-    }
-  });
+    let clamped = num;
+    if (minPossibleGrade !== undefined && clamped < minPossibleGrade) clamped = minPossibleGrade;
+    if (maxPossibleGrade !== undefined && clamped > maxPossibleGrade) clamped = maxPossibleGrade;
+    const str = clamped.toString();
+    setInput(str);
+    onChange(clamped);
+    lastEmittedValue.current = clamped;
+    setError("");
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
@@ -62,16 +67,9 @@ export const GradeFilterInput = memo(function GradeFilterInput({
       setInput("");
       setError("");
       if (autoSetDefault && fallbackGrade !== undefined) {
-        setInput(fallbackGrade.toString());
-        if (lastEmittedValue.current !== fallbackGrade) {
-          onChange(fallbackGrade);
-          lastEmittedValue.current = fallbackGrade;
-        }
+        applyValue(fallbackGrade);
       } else {
-        if (lastEmittedValue.current !== undefined) {
-          onChange(undefined);
-          lastEmittedValue.current = undefined;
-        }
+        applyValue(undefined);
       }
       return;
     }
@@ -107,41 +105,38 @@ export const GradeFilterInput = memo(function GradeFilterInput({
 
   const handleBlur = () => {
     hadFocus.current = false;
-
-    // Коррекция выхода за границы при потере фокуса
     if (input === "") {
       if (autoSetDefault && fallbackGrade !== undefined) {
-        setInput(fallbackGrade.toString());
-        setError("");
-        if (lastEmittedValue.current !== fallbackGrade) {
-          onChange(fallbackGrade);
-          lastEmittedValue.current = fallbackGrade;
-        }
+        applyValue(fallbackGrade);
       } else {
-        // Оставляем пустым, onChange не вызываем, если значение уже undefined
-        if (lastEmittedValue.current !== undefined) {
-          onChange(undefined);
-          lastEmittedValue.current = undefined;
-        }
+        applyValue(undefined);
       }
       return;
     }
-
-    const raw = input.replace(/\D/g, "");
-    if (raw === "") return;
-
-    const num = Number(raw);
-    if (minPossibleGrade !== undefined && num < minPossibleGrade) {
-      setInput(String(minPossibleGrade));
-      setError("");
-      onChange(minPossibleGrade);
-      lastEmittedValue.current = minPossibleGrade;
-    } else if (maxPossibleGrade !== undefined && num > maxPossibleGrade) {
-      setInput(String(maxPossibleGrade));
-      setError("");
-      onChange(maxPossibleGrade);
-      lastEmittedValue.current = maxPossibleGrade;
+    const num = Number(input);
+    if (isNaN(num)) {
+      applyValue(undefined);
+      return;
     }
+    let clamped = num;
+    if (minPossibleGrade !== undefined && clamped < minPossibleGrade) clamped = minPossibleGrade;
+    if (maxPossibleGrade !== undefined && clamped > maxPossibleGrade) clamped = maxPossibleGrade;
+    if (clamped !== num) {
+      setError(clamped < num ? `Максимальный грейд: ${maxPossibleGrade}` : `Минимальный грейд: ${minPossibleGrade}`);
+    } else {
+      setError("");
+    }
+    applyValue(clamped);
+  };
+
+  const increment = () => {
+    const current = input !== "" ? Number(input) : (fallbackGrade ?? 0);
+    applyValue(current + 1);
+  };
+
+  const decrement = () => {
+    const current = input !== "" ? Number(input) : (fallbackGrade ?? 0);
+    applyValue(current - 1);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -154,6 +149,16 @@ export const GradeFilterInput = memo(function GradeFilterInput({
       inputRef.current?.blur();
       return;
     }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      increment();
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      decrement();
+      return;
+    }
     if (e.ctrlKey || e.metaKey) return;
     if (/^\d$/.test(e.key)) return;
     if (!allowedKeys.includes(e.key)) {
@@ -161,22 +166,98 @@ export const GradeFilterInput = memo(function GradeFilterInput({
     }
   };
 
-  return (
+  useEffect(() => {
+    if (autoSetDefault && value === undefined && fallbackGrade !== undefined) {
+      setInput(fallbackGrade.toString());
+      onChange(fallbackGrade);
+      lastEmittedValue.current = fallbackGrade;
+    }
+  }, [autoSetDefault, fallbackGrade, value, onChange]);
+
+  useEffect(() => {
+    if (value !== lastEmittedValue.current) {
+      const newVal = value !== undefined ? value.toString() : "";
+      setInput(newVal);
+      setError("");
+      lastEmittedValue.current = value;
+    }
+  }, [value]);
+
+  useEffect(() => {
+    if (hadFocus.current && inputRef.current) {
+      const timer = setTimeout(() => inputRef.current?.focus(), 0);
+      return () => clearTimeout(timer);
+    }
+  });
+
+return (
     <Tooltip title={error || ""} arrow open={!!error} placement="top">
       <TextField
-        label={label ?? "Грейд"}
+        label={label}
         type="number"
         value={input}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         onBlur={handleBlur}
+        onFocus={() => { hadFocus.current = true; }}
+        inputRef={inputRef}
         error={!!error}
         placeholder={fallbackGrade?.toString() ?? "без фильтра"}
         size="small"
-        sx={{ width: 100 }}
-        inputRef={inputRef}
-        onFocus={() => { hadFocus.current = true; }}
+        variant="outlined"
+        sx={{
+          backgroundColor: '#0088FF',
+          borderRadius: 1,
+          // Рамка поля
+          '& .MuiOutlinedInput-root': {
+            '& fieldset': {
+              borderColor: 'white',
+              borderWidth: '1px',
+            },
+            '&:hover fieldset': {
+              borderColor: 'white',
+              borderWidth: '1px',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: 'white',
+              borderWidth: '1px',
+            },
+          },
+          // Лейбл всегда белый
+          '& .MuiInputLabel-root': {
+            color: 'white',
+            '&.Mui-focused': {
+              color: 'white',
+            },
+          },
+          // Текст внутри поля
+          '& .MuiInputBase-input': {
+            color: 'white',
+          },
+          // Убираем стандартные стрелки для number
+          '& input[type="number"]': {
+            MozAppearance: 'textfield',
+            '&::-webkit-inner-spin-button, &::-webkit-outer-spin-button': {
+              display: 'none',
+            },
+          },
+          ...sx,
+        }}
         slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <Box sx={{ display: "flex", flexDirection: "column", ml: 0.5 }}>
+                  <IconButton size="small" onClick={increment} sx={{ p: 0.25, height: 20, width: 20, color: 'white' }}>
+                    <KeyboardArrowUp fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" onClick={decrement} sx={{ p: 0.25, height: 20, width: 20, color: 'white' }}>
+                    <KeyboardArrowDown fontSize="small" />
+                  </IconButton>
+                </Box>
+              </InputAdornment>
+            ),
+          },
           htmlInput: {
             inputMode: "numeric",
             pattern: "[0-9]*",
@@ -184,8 +265,8 @@ export const GradeFilterInput = memo(function GradeFilterInput({
             max: maxPossibleGrade ?? undefined,
             onPaste: (e: React.ClipboardEvent<HTMLInputElement>) => {
               e.preventDefault();
-              const pasted = e.clipboardData.getData('text');
-              const cleaned = pasted.replace(/\D/g, '');
+              const pasted = e.clipboardData.getData("text");
+              const cleaned = pasted.replace(/\D/g, "");
               if (cleaned) {
                 const num = Number(cleaned);
                 let finalValue = cleaned;
@@ -194,21 +275,15 @@ export const GradeFilterInput = memo(function GradeFilterInput({
                 } else if (maxPossibleGrade !== undefined && num > maxPossibleGrade) {
                   finalValue = String(maxPossibleGrade);
                 }
-                setInput(finalValue);
-                onChange(Number(finalValue));
-                lastEmittedValue.current = Number(finalValue);
+                applyValue(Number(finalValue));
               } else {
                 if (fallbackGrade !== undefined) {
-                  setInput(fallbackGrade.toString());
-                  onChange(fallbackGrade);
-                  lastEmittedValue.current = fallbackGrade;
+                  applyValue(fallbackGrade);
                 } else {
-                  setInput('');
-                  onChange(undefined);
-                  lastEmittedValue.current = undefined;
+                  applyValue(undefined);
                 }
               }
-            }
+            },
           },
         }}
       />

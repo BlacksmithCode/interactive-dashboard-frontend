@@ -1,8 +1,8 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Card, CardContent } from "@mui/material";
 import { rowsOrder, potentialLabels, performanceLabels } from "../config/nineBoxMeta";
 import { BoxCell } from "./BoxCell";
 import type { MergedCells } from "../hooks/useMergedCells";
-import { MERGE_RULES } from "../hooks/useMergedCells"; // <-- добавляем импорт
+import { MERGE_RULES } from "../hooks/useMergedCells";
 import type { NineBoxResponse } from "../../../types/dashboard";
 
 interface NineBoxMatrixProps {
@@ -17,64 +17,95 @@ export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
   );
 
   return (
-    <Box sx={{ mt: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        Матрица потенциала
-      </Typography>
-      <Box sx={{ display: "flex", pl: "80px" }}>
-        <Box sx={{ flex: 1, textAlign: "center" }}>
+    <Box sx={{ p: 2, borderRadius: 2, color: "white" }}>
+      {/* Внешняя сетка 2x2 */}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "80px 1fr",
+          gridTemplateRows: "auto 1fr",
+          gap: 1,
+        }}
+      >
+        {/* Левая верхняя – пустая */}
+        <Box />
+
+        {/* Правая верхняя – заголовок Результативности */}
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
           <Typography variant="caption" sx={{ fontWeight: "bold" }}>
             Результативность (вторая оценка) →
           </Typography>
         </Box>
-      </Box>
-      <Box sx={{ display: "flex", alignItems: "stretch" }}>
+
+        {/* Левая нижняя – повёрнутый Потенциал, центрирован по вертикали */}
         <Box
           sx={{
-            width: "80px",
             display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
             alignItems: "center",
-            mr: 1,
+            justifyContent: "center",
           }}
         >
           <Typography
             variant="caption"
-            sx={{ fontWeight: "bold", transform: "rotate(-90deg)", whiteSpace: "nowrap" }}
+            sx={{
+              transform: "rotate(-90deg)",
+              whiteSpace: "nowrap",
+              fontWeight: "bold",
+            }}
           >
-            Потенциал (первая оценка)
+            Потенциал (первая оценка) →
           </Typography>
         </Box>
-        <Box sx={{ flex: 1 }}>
-          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, mb: 0.5 }}>
-            {performanceLabels.map((label) => (
-              <Typography key={label} variant="caption" align="center">
-                {label}
-              </Typography>
-            ))}
-          </Box>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            {rowsOrder.map((row, rowIndex) => (
-              <Box key={rowIndex} sx={{ display: "flex", alignItems: "stretch" }}>
-                <Box sx={{ width: "80px", display: "flex", alignItems: "center", mr: 1 }}>
-                  <Typography variant="caption">{potentialLabels[rowIndex]}</Typography>
-                </Box>
-                <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, width: "100%" }}>
-                  {row.map((code) => (
-                    <BoxCell
-                      key={code}
-                      code={code}
-                      {...mergedCells[code]}
-                      totalManagers={totalManagers}
-                      sourceKeys={MERGE_RULES[code]}
-                      rawCells={nineBox.cells}
-                    />
-                  ))}
-                </Box>
+
+        {/* Правая нижняя – внутренняя сетка 4x4 (4 колонки, 4 строки) */}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "80px repeat(3, minmax(0, 1fr))",
+            gridTemplateRows: "auto repeat(3, 1fr)",
+            gap: 1,
+          }}
+        >
+          {/* Первая строка: левая ячейка пустая, затем заголовки трёх колонок */}
+          <Box />
+          {performanceLabels.map((label) => (
+            <Card key={label} sx={{ bgcolor: "transparent", boxShadow: "none" }}>
+              <CardContent sx={{ p: 1, display: "flex", justifyContent: "center" }}>
+                <Typography variant="caption" sx={{ fontWeight: "bold", color: "white" }}>
+                  {label}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Три строки данных */}
+          {rowsOrder.map((row, rowIndex) => (
+            <>
+              {/* Левая ячейка строки – метка потенциала */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Typography variant="caption" sx={{ fontWeight: "bold", color: "white" }}>
+                  {potentialLabels[rowIndex]}
+                </Typography>
               </Box>
-            ))}
-          </Box>
+              {/* Три ячейки матрицы */}
+              {row.map((code) => (
+                <BoxCell
+                  key={code}
+                  code={code}
+                  {...mergedCells[code]}
+                  totalManagers={totalManagers}
+                  sourceKeys={MERGE_RULES[code]}
+                  rawCells={nineBox.cells}
+                />
+              ))}
+            </>
+          ))}
         </Box>
       </Box>
     </Box>
