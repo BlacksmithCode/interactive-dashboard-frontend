@@ -52,6 +52,12 @@ export function DomainInsightsPanel({
     return gist;
   }, [gist, filters.domain]);  
 
+  // Надежно собираем доступные домены, даже если они не пришли из общего контекста
+  const computedDomains = useMemo(() => {
+    const fromGist = gist ? gist.map(d => d.domain) : [];
+    return [...new Set([...(availableDomains || []), ...fromGist])].sort();
+  }, [gist, availableDomains]);
+
   const chartData = useMemo(() => {
     if (!filteredGist.length) {
       return { totalWith: 0, totalWithout: 0 };
@@ -107,7 +113,7 @@ export function DomainInsightsPanel({
               }}
             >
               <Typography variant="h2" sx={{ fontWeight: "bold", color: TEXT_COLOR }}>
-                {totalManagers}
+              {filters.domain ? (chartData.totalWith + chartData.totalWithout) : totalManagers}
               </Typography>
             </Box>
           </Box>
@@ -122,11 +128,14 @@ export function DomainInsightsPanel({
               labelId="domain-select-label"
               value={filters.domain ?? ''}
               label="Домен"
-              onChange={(e) => setDomain(e.target.value || undefined)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setDomain(val ? String(val) : undefined);
+            }}
               sx={selectSx}
               >
                 <MenuItem value="">Все домены</MenuItem>
-                {availableDomains.map((d) => (
+              {computedDomains.map((d) => (
                   <MenuItem key={d} value={d}>{d}</MenuItem>
                 ))}
               </Select>
@@ -152,6 +161,7 @@ export function DomainInsightsPanel({
             </Box>
           )}
         </Grid>
+        
 
         {/* Правый блок: кольцевая диаграмма на фоне CARD_BG */}
         <Grid size={{ xs: 12, md: 3 }}>
