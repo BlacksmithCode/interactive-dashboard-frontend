@@ -26,9 +26,15 @@ function getRowClassName(params: GridRowParams<ManagerListItem>): string {
 
 export function CriticalRolesPanel() {
   const { filters } = useDashboardFilters();
-  const queryParams = { critical: true, gradeMin: filters.gradeMin, domain: filters.domain };
+  // Убрали domain из запроса, фильтруем локально
+  const queryParams = { critical: true, gradeMin: filters.gradeMin };
 
-  const { data: leaders = [], isLoading, isError, refetch } = useLeadersQuery(queryParams);
+  const { data: fetchedLeaders = [], isLoading, isError, refetch } = useLeadersQuery(queryParams);
+
+  const leaders = useMemo(() => {
+    if (!filters.domain) return fetchedLeaders;
+    return fetchedLeaders.filter((l) => l.domain === filters.domain);
+  }, [fetchedLeaders, filters.domain]);
 
   const summary = useMemo(() => {
     const total = leaders.length;
@@ -69,6 +75,13 @@ export function CriticalRolesPanel() {
             "& .critical-row--no-successor": {
               backgroundColor: "rgba(255, 0, 0, 0.05)",
               "&:hover": { backgroundColor: "rgba(255, 0, 0, 0.1)" },
+            },
+            // Убираем синее выделение при клике
+            "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
+              outline: "none",
+            },
+            "& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within": {
+              outline: "none",
             },
           }}
         />

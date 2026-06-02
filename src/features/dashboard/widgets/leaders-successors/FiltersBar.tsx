@@ -11,6 +11,38 @@ import {
 } from "@mui/material";
 import { GradeFilterInput } from "../../components/GradeFilterInput";
 
+// Общие стили для полей фильтров (синий фон, белый текст и рамка)
+const commonFilterSx = {
+  backgroundColor: '#0088FF',
+  borderRadius: 1,
+  '& .MuiOutlinedInput-root': {
+    '& fieldset': {
+      borderColor: 'white',
+      borderWidth: '1px',
+    },
+    '&:hover fieldset': {
+      borderColor: 'white',
+      borderWidth: '1px',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: 'white',
+      borderWidth: '1px',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    color: 'white',
+    '&.Mui-focused': {
+      color: 'white',
+    },
+  },
+  '& .MuiInputBase-input, & .MuiSelect-select': {
+    color: 'white',
+  },
+  '& .MuiSvgIcon-root, & .MuiAutocomplete-clearIndicator, & .MuiAutocomplete-popupIndicator': {
+    color: 'white',
+  },
+};
+
 interface FiltersBarProps {
   filters: { gradeMin: number | undefined; domain: string | undefined };
   setGradeMin: (value: number | undefined) => void;
@@ -57,7 +89,14 @@ export const FiltersBar = ({
     <Stack
       direction={{ xs: "column", sm: "row" }}
       spacing={2}
-      sx={{ mb: 3, flexWrap: "wrap", alignItems: "center" }}
+      sx={{ 
+        mb: 3, 
+        flexWrap: "wrap", 
+        alignItems: "center",
+        backgroundColor: '#1DAFF7', // Задаем фон всей панели фильтров
+        p: 2,                       // Внутренние отступы, чтобы элементы не прилипали к краям фона
+        borderRadius: 2             // Скругление как у остальных карточек
+      }}
       useFlexGap
     >
       {/* Поле поиска по ФИО */}
@@ -100,7 +139,7 @@ export const FiltersBar = ({
           e.preventDefault();
         }}
         size="small"
-        sx={{ minWidth: 200 }}
+        sx={{ minWidth: 200, ...commonFilterSx }}
         clearIcon={searchName ? undefined : null}
         renderInput={(params) => (
           <TextField
@@ -139,7 +178,7 @@ export const FiltersBar = ({
           }
         }}
         size="small"
-        sx={{ minWidth: 200 }}
+        sx={{ minWidth: 200, ...commonFilterSx }}
         clearIcon={positionFilter ? undefined : null}
         renderInput={(params) => (
           <TextField {...params} label="Должность" inputRef={positionInputRef} />
@@ -161,7 +200,7 @@ export const FiltersBar = ({
         size="small"
         value={filters.domain ?? ""}
         onChange={(e) => setDomain(e.target.value || undefined)}
-        sx={{ minWidth: 160 }}
+        sx={{ minWidth: 160, ...commonFilterSx }}
       >
         <MenuItem value="">Все домены</MenuItem>
         {availableDomains.map((d) => (
@@ -170,7 +209,7 @@ export const FiltersBar = ({
           </MenuItem>
         ))}
       </TextField>
-      <FormControl size="small" sx={{ minWidth: 160 }}>
+      <FormControl size="small" sx={{ minWidth: 160, ...commonFilterSx }}>
         <InputLabel>Критичность</InputLabel>
         <Select
           value={criticalFilter === undefined ? "all" : criticalFilter.toString()}
@@ -185,7 +224,7 @@ export const FiltersBar = ({
           <MenuItem value="false">Некритичные</MenuItem>
         </Select>
       </FormControl>
-      <FormControl size="small" sx={{ minWidth: 160 }}>
+      <FormControl size="small" sx={{ minWidth: 160, ...commonFilterSx }}>
         <InputLabel>Преемник</InputLabel>
         <Select
           value={successorFilter === undefined ? "all" : successorFilter.toString()}
@@ -205,9 +244,18 @@ export const FiltersBar = ({
         variant="outlined"
         size="small"
         onClick={resetAllFilters}
-        sx={{ minWidth: 140 }}
+        sx={{ 
+          minWidth: 140,
+          backgroundColor: '#0088FF',
+          color: 'white',
+          borderColor: 'white',
+          '&:hover': {
+            backgroundColor: '#0077EE',
+            borderColor: 'white',
+          }
+        }}
       >
-        Сбросить фильтры
+        Сбросить
       </Button>
     </Stack>
   );
