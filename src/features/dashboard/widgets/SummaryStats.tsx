@@ -1,5 +1,6 @@
 //import { useNavigate } from "react-router-dom";
-import { Box, Alert, Button, LinearProgress, Typography, 
+import { useMemo } from "react";
+import { Box, Alert, LinearProgress, Typography, 
   Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import {
   useDashboardFilters,
@@ -7,6 +8,7 @@ import {
   useNineBoxQuery,
   useMergedCells,
   useLeadersQuery,
+  useDomainGistQuery,
 } from "../hooks";
 import {
   RoleSuccessionOverview,
@@ -28,17 +30,63 @@ export default function SummaryStats() {
 function SummaryStatsContent() {
 //  const navigate = useNavigate();
   const { filters, minGrade, maxGrade } = useDashboardFilters();
-  const { data: stats, isLoading: sLoading, isError: sError, refetch: refetchStats } = useStatsQuery(filters);
-  const { data: nineBox, isLoading: nLoading, isError: nError, refetch: refetchNineBox } = useNineBoxQuery(filters);
+  const { data: stats, isLoading: sLoading, isError: sError } = useStatsQuery(filters);
+  const { data: nineBox, isLoading: nLoading, isError: nError } = useNineBoxQuery(filters);
   const mergedCells = useMergedCells(nineBox);
 
-  const { data: criticalLeaders = [] } = useLeadersQuery({
+  // 1. Получаем список критичных руководителей (без учета домена, чтобы кэшировать всех)
+  const { data: criticalLeadersRaw = [] } = useLeadersQuery({
     critical: true,
     gradeMin: filters.gradeMin,
-    domain: filters.domain,
   });
 
-  if (!stats && !nineBox && (sLoading || nLoading)) {
+  // Локально фильтруем критичных руководителей по домену
+  const criticalLeaders = useMemo(() => {
+    if (!filters.domain) return criticalLeadersRaw;
+    return criticalLeadersRaw.filter((l) => l.domain === filters.domain);
+  }, [criticalLeadersRaw, filters.domain]);
+
+  // 2. Получаем общую статистику по доменам
+  const { data: gist } = useDomainGistQuery({ gradeMin: filters.gradeMin });
+
+  const domainTotals = useMemo(() => {
+    if (!gist) return null;
+    let currentGist = gist;
+    if (filters.domain) {
+      currentGist = gist.filter((d) => d.domain === filters.domain);
+    }
+    const totalWith = currentGist.reduce((sum, d) => sum + d.managersWithSuccessors, 0);
+    const totalWithout = currentGist.reduce((sum, d) => sum + d.managersWithoutSuccessors, 0);
+    return { totalWith, totalWithout, total: totalWith + totalWithout };
+  }, [gist, filters.domain]);
+
+  // 3. Вычисляем правильную статистику для RoleSuccessionOverview локально
+  const computedStats = useMemo(() => {
+    if (!stats) return undefined;
+    if (!filters.domain || !domainTotals) return stats;
+
+    const criticalTotal = criticalLeaders.length;
+    const criticalWith = criticalLeaders.filter(l => l.hasSuccessor).length;
+    const criticalWithout = criticalTotal - criticalWith;
+
+    const nonCriticalTotal = domainTotals.total - criticalTotal;
+    const nonCriticalWith = domainTotals.totalWith - criticalWith;
+    const nonCriticalWithout = domainTotals.totalWithout - criticalWithout;
+
+    return {
+      ...stats,
+      criticalRoles: criticalTotal,
+      criticalRolesWithSuccessors: criticalWith,
+      criticalRolesWithoutSuccessors: criticalWithout,
+      nonCriticalRoles: nonCriticalTotal > 0 ? nonCriticalTotal : 0,
+      nonCriticalRolesWithSuccessors: nonCriticalWith > 0 ? nonCriticalWith : 0,
+      nonCriticalRolesWithoutSuccessors: nonCriticalWithout > 0 ? nonCriticalWithout : 0,
+      managersWithSuccessors: domainTotals.totalWith,
+      managersWithoutSuccessors: domainTotals.totalWithout,
+    };
+  }, [stats, filters.domain, domainTotals, criticalLeaders]);
+
+  if (!computedStats && !nineBox && (sLoading || nLoading)) {
     return <SummaryStatsSkeleton />;
   }
 
@@ -46,19 +94,14 @@ function SummaryStatsContent() {
     return (
       <Alert
         severity="error"
-        action={
-          <Button color="inherit" size="small" onClick={() => { refetchStats(); refetchNineBox(); }}>
-            Повторить
-          </Button>
-        }
       >
         Ошибка загрузки данных
       </Alert>
     );
   }
 
-  const totalManagers = stats
-    ? stats.managersWithSuccessors + stats.managersWithoutSuccessors
+  const totalManagers = computedStats
+    ? computedStats.managersWithSuccessors + computedStats.managersWithoutSuccessors
     : 0;
 
   // Если нужна ссылка на список руководителей, раскомментируйте её ниже.
@@ -79,9 +122,9 @@ function SummaryStatsContent() {
         maxPossibleGrade={maxGrade}
       />
 
-      {stats && (
+      {computedStats && (
         <RoleSuccessionOverview
-          stats={stats}
+          stats={computedStats}
           criticalLeaders={criticalLeaders}
           totalManagers={totalManagers}
         />
