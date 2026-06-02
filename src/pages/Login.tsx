@@ -1,8 +1,11 @@
 // src/pages/Login.tsx
-import { useState, type FormEvent } from "react";
+import { useState, useContext, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import { TextField, Button, Box, Typography, Alert, Paper, AppBar, Toolbar } from "@mui/material";
+import { TextField, Button, Box, Typography, Alert, Paper, AppBar, Toolbar, IconButton, useTheme } from "@mui/material";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
+import { ColorModeContext } from "../context/ColorModeContext";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -10,6 +13,8 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { login } = useAuth();
+  const theme = useTheme();
+  const colorMode = useContext(ColorModeContext);
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -28,17 +33,30 @@ export default function Login() {
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        bgcolor: "#f0f4f8", // Слегка затемненный серо-голубой фон всей страницы
+        bgcolor: theme.palette.mode === "dark" ? "background.default" : "#f0f4f8",
+        transition: "background-color 0.4s",
       }}
     >
       {/* Белая шапка с центрированным логотипом */}
-      <AppBar position="static" sx={{ backgroundColor: "white", boxShadow: 1 }}>
-        <Toolbar sx={{ justifyContent: "center" }}>
+      <AppBar position="static" sx={{ backgroundColor: "background.paper", boxShadow: 1, transition: "background-color 0.4s" }}>
+        <Toolbar sx={{ position: "relative", justifyContent: "center" }}>
           <img 
             src="/Format=Logo-Description%20RUS,%20Color=Blue-Black.svg" 
             alt="Логотип Т1" 
-            style={{ height: 40, width: "auto", objectFit: "contain" }} 
+            style={{ height: 40, width: "auto", objectFit: "contain", filter: theme.palette.mode === "dark" ? "brightness(0) invert(1)" : "none", transition: "filter 0.4s" }} 
           />
+          <IconButton
+            onClick={colorMode.toggleColorMode}
+            color="inherit"
+            sx={{
+              position: "absolute",
+              right: 16,
+              transition: "transform 0.5s ease-in-out",
+              transform: theme.palette.mode === "dark" ? "rotate(180deg)" : "rotate(0deg)",
+            }}
+          >
+            {theme.palette.mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon sx={{ color: "text.primary" }} />}
+          </IconButton>
         </Toolbar>
       </AppBar>
 
