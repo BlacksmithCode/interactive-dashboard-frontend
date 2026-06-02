@@ -11,6 +11,11 @@ import { gridLocaleRu } from "../../../../locales/gridLocaleRu";
 import { teamColumns, successorColumns } from "./columns";
 import { capitalizeFirstLetter } from "./utils";
 
+// --- Константы цветов для шапок таблиц ---
+const TEAM_HEADER_BG = "#2e7d32"; // Зеленый фон для команды
+const SUCC_HEADER_BG = "#0088FF"; // Синий фон для преемников
+const HEADER_TEXT_COLOR = "#ffffff"; // Белый текст и иконки
+
 interface LeaderDetailsProps {
   selectedLeader: ManagerListItem | null;
   handleResetSelection: () => void;
@@ -119,6 +124,42 @@ export const LeaderDetails = ({
             initialState={{
               pagination: { paginationModel: { pageSize: 5 } },
             }}
+            sx={{
+              "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-container--top": {
+                backgroundColor: TEAM_HEADER_BG,
+              },
+              "& .MuiDataGrid-columnHeader": {
+                backgroundColor: TEAM_HEADER_BG,
+                color: HEADER_TEXT_COLOR,
+              },
+              "& .MuiDataGrid-columnHeaders .MuiDataGrid-filler, & .MuiDataGrid-container--top .MuiDataGrid-filler": {
+                backgroundColor: TEAM_HEADER_BG,
+              },
+              "& .MuiDataGrid-columnHeaderTitle": {
+                fontWeight: "bold",
+              },
+              "& .MuiDataGrid-columnHeaders .MuiIconButton-root, & .MuiDataGrid-columnHeaders .MuiSvgIcon-root": {
+                color: HEADER_TEXT_COLOR,
+                backgroundColor: "transparent !important",
+              },
+              "& .MuiDataGrid-columnHeaders .MuiSvgIcon-root path": {
+                fill: HEADER_TEXT_COLOR,
+              },
+              "& .MuiDataGrid-columnSeparator": {
+                color: "rgba(255, 255, 255, 0.5)",
+              },
+              // Убираем синее выделение при клике
+              "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
+                outline: "none",
+              },
+              "& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within": {
+                outline: "none",
+              },
+              // Делаем курсор pointer при наведении на строку
+              "& .MuiDataGrid-row:hover": {
+                cursor: "pointer",
+              },
+            }}
           />
         </Box>
       )}
@@ -150,6 +191,42 @@ export const LeaderDetails = ({
             localeText={gridLocaleRu}
             initialState={{
               pagination: { paginationModel: { pageSize: 5 } },
+            }}
+            sx={{
+              "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-container--top": {
+                backgroundColor: SUCC_HEADER_BG,
+              },
+              "& .MuiDataGrid-columnHeader": {
+                backgroundColor: SUCC_HEADER_BG,
+                color: HEADER_TEXT_COLOR,
+              },
+              "& .MuiDataGrid-columnHeaders .MuiDataGrid-filler, & .MuiDataGrid-container--top .MuiDataGrid-filler": {
+                backgroundColor: SUCC_HEADER_BG,
+              },
+              "& .MuiDataGrid-columnHeaderTitle": {
+                fontWeight: "bold",
+              },
+              "& .MuiDataGrid-columnHeaders .MuiIconButton-root, & .MuiDataGrid-columnHeaders .MuiSvgIcon-root": {
+                color: HEADER_TEXT_COLOR,
+                backgroundColor: "transparent !important",
+              },
+              "& .MuiDataGrid-columnHeaders .MuiSvgIcon-root path": {
+                fill: HEADER_TEXT_COLOR,
+              },
+              "& .MuiDataGrid-columnSeparator": {
+                color: "rgba(255, 255, 255, 0.5)",
+              },
+              // Убираем синее выделение при клике
+              "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
+                outline: "none",
+              },
+              "& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within": {
+                outline: "none",
+              },
+              // Делаем курсор pointer при наведении на строку
+              "& .MuiDataGrid-row:hover": {
+                cursor: "pointer",
+              },
             }}
           />
         </Box>

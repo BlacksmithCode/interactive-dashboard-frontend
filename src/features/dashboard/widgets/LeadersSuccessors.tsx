@@ -1,7 +1,7 @@
 // src/features/dashboard/widgets/LeadersSuccessors.tsx
 
 import { useState, useMemo } from "react";
-import { Box, Alert, Button } from "@mui/material";
+import { Box, Alert, Button, Typography } from "@mui/material";
 import type { Theme } from "@mui/material/styles";
 import { DataGrid } from "@mui/x-data-grid";
 import { useSearchParams } from "react-router-dom";
@@ -16,6 +16,10 @@ import { DashboardFiltersProvider } from "../context/DashboardFiltersProvider";
 import type { ManagerListItem } from "../../../types/dashboard";
 import { gridLocaleRu } from "../../../locales/gridLocaleRu";
 import { capitalizeFirstLetter, getRowClassName, leaderColumns, FiltersBar, LeaderDetails } from "./leaders-successors/index";
+
+// --- Константы цветов для шапки таблицы ---
+const LEADERS_HEADER_BG = "#ee5d48"; // Красный фон
+const HEADER_TEXT_COLOR = "#ffffff"; // Белый текст и иконки
 
 export default function LeadersSuccessors() {
   const [searchParams] = useSearchParams();
@@ -51,7 +55,7 @@ function LeadersSuccessorsContent() {
     refetch: refetchLeaders,
   } = useLeadersQuery({
     gradeMin: filters.gradeMin,
-    domain: filters.domain,
+    // Убрали domain отсюда, чтобы загрузить всех и отфильтровать локально
     critical: criticalFilter,
     hasSuccessor: successorFilter,
   });
@@ -79,9 +83,12 @@ function LeadersSuccessorsContent() {
     return uniquePositions.filter((pos) => pos.toLowerCase().includes(lower));
   }, [uniquePositions, positionFilter]);
 
-  // Локальная фильтрация по ФИО и должности
+  // Локальная фильтрация по домену, ФИО и должности
   const filteredLeaders = useMemo(() => {
     let result = leaders;
+    if (filters.domain) {
+      result = result.filter((l) => l.domain === filters.domain);
+    }
     if (searchName.trim()) {
       const lower = searchName.trim().toLowerCase();
       result = result.filter((l) => l.fullName.toLowerCase().includes(lower));
@@ -91,7 +98,7 @@ function LeadersSuccessorsContent() {
       result = result.filter((l) => l.position.toLowerCase().includes(lower));
     }
     return result;
-  }, [leaders, searchName, positionFilter]);
+  }, [leaders, searchName, positionFilter, filters.domain]);
 
   // Данные по выбранному руководителю
   const {
@@ -150,6 +157,9 @@ function LeadersSuccessorsContent() {
       />
 
       {/* Ошибка загрузки руководителей */}
+      <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+        Руководители
+      </Typography>
       {leadersError && (
         <Alert
           severity="error"
@@ -179,6 +189,43 @@ function LeadersSuccessorsContent() {
             pagination: { paginationModel: { pageSize: 25 } },
           }}
           sx={{
+            "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-container--top": {
+              backgroundColor: LEADERS_HEADER_BG,
+              color: HEADER_TEXT_COLOR,
+            },
+            "& .MuiDataGrid-columnHeader": {
+              backgroundColor: LEADERS_HEADER_BG,
+              color: HEADER_TEXT_COLOR,
+            },
+            // Закрашиваем пустое пространство только в шапке, не трогая тело таблицы
+            "& .MuiDataGrid-columnHeaders .MuiDataGrid-filler, & .MuiDataGrid-container--top .MuiDataGrid-filler": {
+              backgroundColor: LEADERS_HEADER_BG,
+            },
+            "& .MuiDataGrid-columnHeaderTitle": {
+              fontWeight: "bold",
+            },
+            // Жестко принудительно делаем иконки белыми, убирая любые возможные фоны
+            "& .MuiDataGrid-columnHeaders .MuiIconButton-root, & .MuiDataGrid-columnHeaders .MuiSvgIcon-root": {
+              color: HEADER_TEXT_COLOR,
+              backgroundColor: "transparent !important",
+            },
+            "& .MuiDataGrid-columnHeaders .MuiSvgIcon-root path": {
+              fill: HEADER_TEXT_COLOR,
+            },
+            "& .MuiDataGrid-columnSeparator": {
+              color: "rgba(255, 255, 255, 0.5)",
+            },
+            // Убираем синее выделение при клике на ячейку или заголовок
+            "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
+              outline: "none",
+            },
+            "& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within": {
+              outline: "none",
+            },
+            // Делаем курсор pointer при наведении на строку в теле таблицы
+            "& .MuiDataGrid-row:hover": {
+              cursor: "pointer",
+            },
             "& .row-without-successor": {
               backgroundColor: (theme: Theme) =>
                 theme.palette.mode === "light"
