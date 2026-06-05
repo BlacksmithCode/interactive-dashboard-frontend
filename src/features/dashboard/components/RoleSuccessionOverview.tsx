@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@mui/material";
 import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis} from "recharts";
-import type { ManagerListItem, StatsResponse } from "../../../types/dashboard";
+import type { ManagerListItem, StatsResponse } from "../../../shared/types/dashboard";
 
 const SUCCESS_COLOR = "#4caf50";
 const ERROR_COLOR = "#f44336";

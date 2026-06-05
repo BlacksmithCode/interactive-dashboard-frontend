@@ -1,4 +1,4 @@
-import type { NineBoxCell } from "../../../types/dashboard";
+import type { NineBoxCell } from "../../../shared/types/dashboard";
 
 /**
  * Суммирует значения нескольких ячеек 9-box по списку ключей.

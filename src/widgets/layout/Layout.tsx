@@ -3,7 +3,8 @@ import { Outlet } from "react-router-dom";
 import { AppBar, Toolbar, Box, CssBaseline, IconButton, useTheme } from "@mui/material";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
-import { ColorModeContext } from "../context/ColorModeContext";
+import { ColorModeContext } from "../../app/providers/ColorModeContext";
+import { Logo } from "../../shared/ui/logo/Logo";
 
 export default function Layout() {
   const theme = useTheme();
@@ -15,11 +16,7 @@ export default function Layout() {
       <AppBar position="static" sx={{ backgroundColor: "background.paper", boxShadow: 1, transition: "background-color 0.4s" }}>
         <Toolbar>
           <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
-            <img 
-              src="/Version=Logo%20T1,%20Format=Logo,%20Color=Blue-Black.svg" 
-              alt="Логотип" 
-              style={{ height: 35, width: "auto", objectFit: "contain", filter: theme.palette.mode === "dark" ? "brightness(0) invert(1)" : "none", transition: "filter 0.4s" }} 
-            />
+            <Logo type="short" height={35} />
           </Box>
           <IconButton
             onClick={colorMode.toggleColorMode}

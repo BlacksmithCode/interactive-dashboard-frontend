@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, type ReactNode } from "react";
 import { AuthContext } from "./AuthContext";
-import { login as apiLogin, logout as apiLogout, isLoggedIn } from "../api/auth";
-import { setOnUnauthorizedHandler } from "../api/apiClient";
+import { login as apiLogin, logout as apiLogout, isLoggedIn } from "../../shared/api/auth";
+import { setOnUnauthorizedHandler } from "../../shared/api/apiClient";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authenticated, setAuthenticated] = useState<boolean>(() => isLoggedIn());

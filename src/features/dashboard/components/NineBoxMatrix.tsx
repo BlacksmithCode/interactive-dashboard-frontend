@@ -3,7 +3,7 @@ import { rowsOrder, potentialLabels, performanceLabels } from "../config/nineBox
 import { BoxCell } from "./BoxCell";
 import type { MergedCells } from "../hooks/useMergedCells";
 import { MERGE_RULES } from "../hooks/useMergedCells";
-import type { NineBoxResponse } from "../../../types/dashboard";
+import type { NineBoxResponse } from "../../../shared/types/dashboard";
 
 interface NineBoxMatrixProps {
   mergedCells: MergedCells;

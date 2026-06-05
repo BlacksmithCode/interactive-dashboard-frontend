@@ -1,13 +1,13 @@
 import { useState, useMemo } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import Layout from "./components/Layout";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import Dashboard from "./pages/Dashboard";
-import { SummaryStats, LeadersSuccessors } from "./features/dashboard/widgets";
-import Login from "./pages/Login";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import { ColorModeContext } from "./context/ColorModeContext";
+import Layout from "../widgets/layout/Layout";
+import { ProtectedRoute } from "../shared/ui/ProtectedRoute";
+import Dashboard from "../pages/Dashboard";
+import { SummaryStats, LeadersSuccessors } from "../widgets";
+import Login from "../pages/Login";
+import { ErrorBoundary } from "../shared/ui/ErrorBoundary";
+import { ColorModeContext } from "./providers/ColorModeContext";
 
 function App() {
   const [mode, setMode] = useState<"light" | "dark">("light");
@@ -26,6 +26,19 @@ function App() {
       createTheme({
         palette: {
           mode,
+          ...(mode === "dark"
+            ? {
+                background: {
+                  default: "#0f172a", // Мягкий глубокий фон (темный сланцево-синий)
+                  paper: "#1e293b",   // Фон для блоков и панелей (чуть светлее)
+                },
+              }
+            : {
+                background: {
+                  default: "#f0f4f8",
+                  paper: "#ffffff",
+                },
+              }),
         },
         typography: {
           fontFamily: '"als_hauss", "Roboto", "Helvetica", "Arial", sans-serif',

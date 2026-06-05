@@ -1,11 +1,12 @@
 // src/pages/Login.tsx
 import { useState, useContext, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/useAuth";
+import { useAuth } from "../app/providers/useAuth";
 import { TextField, Button, Box, Typography, Alert, Paper, AppBar, Toolbar, IconButton, useTheme } from "@mui/material";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
-import { ColorModeContext } from "../context/ColorModeContext";
+import { ColorModeContext } from "../app/providers/ColorModeContext";
+import { Logo } from "../shared/ui/logo/Logo";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -33,18 +34,14 @@ export default function Login() {
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        bgcolor: theme.palette.mode === "dark" ? "background.default" : "#f0f4f8",
+        bgcolor: "background.default",
         transition: "background-color 0.4s",
       }}
     >
       {/* Белая шапка с центрированным логотипом */}
       <AppBar position="static" sx={{ backgroundColor: "background.paper", boxShadow: 1, transition: "background-color 0.4s" }}>
         <Toolbar sx={{ position: "relative", justifyContent: "center" }}>
-          <img 
-            src="/Format=Logo-Description%20RUS,%20Color=Blue-Black.svg" 
-            alt="Логотип Т1" 
-            style={{ height: 40, width: "auto", objectFit: "contain", filter: theme.palette.mode === "dark" ? "brightness(0) invert(1)" : "none", transition: "filter 0.4s" }} 
-          />
+          <Logo type="full" height={40} />
           <IconButton
             onClick={colorMode.toggleColorMode}
             color="inherit"

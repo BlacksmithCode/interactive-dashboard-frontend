@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../context/useAuth";
+import { useAuth } from "../../app/providers/useAuth";
 
 /**
  * Компонент‑обёртка для защищённых маршрутов.

@@ -6,8 +6,8 @@ import {
   Chip,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import type { ManagerListItem, ManagerDetail, Successor, TeamMemberDto } from "../../../../types/dashboard";
-import { gridLocaleRu } from "../../../../locales/gridLocaleRu";
+import type { ManagerListItem, ManagerDetail, Successor, TeamMemberDto } from "../../shared/types/dashboard";
+import { gridLocaleRu } from "../../locales/gridLocaleRu";
 import { teamColumns, successorColumns } from "./columns";
 import { capitalizeFirstLetter } from "./utils";
 
@@ -97,7 +97,7 @@ export const LeaderDetails = ({
       </Box>
 
       {/* Команда */}
-      <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+      <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, fontWeight: 'bold'  }}>
         Команда
       </Typography>
       {teamLoading && <Typography>Загрузка команды...</Typography>}
@@ -165,7 +165,7 @@ export const LeaderDetails = ({
       )}
 
       {/* Преемники */}
-      <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+      <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, fontWeight: 'bold'  }}>
         Преемники
       </Typography>
       {succLoading && <Typography>Загрузка преемников...</Typography>}

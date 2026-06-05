@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import type { DashboardFilters } from "../../../types/dashboard";
+import type { DashboardFilters } from "../../../shared/types/dashboard";
 
 export interface DashboardFiltersState {
   filters: DashboardFilters;

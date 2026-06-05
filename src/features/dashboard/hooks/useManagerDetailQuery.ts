@@ -1,7 +1,7 @@
 // src/features/dashboard/hooks/useManagerDetailQuery.ts
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../../../api/apiClient";
-import type { ManagerDetail } from "../../../types/dashboard";
+import { api } from "../../../shared/api/apiClient";
+import type { ManagerDetail } from "../../../shared/types/dashboard";
 
 export function useManagerDetailQuery(fullName: string | undefined) {
   return useQuery<ManagerDetail>({

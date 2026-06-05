@@ -11,10 +11,10 @@ import {
   useTeamQuery,
   useSuccessorsQuery,
   useManagerDetailQuery,
-} from "../hooks";
-import { DashboardFiltersProvider } from "../context/DashboardFiltersProvider";
-import type { ManagerListItem } from "../../../types/dashboard";
-import { gridLocaleRu } from "../../../locales/gridLocaleRu";
+} from "../features/dashboard/hooks";
+import { DashboardFiltersProvider } from "../features/dashboard/context/DashboardFiltersProvider";
+import type { ManagerListItem } from "../shared/types/dashboard";
+import { gridLocaleRu } from "../locales/gridLocaleRu";
 import { capitalizeFirstLetter, getRowClassName, leaderColumns, FiltersBar, LeaderDetails } from "./leaders-successors/index";
 
 // --- Константы цветов для шапки таблицы ---
@@ -157,7 +157,7 @@ function LeadersSuccessorsContent() {
       />
 
       {/* Ошибка загрузки руководителей */}
-      <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>
+      <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, fontWeight: 'bold'  }}>
         Руководители
       </Typography>
       {leadersError && (
