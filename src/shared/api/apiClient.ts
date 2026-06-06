@@ -63,9 +63,13 @@ api.interceptors.response.use(
   (error: AxiosError<ApiErrorResponse>) => {
     const normalized = normalizeError(error);
 
-    // Централизованная обработка 401 через внешний callback
-    if (normalized.statusCode === 401) {
-      onUnauthorizedHandler?.();
+    // Временный обход: бэкенд сейчас возвращает 403 вместо 401 для неавторизованных
+    // пользователей и при протухшем токене.
+    if (normalized.statusCode === 401 || normalized.statusCode === 403) {
+      // Не вызываем логаут, если ошибка пришла именно с формы входа
+      if (error.config && !error.config.url?.includes("/api/users/login")) {
+        onUnauthorizedHandler?.();
+      }
     }
 
     return Promise.reject(normalized);

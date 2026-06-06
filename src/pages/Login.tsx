@@ -7,22 +7,44 @@ import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { ColorModeContext } from "../app/providers/ColorModeContext";
 import { Logo } from "../shared/ui/logo/Logo";
+import { loginUser } from "../shared/api/adapters/httpAdapter";
+import { setAuthToken } from "../shared/api/auth";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
   const theme = useTheme();
   const colorMode = useContext(ColorModeContext);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     if (username && password) {
-      login(username, password);
-      navigate("/dashboard");
+      try {
+        setIsLoading(true);
+        const response = await loginUser(username, password);
+        
+        setAuthToken(response.token);
+        localStorage.setItem("username", response.username);
+        localStorage.setItem("role", response.role);
+        
+        login();
+        navigate("/dashboard");
+      } catch (err) {
+        const error = err as { message?: string; statusCode?: number };
+        // Маскируем 403 ошибку от бэкенда под нормальное сообщение для пользователя
+        if (error.statusCode === 403) {
+          setError("Неверный логин или пароль");
+        } else {
+          setError(error.message || "Ошибка при входе");
+        }
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       setError("Введите логин и пароль");
     }
@@ -91,8 +113,8 @@ export default function Login() {
           required
           margin="normal"
         />
-        <Button type="submit" variant="contained" color="primary" size="large" fullWidth sx={{ mt: 3, py: 1.5, fontWeight: 'bold' }}>
-          Войти
+      <Button type="submit" disabled={isLoading} variant="contained" color="primary" size="large" fullWidth sx={{ mt: 3, py: 1.5, fontWeight: 'bold' }}>
+        {isLoading ? "Вход..." : "Войти"}
         </Button>
       </Paper>
       </Box>

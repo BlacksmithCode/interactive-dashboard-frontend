@@ -4,23 +4,61 @@ import { api } from "../apiClient";
 import type { DashboardFilters, StatsResponse, NineBoxResponse,
    ManagerListItem, Successor, DomainGistDto, ManagerDetail, TeamMemberDto  } from "../../types/dashboard";
 
+export interface AuthResponse {
+  token: string;
+  username: string;
+  role: string;
+}
+
+export interface GradeRangeResponse {
+  minGrade: number;
+  maxGrade: number;
+}
+
+export async function loginUser(username: string, password: string): Promise<AuthResponse> {
+  const { data } = await api.post<AuthResponse>("/api/users/login", { username, password });
+  return data;
+}
+
+export async function fetchGradeRange(domains?: string[]): Promise<GradeRangeResponse> {
+  const params = new URLSearchParams();
+  if (domains && domains.length > 0) {
+    domains.forEach(d => params.append("domains", d));
+  }
+  const { data } = await api.get<GradeRangeResponse>("/api/dashboard/grade-range", { params });
+  return data;
+}
+
 export async function fetchStats(params: DashboardFilters): Promise<StatsResponse> {
-  const { data } = await api.get<StatsResponse>("/api/dashboard/stats", { params });
+  const searchParams = new URLSearchParams();
+  if (params.gradeMin !== undefined) searchParams.append("gradeMin", params.gradeMin.toString());
+  if (params.domain) searchParams.append("domains", params.domain);
+  const { data } = await api.get<StatsResponse>("/api/dashboard/stats", { params: searchParams });
   return data;
 }
 
 export async function fetchNineBox(params: DashboardFilters): Promise<NineBoxResponse> {
-  const { data } = await api.get<NineBoxResponse>("/api/dashboard/9box", { params });
+  const searchParams = new URLSearchParams();
+  if (params.gradeMin !== undefined) searchParams.append("gradeMin", params.gradeMin.toString());
+  if (params.domain) searchParams.append("domains", params.domain);
+  const { data } = await api.get<NineBoxResponse>("/api/dashboard/9box", { params: searchParams });
   return data;
 }
 
 export async function fetchLeaders(filters: {
   gradeMin?: number;
-  domain?: string;
+  domains?: string[];
   critical?: boolean;
   hasSuccessor?: boolean;
 } = {}): Promise<ManagerListItem[]> {
-  const { data } = await api.get<ManagerListItem[]>("/api/employees/managers", { params: filters });
+  const params = new URLSearchParams();
+  if (filters.gradeMin !== undefined) params.append("gradeMin", filters.gradeMin.toString());
+  if (filters.critical !== undefined) params.append("critical", filters.critical.toString());
+  if (filters.hasSuccessor !== undefined) params.append("hasSuccessor", filters.hasSuccessor.toString());
+  if (filters.domains && filters.domains.length > 0) {
+    filters.domains.forEach(d => params.append("domains", d));
+  }
+  const { data } = await api.get<ManagerListItem[]>("/api/employees/managers", { params });
   return data;
 }
 
@@ -31,8 +69,13 @@ export async function fetchManagerSuccessors(fullName: string): Promise<Successo
   return data ?? [];
 }
 
-export async function fetchDomainGist(params: { gradeMin?: number }): Promise<DomainGistDto[]> {
-  const { data } = await api.get<DomainGistDto[]>("/api/dashboard/gist", { params });
+export async function fetchDomainGist(params: { gradeMin?: number; domains?: string[] }): Promise<DomainGistDto[]> {
+  const searchParams = new URLSearchParams();
+  if (params.gradeMin !== undefined) searchParams.append("gradeMin", params.gradeMin.toString());
+  if (params.domains && params.domains.length > 0) {
+    params.domains.forEach(d => searchParams.append("domains", d));
+  }
+  const { data } = await api.get<DomainGistDto[]>("/api/dashboard/gist", { params: searchParams });
   return data;
 }
 

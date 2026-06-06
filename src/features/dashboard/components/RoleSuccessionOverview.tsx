@@ -32,8 +32,8 @@ function HorizontalBar({ label, value, max, color, percentText }: HorizontalBarP
       <Typography variant="body2" sx={{ width: 140, flexShrink: 0, color: "white" }}>
         {label}: {value}
       </Typography>
-      <Box sx={{ flexGrow: 1, height: "100%", mx: 1 }}>
-        <ResponsiveContainer width="100%" height="100%">
+      <Box sx={{ flexGrow: 1, height: 30, mx: 1 }}>
+        <ResponsiveContainer width="99%" height={30} minWidth={1}>
           <BarChart layout="vertical" data={data}>
             <XAxis type="number" domain={[0, max]} hide />
             <YAxis type="category" dataKey="name" hide />
@@ -226,8 +226,8 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
               height: 300,
               display: "flex",
               flexDirection: "column",
-              border: "1px solid",
-              borderColor: "divider",
+          border: "1px solid",
+          borderColor: "divider",
               borderRadius: 1,
             }}
           >
@@ -283,8 +283,8 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                       <TableCell
                         sx={{
                           flex: 2,
-                          borderBottom: "1px solid rgba(255,255,255,0.3)",
-                          borderColor: "divider",
+                      borderBottom: "1px solid",
+                      borderColor: "divider",
                           padding: "6px 12px",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
@@ -298,8 +298,8 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                         align="right"
                         sx={{
                           flex: 1,
-                          borderBottom: "1px solid rgba(255,255,255,0.3)",
-                          borderColor: "divider",
+                      borderBottom: "1px solid",
+                      borderColor: "divider",
                           padding: "6px 12px",
                           color: "white",
                         }}

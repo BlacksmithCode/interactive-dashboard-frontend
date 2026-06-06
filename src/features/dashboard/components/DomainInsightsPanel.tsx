@@ -73,7 +73,7 @@ export function DomainInsightsPanel({
   ];
 
   return (
-    <Card variant="outlined" sx={{ mb: 4, backgroundColor: CARD_BG, color: TEXT_COLOR }}>
+    <Card variant="outlined" sx={{ mb: 4, backgroundColor: CARD_BG, color: TEXT_COLOR, borderColor: 'rgba(255, 255, 255, 0.3)' }}>
       <Grid container spacing={3} sx={{ p: 3 }}>
         
         {/* Левый блок: фон #0088FF */}
@@ -146,8 +146,8 @@ export function DomainInsightsPanel({
           ) : isError ? (
             <Typography color="error">Ошибка загрузки доменов</Typography>
           ) : (
-            <Box sx={{ width: '100%', height: 300 }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <Box sx={{ width: '100%', height: 300, minWidth: 250 }}>
+              <ResponsiveContainer width="99%" height={300} minWidth={1}>
                 <BarChart data={filteredGist} margin={{ top: 20, right: 10, left: 0, bottom: 80 }} >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
                   <XAxis dataKey="domain" interval={0} angle={-25} textAnchor="end" tick={{ fontSize: 12, fill: TEXT_COLOR }} />
@@ -198,6 +198,14 @@ export function DomainInsightsPanel({
                   }]}
                   width={160} height={160}
                   margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                  // @ts-expect-error - 'hidden' работает, но временно отсутствует в типах @mui/x-charts
+                  slotProps={{ legend: { hidden: true } }}
+                  sx={{
+                    '& path': {
+                      stroke: '#ffffff !important',
+                      strokeWidth: '2px !important',
+                    }
+                  }}
                 />
               </Box>
               <Box sx={{ textAlign: 'center', minWidth: 50 }}>
