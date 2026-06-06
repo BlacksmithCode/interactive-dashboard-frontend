@@ -1,4 +1,4 @@
-import type { MergedKey, MergedCellMeta } from "../../../types/dashboard";
+import type { MergedKey, MergedCellMeta } from "../../../shared/types/dashboard";
 
 /** Метаданные объединённых ячеек 9-box (лейбл + описание) */
 export const boxMeta = {

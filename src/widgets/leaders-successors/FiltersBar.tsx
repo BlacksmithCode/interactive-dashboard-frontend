@@ -9,7 +9,8 @@ import {
   MenuItem,
   Stack,
 } from "@mui/material";
-import { GradeFilterInput } from "../../components/GradeFilterInput";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { GradeFilterInput } from "../../features/dashboard/components/GradeFilterInput";
 
 // Общие стили для полей фильтров (синий фон, белый текст и рамка)
 const commonFilterSx = {
@@ -241,17 +242,18 @@ export const FiltersBar = ({
       </FormControl>
 
       <Button
-        variant="outlined"
+        variant="text"
         size="small"
         onClick={resetAllFilters}
+        startIcon={<RestartAltIcon />}
         sx={{ 
-          minWidth: 140,
-          backgroundColor: '#0088FF',
           color: 'white',
-          borderColor: 'white',
+          ml: 'auto !important', // Прижимаем кнопку к правому краю
+          textTransform: 'none', // Делаем текст более современным (без капса)
+          fontWeight: 600,       // Чуть усиливаем вес текста
+          px: 2,                 // Добавляем воздуха по бокам
           '&:hover': {
-            backgroundColor: '#0077EE',
-            borderColor: 'white',
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
           }
         }}
       >

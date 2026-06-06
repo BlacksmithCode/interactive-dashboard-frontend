@@ -1,27 +1,50 @@
 // src/pages/Login.tsx
 import { useState, useContext, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/useAuth";
+import { useAuth } from "../app/providers/useAuth";
 import { TextField, Button, Box, Typography, Alert, Paper, AppBar, Toolbar, IconButton, useTheme } from "@mui/material";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
-import { ColorModeContext } from "../context/ColorModeContext";
+import { ColorModeContext } from "../app/providers/ColorModeContext";
+import { Logo } from "../shared/ui/logo/Logo";
+import { loginUser } from "../shared/api/adapters/httpAdapter";
+import { setAuthToken } from "../shared/api/auth";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
   const theme = useTheme();
   const colorMode = useContext(ColorModeContext);
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     if (username && password) {
-      login(username, password);
-      navigate("/dashboard");
+      try {
+        setIsLoading(true);
+        const response = await loginUser(username, password);
+        
+        setAuthToken(response.token);
+        localStorage.setItem("username", response.username);
+        localStorage.setItem("role", response.role);
+        
+        login();
+        navigate("/dashboard");
+      } catch (err) {
+        const error = err as { message?: string; statusCode?: number };
+        // Маскируем 403 ошибку от бэкенда под нормальное сообщение для пользователя
+        if (error.statusCode === 403) {
+          setError("Неверный логин или пароль");
+        } else {
+          setError(error.message || "Ошибка при входе");
+        }
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       setError("Введите логин и пароль");
     }
@@ -33,18 +56,14 @@ export default function Login() {
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        bgcolor: theme.palette.mode === "dark" ? "background.default" : "#f0f4f8",
+        bgcolor: "background.default",
         transition: "background-color 0.4s",
       }}
     >
       {/* Белая шапка с центрированным логотипом */}
       <AppBar position="static" sx={{ backgroundColor: "background.paper", boxShadow: 1, transition: "background-color 0.4s" }}>
         <Toolbar sx={{ position: "relative", justifyContent: "center" }}>
-          <img 
-            src="/Format=Logo-Description%20RUS,%20Color=Blue-Black.svg" 
-            alt="Логотип Т1" 
-            style={{ height: 40, width: "auto", objectFit: "contain", filter: theme.palette.mode === "dark" ? "brightness(0) invert(1)" : "none", transition: "filter 0.4s" }} 
-          />
+          <Logo type="full" height={40} />
           <IconButton
             onClick={colorMode.toggleColorMode}
             color="inherit"
@@ -94,8 +113,8 @@ export default function Login() {
           required
           margin="normal"
         />
-        <Button type="submit" variant="contained" color="primary" size="large" fullWidth sx={{ mt: 3, py: 1.5, fontWeight: 'bold' }}>
-          Войти
+      <Button type="submit" disabled={isLoading} variant="contained" color="primary" size="large" fullWidth sx={{ mt: 3, py: 1.5, fontWeight: 'bold' }}>
+        {isLoading ? "Вход..." : "Войти"}
         </Button>
       </Paper>
       </Box>

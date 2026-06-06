@@ -1,9 +1,10 @@
+import React from "react";
 import { Box, Typography, Card, CardContent } from "@mui/material";
 import { rowsOrder, potentialLabels, performanceLabels } from "../config/nineBoxMeta";
 import { BoxCell } from "./BoxCell";
 import type { MergedCells } from "../hooks/useMergedCells";
 import { MERGE_RULES } from "../hooks/useMergedCells";
-import type { NineBoxResponse } from "../../../types/dashboard";
+import type { NineBoxResponse } from "../../../shared/types/dashboard";
 
 interface NineBoxMatrixProps {
   mergedCells: MergedCells;
@@ -80,7 +81,7 @@ export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
 
           {/* Три строки данных */}
           {rowsOrder.map((row, rowIndex) => (
-            <>
+            <React.Fragment key={rowIndex}>
               {/* Левая ячейка строки – метка потенциала */}
               <Box
                 sx={{
@@ -104,7 +105,7 @@ export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
                   rawCells={nineBox.cells}
                 />
               ))}
-            </>
+            </React.Fragment>
           ))}
         </Box>
       </Box>

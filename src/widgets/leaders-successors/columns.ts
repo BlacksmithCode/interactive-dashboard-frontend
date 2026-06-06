@@ -1,5 +1,5 @@
 import type { GridColDef } from "@mui/x-data-grid";
-import type { ManagerListItem, Successor } from "../../../../types/dashboard";
+import type { ManagerListItem, Successor } from "../../shared/types/dashboard";
 import { capitalizeFirstLetter } from "./utils";
 
 // Колонки таблицы руководителей

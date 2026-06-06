@@ -1,6 +1,6 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { fetchNineBox } from "../../../api/dashboardApi";
-import type { DashboardFilters } from "../../../types/dashboard";
+import { fetchNineBox } from "../../../shared/api/dashboardApi";
+import type { DashboardFilters } from "../../../shared/types/dashboard";
 
 /**
  * Хук запроса данных матрицы 9-box.
@@ -11,5 +11,6 @@ export function useNineBoxQuery(filters: DashboardFilters) {
     queryKey: ["nineBox", filters.gradeMin, filters.domain],
     queryFn: () => fetchNineBox({ ...filters }),
     placeholderData: keepPreviousData,  // ← вот это
+    staleTime: 5 * 60 * 1000,
   });
 }

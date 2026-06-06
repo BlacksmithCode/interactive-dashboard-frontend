@@ -4,7 +4,7 @@
  */
 export { api, setOnUnauthorizedHandler } from "./apiClient";
 export {
-  login as authLogin,
+  setAuthToken,
   logout as authLogout,
   getAuthHeader,
   isLoggedIn,

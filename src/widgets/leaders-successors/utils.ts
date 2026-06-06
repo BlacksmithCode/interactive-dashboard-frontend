@@ -1,5 +1,5 @@
 import type { GridRowParams } from "@mui/x-data-grid";
-import type { ManagerListItem } from "../../../../types/dashboard";
+import type { ManagerListItem } from "../../shared/types/dashboard";
 
 export const capitalizeFirstLetter = (str: string) => {
   if (!str) return str;

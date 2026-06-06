@@ -3,7 +3,7 @@ import { gridLocaleRu } from "../../../locales/gridLocaleRu";
 import { Box, Typography, Alert, Button } from "@mui/material";
 import { DataGrid, type GridColDef, type GridRowParams } from "@mui/x-data-grid";
 import { useLeadersQuery, useDashboardFilters } from "../hooks";
-import type { ManagerListItem } from "../../../types/dashboard";
+import type { ManagerListItem } from "../../../shared/types/dashboard";
 
 const columns: GridColDef<ManagerListItem>[] = [
   { field: "position", headerName: "Должность", flex: 1, minWidth: 200 },

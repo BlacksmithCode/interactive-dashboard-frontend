@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../../../api/apiClient";
-import type { TeamMemberDto } from "../../../types/dashboard";
+import { api } from "../../../shared/api/apiClient";
+import type { TeamMemberDto } from "../../../shared/types/dashboard";
 
 export function useTeamQuery(fullName: string | undefined) {
   return useQuery<TeamMemberDto[]>({

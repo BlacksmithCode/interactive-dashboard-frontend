@@ -24,6 +24,8 @@ export function DashboardFiltersProvider({
   const {
     minGrade,
     maxGrade,
+    availableDomains: metaDomains,
+    isLoading: isMetaLoading,
   } = useManagerMeta();
 
   // Домены из domainGist (зависят от выбранного gradeMin)
@@ -32,11 +34,14 @@ export function DashboardFiltersProvider({
     [domainGist]
   );
 
-  // Вычисляем эффективный домен: если нет в списке доступных — сбрасываем на «Все»
-  const effectiveDomain = useMemo(
-    () => (domain && availableDomains.includes(domain) ? domain : undefined),
-    [domain, availableDomains]
-  );
+  // Вычисляем эффективный домен: если нет в списке доступных в целом - сбрасываем на «Все».
+  // Но только если метаданные уже загрузились, чтобы не сбросить первоначальный url.
+  const effectiveDomain = useMemo(() => {
+    if (!domain) return undefined;
+    if (isMetaLoading) return domain;
+    if (metaDomains.includes(domain)) return domain;
+    return undefined;
+  }, [domain, metaDomains, isMetaLoading]);
 
   const setGradeMin = useCallback((value: number | undefined) => {
     setGradeMinRaw(value);

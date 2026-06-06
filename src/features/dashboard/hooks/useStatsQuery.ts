@@ -1,6 +1,6 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { fetchStats } from "../../../api/dashboardApi";
-import type { DashboardFilters } from "../../../types/dashboard";
+import { fetchStats } from "../../../shared/api/dashboardApi";
+import type { DashboardFilters } from "../../../shared/types/dashboard";
 
 /**
  * Хук запроса сводной статистики (KPI).
@@ -11,5 +11,6 @@ export function useStatsQuery(filters: DashboardFilters) {
     queryKey: ["stats", filters.gradeMin, filters.domain],
     queryFn: () => fetchStats({ ...filters }),
     placeholderData: keepPreviousData,  // ← вот это
+    staleTime: 5 * 60 * 1000,
   });
 }

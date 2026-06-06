@@ -1,5 +1,5 @@
 import { Card, CardContent, Typography, Box, Tooltip } from "@mui/material";
-import type { MergedKey, NineBoxCell } from "../../../types/dashboard";
+import type { MergedKey, NineBoxCell } from "../../../shared/types/dashboard";
 import { boxMeta, categoryColor } from "../config/nineBoxMeta";
 
 const PERF_MAP: Record<string, string> = {

@@ -9,14 +9,14 @@ import {
   useMergedCells,
   useLeadersQuery,
   useDomainGistQuery,
-} from "../hooks";
+} from "../features/dashboard/hooks";
 import {
   RoleSuccessionOverview,
   NineBoxMatrix,
   SummaryStatsSkeleton,
   DomainInsightsPanel,
-} from "../components";
-import { DashboardFiltersProvider } from "../context/DashboardFiltersProvider";
+} from "../features/dashboard/components";
+import { DashboardFiltersProvider } from "../features/dashboard/context/DashboardFiltersProvider";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 export default function SummaryStats() {

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { NineBoxResponse, MergedKey, NineBoxCell } from "../../../types/dashboard";
+import type { NineBoxResponse, MergedKey, NineBoxCell } from "../../../shared/types/dashboard";
 import { sumCells } from "../utils/sumCells";
 
 /** Правила объединения: ключ MergedKey → массив исходных ключей NineBox */
