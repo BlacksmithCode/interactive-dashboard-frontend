@@ -18,7 +18,7 @@ services:
       retries: 5
 
   backend:
-    image: ${BACKEND_IMAGE:-inno-backend:latest}
+    image: it-camp.innoca.local/rsreu-team/interactive-dashboard-backend:latest
     container_name: inno-backend
     restart: unless-stopped
     depends_on:
@@ -33,7 +33,7 @@ services:
       APP_JWT_EXPIRATION_MS: 86400000
 
   frontend:
-    image: ${FRONTEND_IMAGE:-inno-frontend:latest}
+    image: it-camp.innoca.local/rsreu-team/interactive-dashboard-frontend:latest
     container_name: inno-frontend
     restart: unless-stopped
 
