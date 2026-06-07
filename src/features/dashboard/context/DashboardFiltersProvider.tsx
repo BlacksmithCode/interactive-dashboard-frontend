@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, type ReactNode } from "react";
 import { DashboardFiltersContext, type DashboardFiltersState } from "./DashboardFiltersContext";
-import { useDomainGistQuery, useManagerMeta } from "../hooks";
+import { useManagerMeta } from "../hooks";
 
 export interface DashboardFiltersProviderProps {
   children: ReactNode;
@@ -18,8 +18,6 @@ export function DashboardFiltersProvider({
   const [gradeMin, setGradeMinRaw] = useState<number | undefined>(initialGradeMin);
   const [domain, setDomainRaw] = useState<string | undefined>(initialDomain);
 
-  const { data: domainGist = [] } = useDomainGistQuery({ gradeMin });
-
   // Метаданные из useManagerMeta (единый источник для minGrade, maxGrade, availableDomains)
   const {
     minGrade,
@@ -27,12 +25,6 @@ export function DashboardFiltersProvider({
     availableDomains: metaDomains,
     isLoading: isMetaLoading,
   } = useManagerMeta();
-
-  // Домены из domainGist (зависят от выбранного gradeMin)
-  const availableDomains = useMemo(
-    () => [...new Set(domainGist.map((d) => d.domain))].sort(),
-    [domainGist]
-  );
 
   // Вычисляем эффективный домен: если нет в списке доступных в целом - сбрасываем на «Все».
   // Но только если метаданные уже загрузились, чтобы не сбросить первоначальный url.
@@ -61,7 +53,7 @@ export function DashboardFiltersProvider({
     // Метаданные для UI
     minGrade,
     maxGrade,
-    availableDomains,
+    availableDomains: metaDomains || [],
   };
 
   return (

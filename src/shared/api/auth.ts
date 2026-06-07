@@ -4,6 +4,13 @@
 
 const AUTH_KEY = "jwt_token";
 
+export interface AuthResponseDto {
+  token: string;
+  username: string;
+  role: string;
+  fullName: string;
+}
+
 /**
  * Сохраняет JWT токен в localStorage.
  */

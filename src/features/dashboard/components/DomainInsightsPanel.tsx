@@ -44,15 +44,9 @@ export function DomainInsightsPanel({
 }: DomainInsightsPanelProps) {
   const theme = useTheme();
   const { filters, setGradeMin, setDomain, availableDomains } = useDashboardFilters();
-  const { data: gist, isLoading, isError } = useDomainGistQuery({ gradeMin: filters.gradeMin });
+  const { data: gist, isLoading, isError } = useDomainGistQuery({ gradeMin: filters.gradeMin, domain: filters.domain });
 
-  const filteredGist = useMemo(() => {
-    if (!gist) return [];
-    if (filters.domain) {
-      return gist.filter((d) => d.domain === filters.domain);
-    }
-    return gist;
-  }, [gist, filters.domain]);  
+  const currentGist = useMemo(() => gist || [], [gist]);
 
   // Надежно собираем доступные домены, даже если они не пришли из общего контекста
   const computedDomains = useMemo(() => {
@@ -61,13 +55,13 @@ export function DomainInsightsPanel({
   }, [gist, availableDomains]);
 
   const chartData = useMemo(() => {
-    if (!filteredGist.length) {
+    if (!currentGist.length) {
       return { totalWith: 0, totalWithout: 0 };
     }
-    const totalWith = filteredGist.reduce((sum, d) => sum + d.managersWithSuccessors, 0);
-    const totalWithout = filteredGist.reduce((sum, d) => sum + d.managersWithoutSuccessors, 0);
+    const totalWith = currentGist.reduce((sum, d) => sum + d.managersWithSuccessors, 0);
+    const totalWithout = currentGist.reduce((sum, d) => sum + d.managersWithoutSuccessors, 0);
     return { totalWith, totalWithout };
-  }, [filteredGist]);
+  }, [currentGist]);
 
   const pieData = [
     { id: "with", value: chartData.totalWith || 0, color: theme.palette.success.main },
@@ -152,7 +146,7 @@ export function DomainInsightsPanel({
           ) : (
             <Box sx={{ width: '100%', height: 300, minWidth: 250 }}>
               <ResponsiveContainer width="99%" height={300} minWidth={1}>
-                <BarChart data={filteredGist} margin={{ top: 20, right: 10, left: 0, bottom: 80 }} >
+                <BarChart data={currentGist} margin={{ top: 20, right: 10, left: 0, bottom: 80 }} >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
                   <XAxis dataKey="domain" interval={0} angle={-25} textAnchor="end" tick={{ fontSize: 12, fill: TEXT_COLOR }} />
                   <YAxis tick={{ fill: TEXT_COLOR }} />

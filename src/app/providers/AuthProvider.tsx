@@ -7,11 +7,13 @@ import { useQueryClient } from "@tanstack/react-query";
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authenticated, setAuthenticated] = useState<boolean>(() => isLoggedIn());
   const [role, setRole] = useState<string | null>(() => localStorage.getItem("role"));
+  const [fullName, setFullName] = useState<string | null>(() => localStorage.getItem("fullName"));
   const queryClient = useQueryClient();
 
   const login = useCallback(() => {
     setAuthenticated(true);
     setRole(localStorage.getItem("role"));
+    setFullName(localStorage.getItem("fullName"));
   }, []);
 
   const logout = useCallback(() => {
@@ -21,6 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("fullName");
     setAuthenticated(false);
     setRole(null);
+    setFullName(null);
     queryClient.clear(); // Полностью очищаем кэш данных при выходе
   }, [queryClient]);
 
@@ -35,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [logout]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated: authenticated, role, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated: authenticated, role, fullName, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

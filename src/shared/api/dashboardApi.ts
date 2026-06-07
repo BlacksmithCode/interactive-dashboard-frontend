@@ -1,1 +1,1 @@
-export { fetchStats, fetchNineBox, fetchLeaders, fetchManagerSuccessors, fetchDomainGist } from "./adapters/httpAdapter";
+export { fetchStats, fetchNineBox, fetchLeaders, fetchManagerSuccessors, fetchDomainGist, fetchDashboardMeta } from "./adapters/httpAdapter";

@@ -16,6 +16,7 @@ import { ROLES } from "../shared/ui/roles";
 import { RoleGuard } from "../shared/ui/RoleGuard";
 import { gridLocaleRu } from "../locales/gridLocaleRu";
 import { useManagerMeta } from "../features/dashboard/hooks/useManagerMeta";
+import { useLeadersQuery } from "../features/dashboard/hooks/useLeadersQuery";
 
 // Бэкенд в этих эндпоинтах ожидает и возвращает роли без префикса "ROLE_"
 const BACKEND_ROLES = {
@@ -37,7 +38,8 @@ export default function AdminPanel() {
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  const { availableDomains, allManagers } = useManagerMeta();
+  const { availableDomains } = useManagerMeta();
+  const { data: allManagers } = useLeadersQuery({});
   const managerNames = Array.from(new Set(allManagers?.map((m) => m.fullName) || []));
   
   const [newUser, setNewUser] = useState<RegisterRequest>({
@@ -123,9 +125,15 @@ export default function AdminPanel() {
       renderCell: (params: GridRenderCellParams) => (
         <Box>
           <IconButton 
+            disabled={params.row.username === localStorage.getItem("username")}
             onClick={async () => {
-              await toggleUserBlock(params.row.id);
-              loadUsers();
+              try {
+                await toggleUserBlock(params.row.id);
+                loadUsers();
+              } catch (error) {
+                console.error(error);
+                alert("Нельзя заблокировать свой собственный аккаунт!");
+              }
             }} 
             color={params.row.active ? "warning" : "success"}
             title={params.row.active ? "Заблокировать" : "Разблокировать"}
@@ -133,6 +141,7 @@ export default function AdminPanel() {
             {params.row.active ? <BlockIcon /> : <CheckCircleIcon />}
           </IconButton>
           <IconButton 
+            disabled={params.row.username === localStorage.getItem("username")}
             onClick={async () => {
               if (confirm(`Вы уверены, что хотите безвозвратно удалить пользователя ${params.row.username}?`)) {
                 try {
