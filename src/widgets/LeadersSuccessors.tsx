@@ -60,7 +60,7 @@ function LeadersSuccessorsContent() {
     refetch: refetchLeaders,
   } = useLeadersQuery({
     gradeMin: filters.gradeMin,
-    // Убрали domain отсюда, чтобы загрузить всех и отфильтровать локально
+    domains: filters.domain ? [filters.domain] : undefined,
     critical: criticalFilter,
     hasSuccessor: successorFilter,
   });
@@ -88,12 +88,9 @@ function LeadersSuccessorsContent() {
     return uniquePositions.filter((pos) => pos.toLowerCase().includes(lower));
   }, [uniquePositions, positionFilter]);
 
-  // Локальная фильтрация по домену, ФИО и должности
+  // Локальная фильтрация ТОЛЬКО по ФИО и должности (остальное на бэкенде)
   const filteredLeaders = useMemo(() => {
     let result = leaders;
-    if (filters.domain) {
-      result = result.filter((l) => l.domain === filters.domain);
-    }
     if (searchName.trim()) {
       const lower = searchName.trim().toLowerCase();
       result = result.filter((l) => l.fullName.toLowerCase().includes(lower));
@@ -103,7 +100,7 @@ function LeadersSuccessorsContent() {
       result = result.filter((l) => l.position.toLowerCase().includes(lower));
     }
     return result;
-  }, [leaders, searchName, positionFilter, filters.domain]);
+  }, [leaders, searchName, positionFilter]);
 
   // Автоматически открываем карточку, если зашел MANAGER (у него всегда только 1 запись)
   useEffect(() => {

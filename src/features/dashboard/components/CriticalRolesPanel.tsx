@@ -26,15 +26,13 @@ function getRowClassName(params: GridRowParams<ManagerListItem>): string {
 
 export function CriticalRolesPanel() {
   const { filters } = useDashboardFilters();
-  // Убрали domain из запроса, фильтруем локально
-  const queryParams = { critical: true, gradeMin: filters.gradeMin };
+  const queryParams = { 
+    critical: true, 
+    gradeMin: filters.gradeMin,
+    domains: filters.domain ? [filters.domain] : undefined 
+  };
 
-  const { data: fetchedLeaders = [], isLoading, isError, refetch } = useLeadersQuery(queryParams);
-
-  const leaders = useMemo(() => {
-    if (!filters.domain) return fetchedLeaders;
-    return fetchedLeaders.filter((l) => l.domain === filters.domain);
-  }, [fetchedLeaders, filters.domain]);
+  const { data: leaders = [], isLoading, isError, refetch } = useLeadersQuery(queryParams);
 
   const summary = useMemo(() => {
     const total = leaders.length;

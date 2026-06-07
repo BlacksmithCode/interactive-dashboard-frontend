@@ -33,9 +33,9 @@ export const GradeFilterInput = memo(function GradeFilterInput({
   const fallbackGrade = minPossibleGrade ?? defaultMinGrade;
 
   const [input, setInput] = useState<string>(
-    value !== undefined
+    value != null
       ? value.toString()
-      : autoSetDefault && fallbackGrade !== undefined
+      : autoSetDefault && fallbackGrade != null
       ? fallbackGrade.toString()
       : ""
   );
@@ -44,16 +44,16 @@ export const GradeFilterInput = memo(function GradeFilterInput({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const hadFocus = useRef(false);
 
-  const applyValue = (num: number | undefined) => {
-    if (num === undefined) {
+  const applyValue = (num: number | undefined | null) => {
+    if (num == null) {
       setInput("");
       onChange(undefined);
       lastEmittedValue.current = undefined;
       return;
     }
     let clamped = num;
-    if (minPossibleGrade !== undefined && clamped < minPossibleGrade) clamped = minPossibleGrade;
-    if (maxPossibleGrade !== undefined && clamped > maxPossibleGrade) clamped = maxPossibleGrade;
+    if (minPossibleGrade != null && clamped < minPossibleGrade) clamped = minPossibleGrade;
+    if (maxPossibleGrade != null && clamped > maxPossibleGrade) clamped = maxPossibleGrade;
     const str = clamped.toString();
     setInput(str);
     onChange(clamped);
@@ -66,7 +66,7 @@ export const GradeFilterInput = memo(function GradeFilterInput({
     if (raw === "") {
       setInput("");
       setError("");
-      if (autoSetDefault && fallbackGrade !== undefined) {
+      if (autoSetDefault && fallbackGrade != null) {
         applyValue(fallbackGrade);
       } else {
         applyValue(undefined);
@@ -77,7 +77,7 @@ export const GradeFilterInput = memo(function GradeFilterInput({
     const cleaned = raw.replace(/^0+/, "") || "";
     if (cleaned === "") {
       setInput(raw);
-      if (minPossibleGrade !== undefined) {
+      if (minPossibleGrade != null) {
         setError(`Минимальный грейд: ${minPossibleGrade}`);
       } else {
         setError("Введите целое положительное число");
@@ -86,12 +86,12 @@ export const GradeFilterInput = memo(function GradeFilterInput({
     }
 
     const num = Number(cleaned);
-    if (minPossibleGrade !== undefined && num < minPossibleGrade) {
+    if (minPossibleGrade != null && num < minPossibleGrade) {
       setInput(cleaned);
       setError(`Минимальный грейд: ${minPossibleGrade}`);
       return;
     }
-    if (maxPossibleGrade !== undefined && num > maxPossibleGrade) {
+    if (maxPossibleGrade != null && num > maxPossibleGrade) {
       setInput(cleaned);
       setError(`Максимальный грейд: ${maxPossibleGrade}`);
       return;
@@ -106,7 +106,7 @@ export const GradeFilterInput = memo(function GradeFilterInput({
   const handleBlur = () => {
     hadFocus.current = false;
     if (input === "") {
-      if (autoSetDefault && fallbackGrade !== undefined) {
+      if (autoSetDefault && fallbackGrade != null) {
         applyValue(fallbackGrade);
       } else {
         applyValue(undefined);
@@ -119,8 +119,8 @@ export const GradeFilterInput = memo(function GradeFilterInput({
       return;
     }
     let clamped = num;
-    if (minPossibleGrade !== undefined && clamped < minPossibleGrade) clamped = minPossibleGrade;
-    if (maxPossibleGrade !== undefined && clamped > maxPossibleGrade) clamped = maxPossibleGrade;
+    if (minPossibleGrade != null && clamped < minPossibleGrade) clamped = minPossibleGrade;
+    if (maxPossibleGrade != null && clamped > maxPossibleGrade) clamped = maxPossibleGrade;
     if (clamped !== num) {
       setError(clamped < num ? `Максимальный грейд: ${maxPossibleGrade}` : `Минимальный грейд: ${minPossibleGrade}`);
     } else {
@@ -167,7 +167,7 @@ export const GradeFilterInput = memo(function GradeFilterInput({
   };
 
   useEffect(() => {
-    if (autoSetDefault && value === undefined && fallbackGrade !== undefined) {
+    if (autoSetDefault && value == null && fallbackGrade != null) {
       setInput(fallbackGrade.toString());
       onChange(fallbackGrade);
       lastEmittedValue.current = fallbackGrade;
@@ -176,7 +176,7 @@ export const GradeFilterInput = memo(function GradeFilterInput({
 
   useEffect(() => {
     if (value !== lastEmittedValue.current) {
-      const newVal = value !== undefined ? value.toString() : "";
+      const newVal = value != null ? value.toString() : "";
       setInput(newVal);
       setError("");
       lastEmittedValue.current = value;
@@ -270,14 +270,14 @@ return (
               if (cleaned) {
                 const num = Number(cleaned);
                 let finalValue = cleaned;
-                if (minPossibleGrade !== undefined && num < minPossibleGrade) {
+                if (minPossibleGrade != null && num < minPossibleGrade) {
                   finalValue = String(minPossibleGrade);
-                } else if (maxPossibleGrade !== undefined && num > maxPossibleGrade) {
+                } else if (maxPossibleGrade != null && num > maxPossibleGrade) {
                   finalValue = String(maxPossibleGrade);
                 }
                 applyValue(Number(finalValue));
               } else {
-                if (fallbackGrade !== undefined) {
+                if (fallbackGrade != null) {
                   applyValue(fallbackGrade);
                 } else {
                   applyValue(undefined);

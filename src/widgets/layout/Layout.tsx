@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { AppBar, Toolbar, Box, CssBaseline, IconButton, useTheme, Typography, Avatar, Button } from "@mui/material";
+import { AppBar, Toolbar, Box, CssBaseline, IconButton, useTheme, Typography, Button } from "@mui/material";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { ColorModeContext } from "../../app/providers/ColorModeContext";
@@ -22,12 +22,12 @@ const formatRole = (role: string) => {
 export default function Layout() {
   const theme = useTheme();
   const colorMode = useContext(ColorModeContext);
-  const { logout, role } = useAuth();
+  const { logout, role, fullName } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isAdminPanel = location.pathname.startsWith("/admin");
 
-  const username = localStorage.getItem("username") || "Пользователь";
+  const displayFullName = fullName || localStorage.getItem("username") || "Пользователь";
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -40,18 +40,13 @@ export default function Layout() {
           </Box>
 
           {/* Центральная часть - Профиль */}
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
-            <Box sx={{ textAlign: "right", display: { xs: "none", sm: "block" } }}>
-              <Typography variant="body2" sx={{ fontWeight: "bold", lineHeight: 1.2, color: "text.primary" }}>
-                {username}
-              </Typography>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {formatRole(role || "")}
-              </Typography>
-            </Box>
-            <Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: "1rem" }}>
-              {username.charAt(0).toUpperCase()}
-            </Avatar>
+          <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "baseline", justifyContent: "center", gap: 1 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: "bold", color: "text.primary" }}>
+              {displayFullName}
+            </Typography>
+            <Typography variant="caption" sx={{ color: "text.secondary", position: "relative", top: "0.25em" }}>
+              {formatRole(role || "")}
+            </Typography>
           </Box>
 
           {/* Правая часть - Кнопки */}

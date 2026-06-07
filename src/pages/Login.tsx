@@ -31,13 +31,19 @@ export default function Login() {
         setAuthToken(response.token);
         localStorage.setItem("username", response.username);
         localStorage.setItem("role", response.role);
+        if (response.fullName) {
+          localStorage.setItem("fullName", response.fullName);
+        }
         
         login();
         navigate("/dashboard");
       } catch (err) {
         const error = err as { message?: string; statusCode?: number };
-        // Маскируем 403 ошибку от бэкенда под нормальное сообщение для пользователя
-        if (error.statusCode === 403) {
+        
+        if (error.message?.toLowerCase().includes("disabled") || error.message?.toLowerCase().includes("заблокирован")) {
+          setError("Учетная запись заблокирована");
+        } else if (error.statusCode === 403 || error.statusCode === 401) {
+          // Маскируем 403 ошибку от бэкенда под нормальное сообщение для пользователя
           setError("Неверный логин или пароль");
         } else {
           setError(error.message || "Ошибка при входе");

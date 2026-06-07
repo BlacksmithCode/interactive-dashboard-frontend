@@ -4,6 +4,12 @@ import { api } from "../apiClient";
 import type { DashboardFilters, StatsResponse, NineBoxResponse,
    ManagerListItem, Successor, DomainGistDto, ManagerDetail, TeamMemberDto  } from "../../types/dashboard";
 
+export interface DashboardMetaDto {
+  minGrade: number;
+  maxGrade: number;
+  availableDomains: string[];
+}
+
 export interface AuthResponse {
   token: string;
   username: string;
@@ -67,6 +73,11 @@ export async function fetchGradeRange(domains?: string[]): Promise<GradeRangeRes
     domains.forEach(d => params.append("domains", d));
   }
   const { data } = await api.get<GradeRangeResponse>("/api/dashboard/grade-range", { params });
+  return data;
+}
+
+export async function fetchDashboardMeta(): Promise<DashboardMetaDto> {
+  const { data } = await api.get<DashboardMetaDto>("/api/dashboard/meta");
   return data;
 }
 
