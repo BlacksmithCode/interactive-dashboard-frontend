@@ -1,11 +1,13 @@
 import { useContext } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { AppBar, Toolbar, Box, CssBaseline, IconButton, useTheme, Typography, Avatar, Button } from "@mui/material";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { ColorModeContext } from "../../app/providers/ColorModeContext";
 import { Logo } from "../../shared/ui/logo/Logo";
 import { useAuth } from "../../app/providers/useAuth";
+import { RoleGuard } from "../../shared/ui/RoleGuard";
+import { ROLES } from "../../shared/ui/roles";
 
 const formatRole = (role: string) => {
   switch (role) {
@@ -20,10 +22,12 @@ const formatRole = (role: string) => {
 export default function Layout() {
   const theme = useTheme();
   const colorMode = useContext(ColorModeContext);
-  const { logout } = useAuth();
+  const { logout, role } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminPanel = location.pathname.startsWith("/admin");
 
   const username = localStorage.getItem("username") || "Пользователь";
-  const rawRole = localStorage.getItem("role") || "";
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -42,7 +46,7 @@ export default function Layout() {
                 {username}
               </Typography>
               <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {formatRole(rawRole)}
+                {formatRole(role || "")}
               </Typography>
             </Box>
             <Avatar sx={{ bgcolor: "primary.main", width: 36, height: 36, fontSize: "1rem" }}>
@@ -52,6 +56,17 @@ export default function Layout() {
 
           {/* Правая часть - Кнопки */}
           <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 2 }}>
+            <RoleGuard allowedRoles={[ROLES.ADMIN]}>
+          {isAdminPanel ? (
+            <Button variant="text" color="primary" onClick={() => navigate("/dashboard")} sx={{ fontWeight: 'bold' }}>
+              Дашборд
+            </Button>
+          ) : (
+            <Button variant="text" color="primary" onClick={() => navigate("/admin")} sx={{ fontWeight: 'bold' }}>
+              Админ-панель
+            </Button>
+          )}
+            </RoleGuard>
             <IconButton
               onClick={colorMode.toggleColorMode}
               color="inherit"
