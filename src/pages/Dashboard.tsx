@@ -1,16 +1,34 @@
 // Dashboard.tsx
+import { useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
+import { useAuth } from "../app/providers/useAuth";
+import { ROLES } from "../shared/ui/roles";
 
 type PanelType = "summary" | "leaders";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { role } = useAuth();
 
   const activePanel: PanelType = location.pathname.includes("leaders")
     ? "leaders"
     : "summary";
+
+  useEffect(() => {
+    // Если это Менеджер и он на вкладке "Сводная статистика" (которая у него скрыта),
+    // принудительно кидаем его на таблицу руководителей.
+    if (role === ROLES.MANAGER && activePanel === "summary") {
+      navigate("leaders", { replace: true });
+    }
+  }, [role, activePanel, navigate]);
+
+  // Блокируем рендер вкладки "Сводная статистика" для менеджера, 
+  // чтобы хуки не успели отправить запросы, на которые бэкенд вернет 403.
+  if (role === ROLES.MANAGER && activePanel === "summary") {
+    return null;
+  }
 
   const handleToggle = (newPanel: PanelType) => {
     if (activePanel !== newPanel) {
@@ -20,7 +38,8 @@ export default function Dashboard() {
 
   return (
     <Box>
-      <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
+      {role !== ROLES.MANAGER && (
+        <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
         <Box
           sx={{
             display: "inline-grid",
@@ -99,7 +118,8 @@ export default function Dashboard() {
             </Typography>
           </Box>
         </Box>
-      </Box>
+        </Box>
+      )}
       <Outlet />
     </Box>
   );

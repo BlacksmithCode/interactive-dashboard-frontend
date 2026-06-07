@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Layout from "../widgets/layout/Layout";
 import { ProtectedRoute } from "../shared/ui/ProtectedRoute";
 import Dashboard from "../pages/Dashboard";
+import AdminPanel from "../pages/AdminPanel";
 import { SummaryStats, LeadersSuccessors } from "../widgets";
 import Login from "../pages/Login";
 import { ErrorBoundary } from "../shared/ui/ErrorBoundary";
@@ -72,7 +73,8 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
-              <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+              <Route index element={<Navigate to="/dashboard" replace />} />
             {/* Дашборд с вложенными панелями */}
             <Route path="/dashboard" element={<Dashboard />}>
               <Route index element={<Navigate to="summary" replace />} />
@@ -93,9 +95,9 @@ function App() {
                 }
               />
             </Route>
+            <Route path="/admin" element={<AdminPanel />} />
           </Route>
           {/* Редиректы по умолчанию на страницу авторизации */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </BrowserRouter>

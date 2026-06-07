@@ -1,7 +1,8 @@
 // src/features/dashboard/widgets/LeadersSuccessors.tsx
 
-import { useState, useMemo } from "react";
-import { Box, Alert, Button, Typography } from "@mui/material";
+import { useState, useMemo, useEffect } from "react";
+import { Box, Alert, Button, Typography, Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import type { Theme } from "@mui/material/styles";
 import { DataGrid } from "@mui/x-data-grid";
 import { useSearchParams } from "react-router-dom";
@@ -15,6 +16,8 @@ import {
 import { DashboardFiltersProvider } from "../features/dashboard/context/DashboardFiltersProvider";
 import type { ManagerListItem } from "../shared/types/dashboard";
 import { gridLocaleRu } from "../locales/gridLocaleRu";
+import { useAuth } from "../app/providers/useAuth";
+import { ROLES } from "../shared/ui/roles";
 import { capitalizeFirstLetter, getRowClassName, leaderColumns, FiltersBar, LeaderDetails } from "./leaders-successors/index";
 
 // --- Константы цветов для шапки таблицы ---
@@ -37,6 +40,7 @@ export default function LeadersSuccessors() {
 }
 
 function LeadersSuccessorsContent() {
+  const { role } = useAuth();
   const { filters, setGradeMin, setDomain, minGrade, maxGrade, availableDomains } = useDashboardFilters();
 
   // Локальные UI-фильтры (поиск по ФИО/должности, критичность, преемник)
@@ -46,6 +50,7 @@ function LeadersSuccessorsContent() {
   const [successorFilter, setSuccessorFilter] = useState<boolean | undefined>(undefined);
 
   const [selectedLeader, setSelectedLeader] = useState<ManagerListItem | null>(null);
+  const [isListExpanded, setIsListExpanded] = useState(true);
 
   // Запрос списка руководителей с фильтрами
   const {
@@ -100,6 +105,17 @@ function LeadersSuccessorsContent() {
     return result;
   }, [leaders, searchName, positionFilter, filters.domain]);
 
+  // Автоматически открываем карточку, если зашел MANAGER (у него всегда только 1 запись)
+  useEffect(() => {
+    if (role === ROLES.MANAGER && filteredLeaders.length > 0 && !selectedLeader) {
+      const timer = setTimeout(() => {
+        setSelectedLeader(filteredLeaders[0]);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [role, filteredLeaders, selectedLeader]);
+
+
   // Данные по выбранному руководителю
   const {
     data: team = [],
@@ -121,9 +137,17 @@ function LeadersSuccessorsContent() {
     isError: detailError,
   } = useManagerDetailQuery(selectedLeader?.fullName);
 
-  const handleRowClick = (params: { row: ManagerListItem }) => setSelectedLeader(params.row);
+  const handleRowClick = (params: { row: ManagerListItem }) => {
+    setSelectedLeader(params.row);
+    setIsListExpanded(false); // Сворачиваем таблицу при выборе
+  };
 
-  const handleResetSelection = () => setSelectedLeader(null);
+  const handleResetSelection = () => {
+    if (role !== ROLES.MANAGER) {
+      setSelectedLeader(null);
+      setIsListExpanded(true); // Разворачиваем таблицу при закрытии карточки
+    }
+  };
 
   const resetAllFilters = () => {
     setGradeMin(undefined);
@@ -136,111 +160,132 @@ function LeadersSuccessorsContent() {
 
   return (
     <Box>
-      <FiltersBar
-        filters={filters as { gradeMin: number | undefined; domain: string | undefined }}
-        setGradeMin={setGradeMin}
-        setDomain={setDomain}
-        minGrade={minGrade ?? 0}
-        maxGrade={maxGrade ?? 0}
-        availableDomains={availableDomains}
-        searchName={searchName}
-        setSearchName={setSearchName}
-        positionFilter={positionFilter}
-        setPositionFilter={setPositionFilter}
-        criticalFilter={criticalFilter}
-        setCriticalFilter={setCriticalFilter}
-        successorFilter={successorFilter}
-        setSuccessorFilter={setSuccessorFilter}
-        resetAllFilters={resetAllFilters}
-        filteredNameOptions={filteredNameOptions}
-        filteredPositionOptions={filteredPositionOptions}
-      />
-
-      {/* Ошибка загрузки руководителей */}
-      <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, fontWeight: 'bold'  }}>
-        Руководители
-      </Typography>
-      {leadersError && (
-        <Alert
-          severity="error"
-          sx={{ mb: 2 }}
-          action={
-            <Button size="small" onClick={() => refetchLeaders()}>
-              Повторить
-            </Button>
-          }
+      {/* Таблица руководителей в виде аккордеона (полностью скрыта для менеджера) */}
+      {role !== ROLES.MANAGER && (
+        <Accordion
+          expanded={isListExpanded}
+          onChange={(_, expanded) => setIsListExpanded(expanded)}
+          sx={{
+            mb: 4,
+            borderRadius: "12px !important",
+            "&:before": { display: "none" },
+            boxShadow: 1,
+            overflow: "hidden"
+          }}
         >
-          Ошибка загрузки списка руководителей
-        </Alert>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: "background.paper" }}>
+            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+              Список руководителей
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ pt: 2, bgcolor: "background.default" }}>
+          <FiltersBar
+            filters={filters as { gradeMin: number | undefined; domain: string | undefined }}
+            setGradeMin={setGradeMin}
+            setDomain={setDomain}
+            minGrade={minGrade ?? 0}
+            maxGrade={maxGrade ?? 0}
+            availableDomains={availableDomains}
+            searchName={searchName}
+            setSearchName={setSearchName}
+            positionFilter={positionFilter}
+            setPositionFilter={setPositionFilter}
+            criticalFilter={criticalFilter}
+            setCriticalFilter={setCriticalFilter}
+            successorFilter={successorFilter}
+            setSuccessorFilter={setSuccessorFilter}
+            resetAllFilters={resetAllFilters}
+            filteredNameOptions={filteredNameOptions}
+            filteredPositionOptions={filteredPositionOptions}
+          />
+
+          {leadersError && (
+            <Alert
+              severity="error"
+              sx={{ mb: 2 }}
+              action={
+                <Button size="small" onClick={() => refetchLeaders()}>
+                  Повторить
+                </Button>
+              }
+            >
+              Ошибка загрузки списка руководителей
+            </Alert>
+          )}
+
+          {/* Таблица руководителей */}
+          <Box sx={{ width: "100%", height: 400, mb: 4 }}>
+            <DataGrid
+              rows={filteredLeaders}
+              columns={leaderColumns}
+              loading={leadersLoading}
+              getRowId={(row) => row.fullName}
+              getRowClassName={getRowClassName}
+              onRowClick={handleRowClick}
+              pageSizeOptions={[10, 25, 50]}
+              localeText={gridLocaleRu}
+              initialState={{
+                pagination: { paginationModel: { pageSize: 25 } },
+              }}
+              sx={{
+                "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-container--top": {
+                  backgroundColor: LEADERS_HEADER_BG,
+                  color: HEADER_TEXT_COLOR,
+                },
+                "& .MuiDataGrid-columnHeader": {
+                  backgroundColor: LEADERS_HEADER_BG,
+                  color: HEADER_TEXT_COLOR,
+                },
+                "& .MuiDataGrid-columnHeaders .MuiDataGrid-filler, & .MuiDataGrid-container--top .MuiDataGrid-filler": {
+                  backgroundColor: LEADERS_HEADER_BG,
+                },
+                "& .MuiDataGrid-columnHeaderTitle": {
+                  fontWeight: "bold",
+                },
+                "& .MuiDataGrid-columnHeaders .MuiIconButton-root, & .MuiDataGrid-columnHeaders .MuiSvgIcon-root": {
+                  color: HEADER_TEXT_COLOR,
+                  backgroundColor: "transparent !important",
+                },
+                "& .MuiDataGrid-columnHeaders .MuiSvgIcon-root path": {
+                  fill: HEADER_TEXT_COLOR,
+                },
+                "& .MuiDataGrid-columnSeparator": {
+                  color: "rgba(255, 255, 255, 0.5)",
+                },
+                "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
+                  outline: "none",
+                },
+                "& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within": {
+                  outline: "none",
+                },
+                "& .MuiDataGrid-row:hover": {
+                  cursor: "pointer",
+                },
+                "& .row-without-successor": {
+                  backgroundColor: (theme: Theme) =>
+                    theme.palette.mode === "light"
+                      ? "rgba(255,0,0,0.05)"
+                      : "rgba(255,0,0,0.15)",
+                  "&:hover": {
+                    backgroundColor: (theme: Theme) =>
+                      theme.palette.mode === "light"
+                        ? "rgba(255,0,0,0.1)"
+                        : "rgba(255,0,0,0.25)",
+                  },
+                },
+              }}
+            />
+          </Box>
+          </AccordionDetails>
+        </Accordion>
       )}
 
-      {/* Таблица руководителей */}
-      <Box sx={{ width: "100%", height: 400, mb: 4 }}>
-        <DataGrid
-          rows={filteredLeaders}
-          columns={leaderColumns}
-          loading={leadersLoading}
-          getRowId={(row) => row.fullName}
-          getRowClassName={getRowClassName}
-          onRowClick={handleRowClick}
-          pageSizeOptions={[10, 25, 50]}
-          localeText={gridLocaleRu}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 25 } },
-          }}
-          sx={{
-            "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-container--top": {
-              backgroundColor: LEADERS_HEADER_BG,
-              color: HEADER_TEXT_COLOR,
-            },
-            "& .MuiDataGrid-columnHeader": {
-              backgroundColor: LEADERS_HEADER_BG,
-              color: HEADER_TEXT_COLOR,
-            },
-            // Закрашиваем пустое пространство только в шапке, не трогая тело таблицы
-            "& .MuiDataGrid-columnHeaders .MuiDataGrid-filler, & .MuiDataGrid-container--top .MuiDataGrid-filler": {
-              backgroundColor: LEADERS_HEADER_BG,
-            },
-            "& .MuiDataGrid-columnHeaderTitle": {
-              fontWeight: "bold",
-            },
-            // Жестко принудительно делаем иконки белыми, убирая любые возможные фоны
-            "& .MuiDataGrid-columnHeaders .MuiIconButton-root, & .MuiDataGrid-columnHeaders .MuiSvgIcon-root": {
-              color: HEADER_TEXT_COLOR,
-              backgroundColor: "transparent !important",
-            },
-            "& .MuiDataGrid-columnHeaders .MuiSvgIcon-root path": {
-              fill: HEADER_TEXT_COLOR,
-            },
-            "& .MuiDataGrid-columnSeparator": {
-              color: "rgba(255, 255, 255, 0.5)",
-            },
-            // Убираем синее выделение при клике на ячейку или заголовок
-            "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
-              outline: "none",
-            },
-            "& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within": {
-              outline: "none",
-            },
-            // Делаем курсор pointer при наведении на строку в теле таблицы
-            "& .MuiDataGrid-row:hover": {
-              cursor: "pointer",
-            },
-            "& .row-without-successor": {
-              backgroundColor: (theme: Theme) =>
-                theme.palette.mode === "light"
-                  ? "rgba(255,0,0,0.05)"
-                  : "rgba(255,0,0,0.15)",
-              "&:hover": {
-                backgroundColor: (theme: Theme) =>
-                  theme.palette.mode === "light"
-                    ? "rgba(255,0,0,0.1)"
-                    : "rgba(255,0,0,0.25)",
-              },
-            },
-          }}
-        />
-      </Box>
+      {/* Сообщение для менеджера, если его нет в БД сотрудников */}
+      {role === ROLES.MANAGER && filteredLeaders.length === 0 && !leadersLoading && (
+        <Alert severity="warning" sx={{ mb: 4 }}>
+          Ваши данные не найдены в базе сотрудников. Обратитесь к администратору.
+        </Alert>
+      )}
 
       {/* Детали выбранного руководителя */}
       <LeaderDetails

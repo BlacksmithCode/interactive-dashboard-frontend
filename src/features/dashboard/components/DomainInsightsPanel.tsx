@@ -6,6 +6,8 @@ import { PieChart } from "@mui/x-charts/PieChart";
 import { useDashboardFilters, useDomainGistQuery } from "../hooks";
 import { useMemo } from "react";
 import { GradeFilterInput } from "./GradeFilterInput";
+import { RoleGuard } from "../../../shared/ui/RoleGuard";
+import { ROLES } from "../../../shared/ui/roles";
 
 interface DomainInsightsPanelProps {
   totalManagers: number;
@@ -121,26 +123,28 @@ export function DomainInsightsPanel({
 
         {/* Центральный блок: гистограмма на фоне CARD_BG */}
         <Grid size={{ xs: 12, md: 5 }}>
-          <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-          <FormControl size="small" sx={{ minWidth: 160, '& .MuiInputLabel-root': { color: 'white' }, '& .MuiInputLabel-root.Mui-focused': { color: 'white' }, }}>
-            <InputLabel id="domain-select-label" sx={{ color: TEXT_COLOR }}>Домен</InputLabel>
-            <Select
-              labelId="domain-select-label"
-              value={filters.domain ?? ''}
-              label="Домен"
-            onChange={(e) => {
-              const val = e.target.value;
-              setDomain(val ? String(val) : undefined);
-            }}
-              sx={selectSx}
-              >
-                <MenuItem value="">Все домены</MenuItem>
-              {computedDomains.map((d) => (
-                  <MenuItem key={d} value={d}>{d}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
+          <RoleGuard allowedRoles={[ROLES.ADMIN, ROLES.HRD_EVALUATION]}>
+            <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+            <FormControl size="small" sx={{ minWidth: 160, '& .MuiInputLabel-root': { color: 'white' }, '& .MuiInputLabel-root.Mui-focused': { color: 'white' }, }}>
+              <InputLabel id="domain-select-label" sx={{ color: TEXT_COLOR }}>Домен</InputLabel>
+              <Select
+                labelId="domain-select-label"
+                value={filters.domain ?? ''}
+                label="Домен"
+              onChange={(e) => {
+                const val = e.target.value;
+                setDomain(val ? String(val) : undefined);
+              }}
+                sx={selectSx}
+                >
+                  <MenuItem value="">Все домены</MenuItem>
+                {computedDomains.map((d) => (
+                    <MenuItem key={d} value={d}>{d}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          </RoleGuard>
           {isLoading ? (
             <Typography sx={{ color: TEXT_COLOR }}>Загрузка данных по доменам…</Typography>
           ) : isError ? (
