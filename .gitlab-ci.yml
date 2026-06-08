@@ -42,6 +42,18 @@ docker:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
+push-nginx:
+  stage: package
+  image: docker:27
+  script:
+    - docker pull nginx:alpine
+    - docker tag nginx:alpine $CI_REGISTRY_IMAGE:nginx-alpine
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:nginx-alpine
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  when: manual
+
 deploy:
   stage: deploy
   image: alpine:latest
@@ -59,7 +71,7 @@ deploy:
         docker login -u '$CI_REGISTRY_USER' -p '$CI_REGISTRY_PASSWORD' '$CI_REGISTRY' &&
         cd /opt/inno &&
         docker compose down frontend proxy 2>/dev/null;
-        docker compose up -d --pull always frontend proxy
+        docker compose up -d frontend proxy
       "
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
