@@ -47,18 +47,6 @@ docker:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-push-nginx:
-  stage: package
-  image: docker:27
-  script:
-    - docker pull nginx:alpine
-    - docker tag nginx:alpine $CI_REGISTRY_IMAGE:nginx-alpine
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker push $CI_REGISTRY_IMAGE:nginx-alpine
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-  when: manual
-
 deploy:
   stage: deploy
   image: alpine:latest
@@ -72,9 +60,7 @@ deploy:
     - ssh $DEPLOY_USER@$DEPLOY_SERVER_IP "mkdir -p /opt/inno/proxy"
     - scp docker-compose.yml $DEPLOY_USER@$DEPLOY_SERVER_IP:/opt/inno/docker-compose.yml
     - scp proxy/nginx.conf $DEPLOY_USER@$DEPLOY_SERVER_IP:/opt/inno/proxy/nginx.conf
-    # Передаём сохранённый образ фронтенда
     - scp image.tar $DEPLOY_USER@$DEPLOY_SERVER_IP:/tmp/image.tar
-    # Загружаем образ на сервере и запускаем контейнеры
     - ssh $DEPLOY_USER@$DEPLOY_SERVER_IP "
         docker load -i /tmp/image.tar &&
         docker tag $DOCKER_IMAGE it-camp.innoca.local/rsreu-team/interactive-dashboard-frontend:latest &&
@@ -84,5 +70,4 @@ deploy:
         docker compose up -d frontend proxy
       "
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-  when: manual
+    - if: $CI_COMMIT_BRANCH == "main"
