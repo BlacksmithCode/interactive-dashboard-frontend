@@ -1,11 +1,8 @@
 /**
- * @file Хук для получения мета-информации о руководителях.
+ * @file Хук для получения мета-информации о руководителе.
  *
- * Устраняет дублирование логики вычисления minGrade / maxGrade / availableDomains
+ * Устраняет дублирование логики получения minGrade / maxGrade / availableDomains
  * между SummaryStats.tsx и LeadersSuccessors.tsx.
- *
- * В будущем, если бэкенд предоставит эндпоинт /api/dashboard/meta,
- * этот хук будет переписан на его использование (см. requirements.md).
  */
 import { useQuery } from "@tanstack/react-query";
 import { fetchDashboardMeta } from "../../../shared/api/dashboardApi";

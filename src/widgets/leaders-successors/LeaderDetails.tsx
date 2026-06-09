@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   Box,
   Typography,
@@ -47,6 +48,12 @@ export const LeaderDetails = ({
   succError,
   refetchSucc,
 }: LeaderDetailsProps) => {
+  const filteredTeam = useMemo(() => {
+    if (!team || !successors) return team;
+    const successorNames = new Set(successors.map((s) => s.fullName));
+    return team.filter((member) => !successorNames.has(member.fullName));
+  }, [team, successors]);
+
   if (!selectedLeader) return null;
 
   return (
@@ -116,7 +123,7 @@ export const LeaderDetails = ({
       {!teamLoading && !teamError && (
         <Box sx={{ height: 300, mb: 3 }}>
           <DataGrid
-            rows={team}
+            rows={filteredTeam}
             columns={teamColumns}
             getRowId={(row) => row.fullName}
             pageSizeOptions={[5, 10]}

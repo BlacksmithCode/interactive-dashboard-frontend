@@ -18,7 +18,6 @@ export function DashboardFiltersProvider({
   const [gradeMin, setGradeMinRaw] = useState<number | undefined>(initialGradeMin);
   const [domain, setDomainRaw] = useState<string | undefined>(initialDomain);
 
-  // Метаданные из useManagerMeta (единый источник для minGrade, maxGrade, availableDomains)
   const {
     minGrade,
     maxGrade,
@@ -26,8 +25,6 @@ export function DashboardFiltersProvider({
     isLoading: isMetaLoading,
   } = useManagerMeta();
 
-  // Вычисляем эффективный домен: если нет в списке доступных в целом - сбрасываем на «Все».
-  // Но только если метаданные уже загрузились, чтобы не сбросить первоначальный url.
   const effectiveDomain = useMemo(() => {
     if (!domain) return undefined;
     if (isMetaLoading) return domain;
@@ -50,7 +47,6 @@ export function DashboardFiltersProvider({
     },
     setGradeMin,
     setDomain,
-    // Метаданные для UI
     minGrade,
     maxGrade,
     availableDomains: metaDomains || [],
