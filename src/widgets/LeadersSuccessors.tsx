@@ -41,13 +41,16 @@ export default function LeadersSuccessors() {
 
 function LeadersSuccessorsContent() {
   const { role } = useAuth();
-  const { filters, setGradeMin, setDomain, minGrade, maxGrade, availableDomains } = useDashboardFilters();
-
-  // Локальные UI-фильтры (поиск по ФИО/должности, критичность, преемник)
-  const [searchName, setSearchName] = useState("");
-  const [positionFilter, setPositionFilter] = useState("");
-  const [criticalFilter, setCriticalFilter] = useState<boolean | undefined>(undefined);
-  const [successorFilter, setSuccessorFilter] = useState<boolean | undefined>(undefined);
+  const {
+    filters,
+    availableDomains,
+    searchName,
+    debouncedSearchName,
+    positionFilter,
+    debouncedPositionFilter,
+    criticalFilter,
+    successorFilter,
+  } = useDashboardFilters();
 
   const [selectedLeader, setSelectedLeader] = useState<ManagerListItem | null>(null);
   const [isListExpanded, setIsListExpanded] = useState(true);
@@ -65,42 +68,90 @@ function LeadersSuccessorsContent() {
     hasSuccessor: successorFilter,
   });
 
-  // Метаданные для автокомплита
-  const { data: allManagers = [] } = useLeadersQuery({});
-
-  const uniquePositions = useMemo(() => {
-    if (!allManagers) return [];
-    return [...new Set(allManagers.map((m) => capitalizeFirstLetter(m.position)))].sort();
-  }, [allManagers]);
-
-  // Автодополнение ФИО
+  // Автодополнение ФИО (с учетом фильтра по должности)
   const filteredNameOptions = useMemo(() => {
-    const names = allManagers?.map((m) => m.fullName) ?? [];
+    let relevantLeaders = leaders;
+    if (positionFilter.trim()) {
+      const lowerPos = positionFilter.trim().toLowerCase();
+      relevantLeaders = relevantLeaders.filter((l) => l.position.toLowerCase().includes(lowerPos));
+    }
+    const names = relevantLeaders.map((m) => m.fullName);
+    
     if (!searchName.trim()) return names;
-    const lower = searchName.trim().toLowerCase();
-    return names.filter((name) => name.toLowerCase().includes(lower));
-  }, [allManagers, searchName]);
+    const lowerName = searchName.trim().toLowerCase();
+    return names.filter((name) => name.toLowerCase().includes(lowerName));
+  }, [leaders, searchName, positionFilter]);
 
-  // Автодополнение должности
+  // Автодополнение должности (с учетом фильтра по ФИО)
   const filteredPositionOptions = useMemo(() => {
-    if (!positionFilter.trim()) return uniquePositions;
-    const lower = positionFilter.trim().toLowerCase();
-    return uniquePositions.filter((pos) => pos.toLowerCase().includes(lower));
-  }, [uniquePositions, positionFilter]);
-
-  // Локальная фильтрация ТОЛЬКО по ФИО и должности (остальное на бэкенде)
-  const filteredLeaders = useMemo(() => {
-    let result = leaders;
+    let relevantLeaders = leaders;
     if (searchName.trim()) {
-      const lower = searchName.trim().toLowerCase();
-      result = result.filter((l) => l.fullName.toLowerCase().includes(lower));
+      const lowerName = searchName.trim().toLowerCase();
+      relevantLeaders = relevantLeaders.filter((l) => l.fullName.toLowerCase().includes(lowerName));
+    }
+    const positions = [...new Set(relevantLeaders.map((m) => capitalizeFirstLetter(m.position)))].sort();
+    
+    if (!positionFilter.trim()) return positions;
+    const lowerPos = positionFilter.trim().toLowerCase();
+    return positions.filter((pos) => pos.toLowerCase().includes(lowerPos));
+  }, [leaders, searchName, positionFilter]);
+
+  // Автодополнение домена (с учетом фильтров по ФИО и должности)
+  const filteredDomainOptions = useMemo(() => {
+    let relevantLeaders = leaders;
+    if (searchName.trim()) {
+      const lowerName = searchName.trim().toLowerCase();
+      relevantLeaders = relevantLeaders.filter((l) => l.fullName.toLowerCase().includes(lowerName));
     }
     if (positionFilter.trim()) {
-      const lower = positionFilter.trim().toLowerCase();
+      const lowerPos = positionFilter.trim().toLowerCase();
+      relevantLeaders = relevantLeaders.filter((l) => l.position.toLowerCase().includes(lowerPos));
+    }
+    const activeDomains = new Set(relevantLeaders.map((m) => m.domain));
+    
+    // Обязательно сохраняем уже выбранный домен, чтобы Autocomplete не сбоил и позволял переключаться
+    if (filters.domain) activeDomains.add(filters.domain);
+    
+    return availableDomains.filter((d) => activeDomains.has(d));
+  }, [leaders, searchName, positionFilter, availableDomains, filters.domain]);
+
+  // Локальная фильтрация с использованием debounced значений
+  const filteredLeaders = useMemo(() => {
+    let result = leaders;
+    if (debouncedSearchName.trim()) {
+      const lower = debouncedSearchName.trim().toLowerCase();
+      result = result.filter((l) => l.fullName.toLowerCase().includes(lower));
+    }
+    if (debouncedPositionFilter.trim()) {
+      const lower = debouncedPositionFilter.trim().toLowerCase();
       result = result.filter((l) => l.position.toLowerCase().includes(lower));
     }
     return result;
-  }, [leaders, searchName, positionFilter]);
+  }, [leaders, debouncedSearchName, debouncedPositionFilter]);
+
+  // Динамические опции для Критичности (только то, что есть в отфильтрованной таблице)
+  const availableCriticalOptions = useMemo(() => {
+    const options = new Set<string>();
+    filteredLeaders.forEach((l) => {
+      if (l.critical !== undefined) options.add(l.critical.toString());
+    });
+    return Array.from(options);
+  }, [filteredLeaders]);
+
+  // Динамические опции для Преемника (безопасно для TypeScript, без any)
+  const availableSuccessorOptions = useMemo(() => {
+    const options = new Set<string>();
+    filteredLeaders.forEach((l) => {
+      // Приводим к безопасному типу Record, чтобы избежать ошибки eslint: no-explicit-any
+      const leaderData = l as unknown as Record<string, unknown>;
+      if (typeof leaderData.hasSuccessor === 'boolean') {
+        options.add(String(leaderData.hasSuccessor));
+      } else if (typeof leaderData.successorsCount === 'number') {
+        options.add(String(leaderData.successorsCount > 0));
+      }
+    });
+    return Array.from(options);
+  }, [filteredLeaders]);
 
   // Автоматически открываем карточку, если зашел MANAGER (у него всегда только 1 запись)
   useEffect(() => {
@@ -146,15 +197,6 @@ function LeadersSuccessorsContent() {
     }
   };
 
-  const resetAllFilters = () => {
-    setGradeMin(undefined);
-    setDomain(undefined);
-    setSearchName("");
-    setPositionFilter("");
-    setCriticalFilter(undefined);
-    setSuccessorFilter(undefined);
-  };
-
   return (
     <Box>
       {/* Таблица руководителей в виде аккордеона (полностью скрыта для менеджера) */}
@@ -177,23 +219,11 @@ function LeadersSuccessorsContent() {
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 2, bgcolor: "background.default" }}>
           <FiltersBar
-            filters={filters as { gradeMin: number | undefined; domain: string | undefined }}
-            setGradeMin={setGradeMin}
-            setDomain={setDomain}
-            minGrade={minGrade ?? 0}
-            maxGrade={maxGrade ?? 0}
-            availableDomains={availableDomains}
-            searchName={searchName}
-            setSearchName={setSearchName}
-            positionFilter={positionFilter}
-            setPositionFilter={setPositionFilter}
-            criticalFilter={criticalFilter}
-            setCriticalFilter={setCriticalFilter}
-            successorFilter={successorFilter}
-            setSuccessorFilter={setSuccessorFilter}
-            resetAllFilters={resetAllFilters}
             filteredNameOptions={filteredNameOptions}
             filteredPositionOptions={filteredPositionOptions}
+            filteredDomainOptions={filteredDomainOptions}
+            availableCriticalOptions={availableCriticalOptions}
+            availableSuccessorOptions={availableSuccessorOptions}
           />
 
           {leadersError && (

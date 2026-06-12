@@ -1,15 +1,13 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Autocomplete,
   TextField,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Stack,
 } from "@mui/material";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import ClearIcon from "@mui/icons-material/Clear";
+import { useDashboardFilters } from "../../features/dashboard/hooks";
 import { GradeFilterInput } from "../../features/dashboard/components/GradeFilterInput";
 
 // Общие стили для полей фильтров (синий фон, белый текст и рамка)
@@ -45,46 +43,43 @@ const commonFilterSx = {
 };
 
 interface FiltersBarProps {
-  filters: { gradeMin: number | undefined; domain: string | undefined };
-  setGradeMin: (value: number | undefined) => void;
-  setDomain: (value: string | undefined) => void;
-  minGrade: number;
-  maxGrade: number;
-  availableDomains: string[];
-  searchName: string;
-  setSearchName: (value: string | ((prev: string) => string)) => void;
-  positionFilter: string;
-  setPositionFilter: (value: string) => void;
-  criticalFilter: boolean | undefined;
-  setCriticalFilter: (value: boolean | undefined) => void;
-  successorFilter: boolean | undefined;
-  setSuccessorFilter: (value: boolean | undefined) => void;
-  resetAllFilters: () => void;
   filteredNameOptions: string[];
   filteredPositionOptions: string[];
+  filteredDomainOptions: string[];
+  availableCriticalOptions: string[];
+  availableSuccessorOptions: string[];
 }
 
 export const FiltersBar = ({
-  filters,
-  setGradeMin,
-  setDomain,
-  minGrade,
-  maxGrade,
-  availableDomains,
-  searchName,
-  setSearchName,
-  positionFilter,
-  setPositionFilter,
-  criticalFilter,
-  setCriticalFilter,
-  successorFilter,
-  setSuccessorFilter,
-  resetAllFilters,
   filteredNameOptions,
   filteredPositionOptions,
+  filteredDomainOptions,
+  availableCriticalOptions,
+  availableSuccessorOptions,
 }: FiltersBarProps) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const positionInputRef = useRef<HTMLInputElement>(null);
+
+  const [domainOpen, setDomainOpen] = useState(false);
+  const [criticalOpen, setCriticalOpen] = useState(false);
+  const [successorOpen, setSuccessorOpen] = useState(false);
+
+  const {
+    filters,
+    setGradeMin,
+    setDomain,
+    minGrade,
+    maxGrade,
+    searchName,
+    setSearchName,
+    positionFilter,
+    setPositionFilter,
+    criticalFilter,
+    setCriticalFilter,
+    successorFilter,
+    setSuccessorFilter,
+    resetAllFilters,
+  } = useDashboardFilters();
 
   return (
     <Stack
@@ -103,12 +98,16 @@ export const FiltersBar = ({
       {/* Поле поиска по ФИО */}
       <Autocomplete
         freeSolo
-        disableClearable={false}
+      disableClearable={!searchName}
         clearOnBlur={false}
         selectOnFocus
         openOnFocus
         options={filteredNameOptions}
-        value={searchName}
+        noOptionsText="Нет вариантов"
+        clearText=""
+        closeText=""
+        openText=""
+      value={searchName || null}
         inputValue={searchName}
         onInputChange={(_, newValue) => {
           const cleaned = newValue.replace(/[^а-яА-ЯёЁa-zA-Z \-.]/g, "");
@@ -141,7 +140,8 @@ export const FiltersBar = ({
         }}
         size="small"
         sx={{ minWidth: 200, ...commonFilterSx }}
-        clearIcon={searchName ? undefined : null}
+        forcePopupIcon={!searchName}
+        clearIcon={<ClearIcon fontSize="small" />}
         renderInput={(params) => (
           <TextField
             {...params}
@@ -160,12 +160,16 @@ export const FiltersBar = ({
       {/* Поле должности */}
       <Autocomplete
         freeSolo
-        disableClearable={false}
+      disableClearable={!positionFilter}
         clearOnBlur={false}
         selectOnFocus
         openOnFocus
         options={filteredPositionOptions}
-        value={positionFilter}
+        noOptionsText="Нет вариантов"
+        clearText=""
+        closeText=""
+        openText=""
+      value={positionFilter || null}
         inputValue={positionFilter}
         onInputChange={(_, newValue) => setPositionFilter(newValue)}
         onKeyDown={(e) => {
@@ -180,7 +184,8 @@ export const FiltersBar = ({
         }}
         size="small"
         sx={{ minWidth: 200, ...commonFilterSx }}
-        clearIcon={positionFilter ? undefined : null}
+        forcePopupIcon={!positionFilter}
+        clearIcon={<ClearIcon fontSize="small" />}
         renderInput={(params) => (
           <TextField {...params} label="Должность" inputRef={positionInputRef} />
         )}
@@ -195,51 +200,63 @@ export const FiltersBar = ({
         maxPossibleGrade={maxGrade}
         autoSetDefault={false}
       />
-      <TextField
-        label="Домен"
-        select
+      <Autocomplete
+        options={filteredDomainOptions}
+        value={filters.domain ?? null}
+        noOptionsText="Нет вариантов"
+        clearText=""
+        closeText=""
+        openText=""
+        open={domainOpen}
+        onOpen={() => { if (!filters.domain) setDomainOpen(true); }}
+        onClose={() => setDomainOpen(false)}
+        onChange={(_, newValue) => setDomain(newValue || undefined)}
         size="small"
-        value={filters.domain ?? ""}
-        onChange={(e) => setDomain(e.target.value || undefined)}
+        forcePopupIcon={!filters.domain}
+        clearIcon={<ClearIcon fontSize="small" />}
         sx={{ minWidth: 160, ...commonFilterSx }}
-      >
-        <MenuItem value="">Все домены</MenuItem>
-        {availableDomains.map((d) => (
-          <MenuItem key={d} value={d}>
-            {d}
-          </MenuItem>
-        ))}
-      </TextField>
-      <FormControl size="small" sx={{ minWidth: 160, ...commonFilterSx }}>
-        <InputLabel>Критичность</InputLabel>
-        <Select
-          value={criticalFilter === undefined ? "all" : criticalFilter.toString()}
-          label="Критичность"
-          onChange={(e) => {
-            const val = e.target.value;
-            setCriticalFilter(val === "all" ? undefined : val === "true");
-          }}
-        >
-          <MenuItem value="all">Все</MenuItem>
-          <MenuItem value="true">Критичные</MenuItem>
-          <MenuItem value="false">Некритичные</MenuItem>
-        </Select>
-      </FormControl>
-      <FormControl size="small" sx={{ minWidth: 160, ...commonFilterSx }}>
-        <InputLabel>Преемник</InputLabel>
-        <Select
-          value={successorFilter === undefined ? "all" : successorFilter.toString()}
-          label="Преемник"
-          onChange={(e) => {
-            const val = e.target.value;
-            setSuccessorFilter(val === "all" ? undefined : val === "true");
-          }}
-        >
-          <MenuItem value="all">Все</MenuItem>
-          <MenuItem value="true">Есть преемник</MenuItem>
-          <MenuItem value="false">Нет преемника</MenuItem>
-        </Select>
-      </FormControl>
+        renderInput={(params) => <TextField {...params} label="Домен" />}
+      />
+      <Autocomplete
+        options={["true", "false"].filter(
+          (v) => availableCriticalOptions.includes(v) || criticalFilter === (v === "true")
+        )}
+        value={criticalFilter !== undefined ? criticalFilter.toString() : null}
+        noOptionsText="Нет вариантов"
+        clearText=""
+        closeText=""
+        openText=""
+        open={criticalOpen}
+        onOpen={() => { if (criticalFilter === undefined) setCriticalOpen(true); }}
+        onClose={() => setCriticalOpen(false)}
+        onChange={(_, newValue) => setCriticalFilter(newValue ? newValue === "true" : undefined)}
+        getOptionLabel={(option) => (option === "true" ? "Критичные" : "Некритичные")}
+        size="small"
+        forcePopupIcon={criticalFilter === undefined}
+        clearIcon={<ClearIcon fontSize="small" />}
+        sx={{ minWidth: 160, ...commonFilterSx }}
+        renderInput={(params) => <TextField {...params} label="Критичность" />}
+      />
+      <Autocomplete
+        options={["true", "false"].filter(
+          (v) => availableSuccessorOptions.includes(v) || successorFilter === (v === "true")
+        )}
+        value={successorFilter !== undefined ? successorFilter.toString() : null}
+        noOptionsText="Нет вариантов"
+        clearText=""
+        closeText=""
+        openText=""
+        open={successorOpen}
+        onOpen={() => { if (successorFilter === undefined) setSuccessorOpen(true); }}
+        onClose={() => setSuccessorOpen(false)}
+        onChange={(_, newValue) => setSuccessorFilter(newValue ? newValue === "true" : undefined)}
+        getOptionLabel={(option) => (option === "true" ? "Есть преемник" : "Нет преемника")}
+        size="small"
+        forcePopupIcon={successorFilter === undefined}
+        clearIcon={<ClearIcon fontSize="small" />}
+        sx={{ minWidth: 160, ...commonFilterSx }}
+        renderInput={(params) => <TextField {...params} label="Преемник" />}
+      />
 
       <Button
         variant="text"

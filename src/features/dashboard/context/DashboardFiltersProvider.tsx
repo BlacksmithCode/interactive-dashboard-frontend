@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, type ReactNode } from "react";
+import { useState, useCallback, useMemo, useEffect, type ReactNode } from "react";
 import { DashboardFiltersContext, type DashboardFiltersState } from "./DashboardFiltersContext";
 import { useManagerMeta } from "../hooks";
 
@@ -17,6 +17,16 @@ export function DashboardFiltersProvider({
 }: DashboardFiltersProviderProps) {
   const [gradeMin, setGradeMinRaw] = useState<number | undefined>(initialGradeMin);
   const [domain, setDomainRaw] = useState<string | undefined>(initialDomain);
+
+  // Состояния для локальных/текстовых фильтров
+  const [searchName, setSearchName] = useState("");
+  const [debouncedSearchName, setDebouncedSearchName] = useState("");
+
+  const [positionFilter, setPositionFilter] = useState("");
+  const [debouncedPositionFilter, setDebouncedPositionFilter] = useState("");
+
+  const [criticalFilter, setCriticalFilter] = useState<boolean | undefined>(undefined);
+  const [successorFilter, setSuccessorFilter] = useState<boolean | undefined>(undefined);
 
   const {
     minGrade,
@@ -40,6 +50,30 @@ export function DashboardFiltersProvider({
     setDomainRaw(value);
   }, []);
 
+  // Debounce для текстовых полей (500ms) для будущей пагинации и оптимизации UI
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchName(searchName);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchName]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedPositionFilter(positionFilter);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [positionFilter]);
+
+  const resetAllFilters = useCallback(() => {
+    setGradeMinRaw(undefined);
+    setDomainRaw(undefined);
+    setSearchName("");
+    setPositionFilter("");
+    setCriticalFilter(undefined);
+    setSuccessorFilter(undefined);
+  }, []);
+
   const state: DashboardFiltersState = {
     filters: {
       gradeMin,
@@ -50,6 +84,17 @@ export function DashboardFiltersProvider({
     minGrade,
     maxGrade,
     availableDomains: metaDomains || [],
+    searchName,
+    setSearchName,
+    debouncedSearchName,
+    positionFilter,
+    setPositionFilter,
+    debouncedPositionFilter,
+    criticalFilter,
+    setCriticalFilter,
+    successorFilter,
+    setSuccessorFilter,
+    resetAllFilters,
   };
 
   return (
