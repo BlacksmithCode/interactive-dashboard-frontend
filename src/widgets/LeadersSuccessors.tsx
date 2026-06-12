@@ -68,9 +68,15 @@ function LeadersSuccessorsContent() {
     hasSuccessor: successorFilter,
   });
 
+  // Оставляем только руководителей с точным совпадением грейда для этой страницы
+  const exactGradeLeaders = useMemo(() => {
+    if (filters.gradeMin === undefined) return leaders;
+    return leaders.filter((l) => l.grade === filters.gradeMin);
+  }, [leaders, filters.gradeMin]);
+
   // Автодополнение ФИО (с учетом фильтра по должности)
   const filteredNameOptions = useMemo(() => {
-    let relevantLeaders = leaders;
+    let relevantLeaders = exactGradeLeaders;
     if (positionFilter.trim()) {
       const lowerPos = positionFilter.trim().toLowerCase();
       relevantLeaders = relevantLeaders.filter((l) => l.position.toLowerCase().includes(lowerPos));
@@ -80,11 +86,11 @@ function LeadersSuccessorsContent() {
     if (!searchName.trim()) return names;
     const lowerName = searchName.trim().toLowerCase();
     return names.filter((name) => name.toLowerCase().includes(lowerName));
-  }, [leaders, searchName, positionFilter]);
+  }, [exactGradeLeaders, searchName, positionFilter]);
 
   // Автодополнение должности (с учетом фильтра по ФИО)
   const filteredPositionOptions = useMemo(() => {
-    let relevantLeaders = leaders;
+    let relevantLeaders = exactGradeLeaders;
     if (searchName.trim()) {
       const lowerName = searchName.trim().toLowerCase();
       relevantLeaders = relevantLeaders.filter((l) => l.fullName.toLowerCase().includes(lowerName));
@@ -94,11 +100,11 @@ function LeadersSuccessorsContent() {
     if (!positionFilter.trim()) return positions;
     const lowerPos = positionFilter.trim().toLowerCase();
     return positions.filter((pos) => pos.toLowerCase().includes(lowerPos));
-  }, [leaders, searchName, positionFilter]);
+  }, [exactGradeLeaders, searchName, positionFilter]);
 
   // Автодополнение домена (с учетом фильтров по ФИО и должности)
   const filteredDomainOptions = useMemo(() => {
-    let relevantLeaders = leaders;
+    let relevantLeaders = exactGradeLeaders;
     if (searchName.trim()) {
       const lowerName = searchName.trim().toLowerCase();
       relevantLeaders = relevantLeaders.filter((l) => l.fullName.toLowerCase().includes(lowerName));
@@ -113,11 +119,11 @@ function LeadersSuccessorsContent() {
     if (filters.domain) activeDomains.add(filters.domain);
     
     return availableDomains.filter((d) => activeDomains.has(d));
-  }, [leaders, searchName, positionFilter, availableDomains, filters.domain]);
+  }, [exactGradeLeaders, searchName, positionFilter, availableDomains, filters.domain]);
 
   // Локальная фильтрация с использованием debounced значений
   const filteredLeaders = useMemo(() => {
-    let result = leaders;
+    let result = exactGradeLeaders;
     if (debouncedSearchName.trim()) {
       const lower = debouncedSearchName.trim().toLowerCase();
       result = result.filter((l) => l.fullName.toLowerCase().includes(lower));
@@ -127,7 +133,7 @@ function LeadersSuccessorsContent() {
       result = result.filter((l) => l.position.toLowerCase().includes(lower));
     }
     return result;
-  }, [leaders, debouncedSearchName, debouncedPositionFilter]);
+  }, [exactGradeLeaders, debouncedSearchName, debouncedPositionFilter]);
 
   // Динамические опции для Критичности (только то, что есть в отфильтрованной таблице)
   const availableCriticalOptions = useMemo(() => {
