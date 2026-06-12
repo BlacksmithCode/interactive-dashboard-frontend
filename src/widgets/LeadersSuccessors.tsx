@@ -220,7 +220,7 @@ function LeadersSuccessorsContent() {
               getRowClassName={getRowClassName}
               onRowClick={handleRowClick}
               pageSizeOptions={[10, 25, 50]}
-              localeText={gridLocaleRu}
+              localeText={{ ...gridLocaleRu, noRowsLabel: "Ничего не найдено" }}
               initialState={{
                 pagination: { paginationModel: { pageSize: 25 } },
               }}
