@@ -1,6 +1,7 @@
 import type { GridColDef } from "@mui/x-data-grid";
 import type { ManagerListItem, Successor } from "../../shared/types/dashboard";
 import { capitalizeFirstLetter } from "./utils";
+import { PERF_MAP, POT_MAP } from "../../features/dashboard/config/nineBoxMeta";
 
 // Колонки таблицы руководителей
 export const leaderColumns: GridColDef<ManagerListItem>[] = [
@@ -80,14 +81,20 @@ export const teamColumns: GridColDef[] = [
   { 
     field: "performance", 
     headerName: "Результат-ть", 
-    width: 130,
-    valueGetter: (value) => value || "Нет данных"
+    width: 150,
+    valueGetter: (value) => {
+      if (!value) return "Нет данных";
+      return PERF_MAP[value as string] ? `${value} (${PERF_MAP[value as string]})` : value;
+    }
   },
   { 
     field: "potential", 
     headerName: "Потенциал", 
-    width: 100,
-    valueGetter: (value) => value || "Нет данных"
+    width: 130,
+    valueGetter: (value) => {
+      if (!value) return "Нет данных";
+      return POT_MAP[value as string] ? `${value} (${POT_MAP[value as string]})` : value;
+    }
   },
   { 
     field: "era", 
@@ -139,14 +146,20 @@ export const successorColumns: GridColDef<Successor>[] = [
   { 
     field: "performance", 
     headerName: "Результат-ть", 
-    width: 140,
-    valueGetter: (value) => value || "Нет данных"
+    width: 160,
+    valueGetter: (value) => {
+      if (!value) return "Нет данных";
+      return PERF_MAP[value as string] ? `${value} (${PERF_MAP[value as string]})` : value;
+    }
   },
   { 
     field: "potential", 
     headerName: "Потенциал", 
-    width: 100,
-    valueGetter: (value) => value || "Нет данных"
+    width: 130,
+    valueGetter: (value) => {
+      if (!value) return "Нет данных";
+      return POT_MAP[value as string] ? `${value} (${POT_MAP[value as string]})` : value;
+    }
   },
   { 
     field: "era", 

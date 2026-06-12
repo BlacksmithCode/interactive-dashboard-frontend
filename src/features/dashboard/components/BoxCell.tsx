@@ -1,19 +1,6 @@
 import { Card, CardContent, Typography, Box, Tooltip } from "@mui/material";
 import type { MergedKey, NineBoxCell } from "../../../shared/types/dashboard";
-import { boxMeta, categoryColor } from "../config/nineBoxMeta";
-
-const PERF_MAP: Record<string, string> = {
-  A: "Высшая",
-  B: "Высокая",
-  C: "Нормальная",
-  D: "Сниженная",
-  E: "Низкая",
-};
-const POT_MAP: Record<string, string> = {
-  A: "Высокий",
-  B: "Средний",
-  C: "Низкий",
-};
+import { boxMeta, categoryColor, PERF_MAP, POT_MAP } from "../config/nineBoxMeta";
 
 interface BoxCellProps extends NineBoxCell {
   code: MergedKey;

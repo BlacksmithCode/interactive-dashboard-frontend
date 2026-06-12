@@ -42,3 +42,19 @@ export const potentialLabels = ["A (высокий)", "B (средний)", "C (
 
 /** Подписи столбцов (результативность) */
 export const performanceLabels = ["D / E", "C", "A / B"] as const;
+
+/** Расшифровка результативности */
+export const PERF_MAP: Record<string, string> = {
+  A: "Высшая",
+  B: "Высокая",
+  C: "Нормальная",
+  D: "Сниженная",
+  E: "Низкая",
+};
+
+/** Расшифровка потенциала */
+export const POT_MAP: Record<string, string> = {
+  A: "Высокий",
+  B: "Средний",
+  C: "Низкий",
+};
