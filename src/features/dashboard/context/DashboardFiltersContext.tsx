@@ -11,7 +11,24 @@ export interface DashboardFiltersState {
   maxGrade: number | undefined;
   /** Отсортированный список уникальных доменов */
   availableDomains: string[];
+
+  // Текстовые фильтры и их debounced (отложенные) версии
+  searchName: string;
+  setSearchName: (value: string | ((prev: string) => string)) => void;
+  debouncedSearchName: string;
+
+  positionFilter: string;
+  setPositionFilter: (value: string) => void;
+  debouncedPositionFilter: string;
+
+  // Дополнительные фильтры
+  criticalFilter: boolean | undefined;
+  setCriticalFilter: (value: boolean | undefined) => void;
+
+  successorFilter: boolean | undefined;
+  setSuccessorFilter: (value: boolean | undefined) => void;
+
+  resetAllFilters: () => void;
 }
 
 export const DashboardFiltersContext = createContext<DashboardFiltersState | null>(null);
-
