@@ -1,7 +1,6 @@
 import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 import type { ApiErrorResponse, NormalizedError } from "../types/errors";
-import { getAuthHeader } from "./auth";
 
 /** Нормализация ошибки Axios в единый формат */
 function normalizeError(error: AxiosError<ApiErrorResponse>): NormalizedError {
@@ -48,11 +47,18 @@ export function setOnUnauthorizedHandler(handler: (() => void) | null) {
   onUnauthorizedHandler = handler;
 }
 
+// ─── Провайдер токена (Инверсия зависимостей) ─────────────────────────────
+let tokenProvider: (() => string | null) | null = null;
+
+export function setTokenProvider(provider: () => string | null) {
+  tokenProvider = provider;
+}
+
 // Перехватчик запросов — добавляем Basic Auth заголовок
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const authHeader = getAuthHeader();
-  if (authHeader) {
-    config.headers.set("Authorization", authHeader);
+  if (tokenProvider) {
+    const authHeader = tokenProvider();
+    if (authHeader) config.headers.set("Authorization", authHeader);
   }
   return config;
 });

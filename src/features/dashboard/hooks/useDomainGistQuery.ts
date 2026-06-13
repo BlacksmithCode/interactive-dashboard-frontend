@@ -1,8 +1,6 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { fetchDomainGist } from "../../../shared/api/dashboardApi";
-import { useAuth } from "../../../app/providers/useAuth";
-import { ROLES } from "../../../shared/ui/roles";
-import type { DomainGistDto } from "../../../shared/types/dashboard";
+import { fetchDomainGist, type DomainGistDto } from "@/entities/dashboard";
+import { useAuth, ROLES } from "@/entities/user";
 
 export function useDomainGistQuery(filters: { gradeMin?: number; domain?: string }) {
   const { role } = useAuth();

@@ -2,7 +2,6 @@
  * @file Barrel file для хуков дашборда.
  * Централизованный экспорт всех хуков для чистоты импортов.
  */
-export { useDashboardFilters } from "./useDashboardFilters";
 export { useDomainGistQuery } from "./useDomainGistQuery";
 export { useLeadersQuery } from "./useLeadersQuery";
 export { useManagerDetailQuery } from "./useManagerDetailQuery";

@@ -1,8 +1,6 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { fetchStats } from "../../../shared/api/dashboardApi";
-import { useAuth } from "../../../app/providers/useAuth";
-import { ROLES } from "../../../shared/ui/roles";
-import type { DashboardFilters } from "../../../shared/types/dashboard";
+import { fetchStats, type DashboardFilters } from "@/entities/dashboard";
+import { useAuth, ROLES } from "@/entities/user";
 
 /**
  * Хук запроса сводной статистики (KPI).

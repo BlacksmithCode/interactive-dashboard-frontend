@@ -1,9 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "./providers/AuthProvider";
+import { AuthProvider } from "@/entities/user";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -14,21 +13,12 @@ const queryClient = new QueryClient({
   },
 });
 
-const theme = createTheme({
-  palette: {
-    primary: { main: "#1565c0" },
-  },
-});
-
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </QueryClientProvider>
   </React.StrictMode>
 );

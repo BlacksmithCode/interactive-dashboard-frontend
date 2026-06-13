@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchLeaders } from "../../../shared/api/dashboardApi";
-import type { ManagerListItem } from "../../../shared/types/dashboard";
+import { fetchLeaders, type ManagerListItem } from "@/entities/leader";
 
 /**
  * Хук для получения списка руководителей.

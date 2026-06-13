@@ -1,17 +1,13 @@
 // src/features/dashboard/hooks/useManagerDetailQuery.ts
 import { useQuery } from "@tanstack/react-query";
-import { api } from "../../../shared/api/apiClient";
-import type { ManagerDetail } from "../../../shared/types/dashboard";
+import { fetchManagerDetail, type ManagerDetail } from "@/entities/leader";
 
 export function useManagerDetailQuery(fullName: string | undefined) {
   return useQuery<ManagerDetail>({
     queryKey: ["managerDetail", fullName],
-    queryFn: async () => {
+    queryFn: () => {
       if (!fullName) throw new Error("fullName is required");
-      const { data } = await api.get<ManagerDetail>(
-        `/api/employees/${encodeURIComponent(fullName)}`
-      );
-      return data;
+      return fetchManagerDetail(fullName);
     },
     enabled: !!fullName,
   });
