@@ -5,7 +5,7 @@
  * между SummaryStats.tsx и LeadersSuccessors.tsx.
  */
 import { useQuery } from "@tanstack/react-query";
-import { fetchDashboardMeta } from "../../../shared/api/dashboardApi";
+import { fetchDashboardMeta } from "@/entities/dashboard";
 
 export interface ManagerMeta {
   minGrade: number | undefined;

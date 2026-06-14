@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchManagerSuccessors } from "../../../shared/api/dashboardApi";
-import type { Successor } from "../../../shared/types/dashboard";
+import { fetchManagerSuccessors, type Successor } from "@/entities/leader";
 
 export function useSuccessorsQuery(fullName: string | undefined) {
   return useQuery<Successor[]>({

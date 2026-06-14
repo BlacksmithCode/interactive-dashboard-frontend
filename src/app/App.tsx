@@ -1,74 +1,17 @@
-import { useState, useMemo } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import Layout from "../widgets/layout/Layout";
-import { ProtectedRoute } from "../shared/ui/ProtectedRoute";
-import Dashboard from "../pages/Dashboard";
-import AdminPanel from "../pages/AdminPanel";
-import { SummaryStats, LeadersSuccessors } from "../widgets";
-import Login from "../pages/Login";
-import { ErrorBoundary } from "../shared/ui/ErrorBoundary";
-import { ColorModeContext } from "./providers/ColorModeContext";
+import { Layout } from "@/widgets/layout";
+import { ProtectedRoute } from "@/shared/ui/ProtectedRoute";
+import { Dashboard } from "@/pages/dashboard";
+import { AdminPanel } from "@/pages/admin";
+import { SummaryStats } from "@/widgets/summary-stats";
+import { LeadersSuccessors } from "@/widgets/leaders-successors";
+import { Login } from "@/pages/login";
+import { ErrorBoundary } from "@/shared/ui/ErrorBoundary";
+import { ColorModeProvider } from "@/shared/theme/ColorModeProvider";
 
 function App() {
-  const [mode, setMode] = useState<"light" | "dark">("light");
-
-  const colorMode = useMemo(
-    () => ({
-      toggleColorMode: () => {
-        setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
-      },
-    }),
-    []
-  );
-
-  const theme = useMemo(
-    () =>
-      createTheme({
-        palette: {
-          mode,
-          ...(mode === "dark"
-            ? {
-                background: {
-                  default: "#0f172a", // Мягкий глубокий фон (темный сланцево-синий)
-                  paper: "#1e293b",   // Фон для блоков и панелей (чуть светлее)
-                },
-              }
-            : {
-                background: {
-                  default: "#f0f4f8",
-                  paper: "#ffffff",
-                },
-              }),
-        },
-        typography: {
-          fontFamily: '"als_hauss", "Roboto", "Helvetica", "Arial", sans-serif',
-          fontWeightLight: 300,
-          fontWeightRegular: 400,
-          fontWeightMedium: 500,
-          fontWeightBold: 700,
-          h1: { fontWeight: 900 },
-          h2: { fontWeight: 900 },
-          h3: { fontWeight: 700 },
-          h4: { fontWeight: 700 },
-          h5: { fontWeight: 700 },
-        },
-        components: {
-          MuiCssBaseline: {
-            styleOverrides: {
-              body: {
-                transition: "background-color 0.4s ease, color 0.4s ease",
-              },
-            },
-          },
-        },
-      }),
-    [mode]
-  );
-
   return (
-    <ColorModeContext.Provider value={colorMode}>
-      <ThemeProvider theme={theme}>
+    <ColorModeProvider>
       <ErrorBoundary>
         <BrowserRouter>
           <Routes>
@@ -102,8 +45,7 @@ function App() {
           </Routes>
         </BrowserRouter>
       </ErrorBoundary>
-      </ThemeProvider>
-    </ColorModeContext.Provider>
+    </ColorModeProvider>
   );
 }
 

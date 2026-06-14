@@ -1,8 +1,8 @@
 import { Box, useTheme } from "@mui/material";
-import logoFullLight from "../../assets/logo-full-light.svg";
-import logoFullDark from "../../assets/logo-full-dark.svg";
-import logoShortLight from "../../assets/logo-short-light.svg";
-import logoShortDark from "../../assets/logo-short-dark.svg";
+import logoFullLight from "@/shared/assets/logo-full-light.svg";
+import logoFullDark from "@/shared/assets/logo-full-dark.svg";
+import logoShortLight from "@/shared/assets/logo-short-light.svg";
+import logoShortDark from "@/shared/assets/logo-short-dark.svg";
 
 interface LogoProps {
   type?: "full" | "short";
