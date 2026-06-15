@@ -45,18 +45,47 @@ export function PotentialAreaCharts({ nineBox }: PotentialAreaChartsProps) {
     return { potentialData: potData, performanceData: perfData };
   }, [nineBox]);
 
-  const globalMax = useMemo(() => {
-    let max = 0;
-    const checkMax = (data: Array<{ successors: number, nonSuccessors: number }>) => {
+  // Умный расчет осей
+  const { potDomainMax, perfDomainMax } = useMemo(() => {
+    const getChartMax = (data: Array<{ successors: number, nonSuccessors: number }>) => {
+      let max = 0;
       data.forEach(d => {
-        if (d.successors > max) max = d.successors;
-        if (d.nonSuccessors > max) max = d.nonSuccessors;
+        if (activeSeries === 'successors' || !activeSeries) max = Math.max(max, d.successors);
+        if (activeSeries === 'nonSuccessors' || !activeSeries) max = Math.max(max, d.nonSuccessors);
       });
+      return max;
     };
-    checkMax(potentialData);
-    checkMax(performanceData);
-    return max > 0 ? max : 1; // Возвращаем минимум 1, чтобы шкала не ломалась от [0, 0]
-  }, [potentialData, performanceData]);
+
+    // Алгоритм "красивого" округления шкалы до числа, которое ровно делится на 4 интервала
+    const getNiceMax = (maxValue: number) => {
+      if (maxValue <= 4) return 4;
+      const target = maxValue / 4;
+      const power = Math.floor(Math.log10(target));
+      const mag = Math.pow(10, power);
+      const factor = target / mag;
+      
+      let stepFactor;
+      if (factor <= 1) stepFactor = 1;
+      else if (factor <= 2) stepFactor = 2;
+      else if (factor <= 2.5) stepFactor = 2.5;
+      else if (factor <= 3) stepFactor = 3;
+      else if (factor <= 4) stepFactor = 4;
+      else if (factor <= 5) stepFactor = 5;
+      else stepFactor = 10;
+
+      const step = Math.max(1, Math.ceil(stepFactor * mag));
+      return step * 4;
+    };
+
+    const potNice = getNiceMax(getChartMax(potentialData));
+    const perfNice = getNiceMax(getChartMax(performanceData));
+    
+    if (unifiedScale) {
+      const unifiedMax = Math.max(potNice, perfNice);
+      return { potDomainMax: unifiedMax, perfDomainMax: unifiedMax };
+    }
+    return { potDomainMax: potNice, perfDomainMax: perfNice };
+  }, [potentialData, performanceData, activeSeries, unifiedScale]);
 
   const hasPotential = potentialData.some(d => d.successors > 0 || d.nonSuccessors > 0);
   const hasPerformance = performanceData.some(d => d.successors > 0 || d.nonSuccessors > 0);
@@ -101,7 +130,8 @@ export function PotentialAreaCharts({ nineBox }: PotentialAreaChartsProps) {
                   <PolarAngleAxis dataKey="subject" tick={{ fill: 'white', fontSize: 14, fontWeight: 'bold' }} />
                   <PolarRadiusAxis 
                     angle={90} 
-                    domain={unifiedScale ? [0, globalMax] : ['auto', 'auto']}
+                    domain={[0, potDomainMax]}
+                    tickCount={5}
                     tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 10 }} 
                   />
                   
@@ -111,24 +141,28 @@ export function PotentialAreaCharts({ nineBox }: PotentialAreaChartsProps) {
                     labelStyle={{ color: 'white', fontWeight: 'bold', marginBottom: '8px' }}
                   />
                   
-                  <Radar
-                    name="С преемниками"
-                    dataKey="successors"
-                    stroke="#2f9d76"
-                    fill="#2f9d76"
-                    fillOpacity={activeSeries === 'successors' ? 0.7 : (activeSeries === 'nonSuccessors' ? 0.1 : 0.4)}
-                    strokeOpacity={activeSeries === 'nonSuccessors' ? 0.2 : 1}
-                    isAnimationActive={true}
-                  />
-                  <Radar
-                    name="Без преемников"
-                    dataKey="nonSuccessors"
-                    stroke="#ee5d48"
-                    fill="#ee5d48"
-                    fillOpacity={activeSeries === 'nonSuccessors' ? 0.7 : (activeSeries === 'successors' ? 0.1 : 0.4)}
-                    strokeOpacity={activeSeries === 'successors' ? 0.2 : 1}
-                    isAnimationActive={true}
-                  />
+                  {(!activeSeries || activeSeries === 'successors') && (
+                    <Radar
+                      name="С преемниками"
+                      dataKey="successors"
+                      stroke="#2f9d76"
+                      fill="#2f9d76"
+                      fillOpacity={activeSeries ? 0.7 : 0.4}
+                      strokeOpacity={1}
+                      isAnimationActive={true}
+                    />
+                  )}
+                  {(!activeSeries || activeSeries === 'nonSuccessors') && (
+                    <Radar
+                      name="Без преемников"
+                      dataKey="nonSuccessors"
+                      stroke="#ee5d48"
+                      fill="#ee5d48"
+                      fillOpacity={activeSeries ? 0.7 : 0.4}
+                      strokeOpacity={1}
+                      isAnimationActive={true}
+                    />
+                  )}
                 </RadarChart>
               </ResponsiveContainer>
             ) : (
@@ -152,7 +186,8 @@ export function PotentialAreaCharts({ nineBox }: PotentialAreaChartsProps) {
                   <PolarAngleAxis dataKey="subject" tick={{ fill: 'white', fontSize: 14, fontWeight: 'bold' }} />
                   <PolarRadiusAxis 
                     angle={90} 
-                    domain={unifiedScale ? [0, globalMax] : ['auto', 'auto']}
+                    domain={[0, perfDomainMax]}
+                    tickCount={5}
                     tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 10 }} 
                   />
                   
@@ -162,24 +197,28 @@ export function PotentialAreaCharts({ nineBox }: PotentialAreaChartsProps) {
                     labelStyle={{ color: 'white', fontWeight: 'bold', marginBottom: '8px' }}
                   />
                   
-                  <Radar
-                    name="С преемниками"
-                    dataKey="successors"
-                    stroke="#2f9d76"
-                    fill="#2f9d76"
-                    fillOpacity={activeSeries === 'successors' ? 0.7 : (activeSeries === 'nonSuccessors' ? 0.1 : 0.4)}
-                    strokeOpacity={activeSeries === 'nonSuccessors' ? 0.2 : 1}
-                    isAnimationActive={true}
-                  />
-                  <Radar
-                    name="Без преемников"
-                    dataKey="nonSuccessors"
-                    stroke="#ee5d48"
-                    fill="#ee5d48"
-                    fillOpacity={activeSeries === 'nonSuccessors' ? 0.7 : (activeSeries === 'successors' ? 0.1 : 0.4)}
-                    strokeOpacity={activeSeries === 'successors' ? 0.2 : 1}
-                    isAnimationActive={true}
-                  />
+                  {(!activeSeries || activeSeries === 'successors') && (
+                    <Radar
+                      name="С преемниками"
+                      dataKey="successors"
+                      stroke="#2f9d76"
+                      fill="#2f9d76"
+                      fillOpacity={activeSeries ? 0.7 : 0.4}
+                      strokeOpacity={1}
+                      isAnimationActive={true}
+                    />
+                  )}
+                  {(!activeSeries || activeSeries === 'nonSuccessors') && (
+                    <Radar
+                      name="Без преемников"
+                      dataKey="nonSuccessors"
+                      stroke="#ee5d48"
+                      fill="#ee5d48"
+                      fillOpacity={activeSeries ? 0.7 : 0.4}
+                      strokeOpacity={1}
+                      isAnimationActive={true}
+                    />
+                  )}
                 </RadarChart>
               </ResponsiveContainer>
             ) : (
