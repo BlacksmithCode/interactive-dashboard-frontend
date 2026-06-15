@@ -7,6 +7,7 @@ import {
   NineBoxMatrix,
   SummaryStatsSkeleton,
   DomainInsightsPanel,
+  PotentialAreaCharts,
 } from "@/features/dashboard/ui";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
@@ -75,33 +76,41 @@ function SummaryStatsContent() {
       )}
 
       {mergedCells && nineBox ? (
-<Accordion 
-  defaultExpanded 
-  sx={{ 
-    backgroundColor: '#0088FF',   // фон деталей и фона аккордеона
-    borderRadius: '12px',
-    boxShadow: 'none',
-    '&:before': { display: 'none' },
-    overflow: 'hidden',
-  }}
->
-  <AccordionSummary
-    expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
-    sx={{
-      backgroundColor: '#1DAFF7',
-      borderRadius: '12px',      // полное скругление
-      '& .MuiAccordionSummary-content': { justifyContent: 'center', margin: '12px 0' },
-      '& .MuiAccordionSummary-expandIconWrapper': { position: 'absolute', right: 16 },
-    }}
-  >
-    <Typography variant="h6" sx={{ fontWeight: 'bold', textAlign: 'center', color: 'white' }}>
-      Матрица потенциала
-    </Typography>
-  </AccordionSummary>
-  <AccordionDetails sx={{ p: 0, backgroundColor: '#0088FF' }}>
-    <NineBoxMatrix mergedCells={mergedCells} nineBox={nineBox} />
-  </AccordionDetails>
-</Accordion> 
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          <Box sx={{ backgroundColor: '#0088FF', borderRadius: '12px', overflow: 'hidden' }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', textAlign: 'center', color: 'white', pt: 2 }}>
+              Матрица потенциала
+            </Typography>
+            <NineBoxMatrix mergedCells={mergedCells} nineBox={nineBox} />
+          </Box>
+          
+          <Accordion 
+            sx={{ 
+              backgroundColor: '#0088FF',
+              borderRadius: '12px !important',
+              boxShadow: 'none',
+              '&:before': { display: 'none' },
+              overflow: 'hidden',
+            }}
+          >
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
+              sx={{
+                backgroundColor: '#1DAFF7',
+                borderRadius: '12px',
+                '& .MuiAccordionSummary-content': { justifyContent: 'center', margin: '12px 0' },
+                '& .MuiAccordionSummary-expandIconWrapper': { position: 'absolute', right: 16 },
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 'bold', textAlign: 'center', color: 'white' }}>
+                Область потенциала
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ p: 0, backgroundColor: '#0088FF' }}>
+              <PotentialAreaCharts nineBox={nineBox} />
+            </AccordionDetails>
+          </Accordion> 
+        </Box>
       ) : (
         <Box sx={{ mt: 2, p: 2, border: '1px dashed grey.300', borderRadius: 1, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary">
