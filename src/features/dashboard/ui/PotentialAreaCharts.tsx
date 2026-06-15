@@ -7,9 +7,123 @@ import type { NineBoxResponse } from '@/entities/dashboard';
 
 interface PotentialAreaChartsProps {
   nineBox: NineBoxResponse;
+  totalManagers: number;
 }
 
-export function PotentialAreaCharts({ nineBox }: PotentialAreaChartsProps) {
+interface TooltipPayloadItem {
+  name: string;
+  value: number;
+  color: string;
+  payload: {
+    subject: string;
+    successors: number;
+    nonSuccessors: number;
+  };
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+  totalManagers?: number;
+}
+
+interface CustomTickProps {
+  payload?: { value: string };
+  x?: number | string;
+  y?: number | string;
+  cy?: number | string;
+  textAnchor?: 'inherit' | 'end' | 'start' | 'middle';
+  data?: Array<{ subject: string; successors: number; nonSuccessors: number }>;
+  activeSeries?: 'successors' | 'nonSuccessors' | null;
+}
+
+// Кастомный рендер углов графика (Буква + Значение)
+const CustomTick = (props: CustomTickProps) => {
+  const { payload, x, y, cy, textAnchor, data, activeSeries } = props;
+  if (!payload || !data || y === undefined) return null;
+
+  const dataPoint = data.find(d => d.subject === payload.value);
+  if (!dataPoint) return null;
+
+  let displayValue: number;
+  let color: string;
+
+  if (!activeSeries) {
+    displayValue = dataPoint.successors + dataPoint.nonSuccessors;
+    color = 'white'; // Белый для общей суммы
+  } else if (activeSeries === 'successors') {
+    displayValue = dataPoint.successors;
+    color = '#a7f3d0'; // Светло-зеленый
+  } else {
+    displayValue = dataPoint.nonSuccessors;
+    color = '#fecaca'; // Светло-красный
+  }
+
+  const numY = Number(y);
+  const numCy = Number(cy);
+  // Определяем, находится ли точка в верхней половине (координата y меньше центра cy)
+  const isTop = !isNaN(numY) && !isNaN(numCy) && numY < numCy - 10;
+
+  // Для верхней точки: и букву, и значение выталкиваем ВВЕРХ (уменьшаем y от края)
+  // Для нижних/боковых точек: выталкиваем ВНИЗ (увеличиваем y от края)
+  const letterY = isTop ? numY - 24 : numY + 10;
+  const valueY = isTop ? numY - 8 : numY + 26;
+
+  return (
+    <text x={x} y={y} textAnchor={textAnchor} dominantBaseline="central">
+      {/* Буква угла */}
+      <tspan x={x} y={letterY} fill="white" fontSize={14} fontWeight="bold">{payload.value}</tspan>
+      {/* Значение (скрываем если 0, чтобы не шуметь) */}
+      {displayValue > 0 && (
+        <tspan x={x} y={valueY} fill={color} fontSize={14} fontWeight="bold">{displayValue}</tspan>
+      )}
+    </text>
+  );
+};
+
+// Кастомный тултип для радарных графиков
+const CustomTooltip = ({ active, payload, label, totalManagers = 0 }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const successors = data.successors || 0;
+    const nonSuccessors = data.nonSuccessors || 0;
+    const total = successors + nonSuccessors;
+
+    let succPercent = 0;
+    let nonSuccPercent = 0;
+    if (total > 0) {
+      succPercent = Math.round((successors / total) * 100);
+      nonSuccPercent = Math.round((nonSuccessors / total) * 100);
+      const diff = 100 - (succPercent + nonSuccPercent);
+      if (diff !== 0) {
+        // Балансируем округление, чтобы в сумме всегда было ровно 100%
+        if (succPercent >= nonSuccPercent) succPercent += diff;
+        else nonSuccPercent += diff;
+      }
+    }
+
+    const managerPercent = totalManagers > 0 ? Math.round((total / totalManagers) * 100) : 0;
+    
+    return (
+      <Box sx={{ backgroundColor: '#0088FF', color: 'white', p: 1.5, border: '1px solid rgba(255,255,255,0.3)', borderRadius: '8px', minWidth: 150 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>{label}</Typography>
+        <Typography variant="body2" sx={{ color: '#a7f3d0', display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+          <span>С преемниками:</span> <span style={{ fontWeight: 'bold', marginLeft: '16px' }}>{successors} ({succPercent}%)</span>
+        </Typography>
+        <Typography variant="body2" sx={{ color: '#fecaca', display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+          <span>Без преемников:</span> <span style={{ fontWeight: 'bold', marginLeft: '16px' }}>{nonSuccessors} ({nonSuccPercent}%)</span>
+        </Typography>
+        <Typography variant="body2" sx={{ fontWeight: 'bold', mt: 1, pt: 0.5, borderTop: '1px solid rgba(255,255,255,0.3)', display: 'flex', justifyContent: 'space-between' }}>
+          <span>Всего:</span> <span>{total} {totalManagers > 0 && `(${managerPercent}%)`}</span>
+        </Typography>
+      </Box>
+    );
+  }
+  return null;
+};
+
+export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaChartsProps) {
   const [activeSeries, setActiveSeries] = useState<'successors' | 'nonSuccessors' | null>(null);
   const [unifiedScale, setUnifiedScale] = useState(true);
 
@@ -127,7 +241,10 @@ export function PotentialAreaCharts({ nineBox }: PotentialAreaChartsProps) {
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={potentialData}>
                   <PolarGrid stroke="rgba(255, 255, 255, 0.3)" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'white', fontSize: 14, fontWeight: 'bold' }} />
+                  <PolarAngleAxis 
+                    dataKey="subject" 
+                  tick={(tickProps: CustomTickProps) => <CustomTick {...tickProps} data={potentialData} activeSeries={activeSeries} />} 
+                  />
                   <PolarRadiusAxis 
                     angle={90} 
                     domain={[0, potDomainMax]}
@@ -135,11 +252,7 @@ export function PotentialAreaCharts({ nineBox }: PotentialAreaChartsProps) {
                     tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 10 }} 
                   />
                   
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#0088FF', color: 'white', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '8px' }}
-                    itemStyle={{ color: 'white' }}
-                    labelStyle={{ color: 'white', fontWeight: 'bold', marginBottom: '8px' }}
-                  />
+                  <Tooltip content={<CustomTooltip totalManagers={totalManagers} />} />
                   
                   {(!activeSeries || activeSeries === 'successors') && (
                     <Radar
@@ -183,7 +296,10 @@ export function PotentialAreaCharts({ nineBox }: PotentialAreaChartsProps) {
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={performanceData}>
                   <PolarGrid stroke="rgba(255, 255, 255, 0.3)" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'white', fontSize: 14, fontWeight: 'bold' }} />
+                  <PolarAngleAxis 
+                    dataKey="subject" 
+                  tick={(tickProps: CustomTickProps) => <CustomTick {...tickProps} data={performanceData} activeSeries={activeSeries} />} 
+                  />
                   <PolarRadiusAxis 
                     angle={90} 
                     domain={[0, perfDomainMax]}
@@ -191,11 +307,7 @@ export function PotentialAreaCharts({ nineBox }: PotentialAreaChartsProps) {
                     tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 10 }} 
                   />
                   
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#0088FF', color: 'white', border: '1px solid rgba(255,255,255,0.3)', borderRadius: '8px' }}
-                    itemStyle={{ color: 'white' }}
-                    labelStyle={{ color: 'white', fontWeight: 'bold', marginBottom: '8px' }}
-                  />
+                  <Tooltip content={<CustomTooltip totalManagers={totalManagers} />} />
                   
                   {(!activeSeries || activeSeries === 'successors') && (
                     <Radar

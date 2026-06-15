@@ -107,7 +107,7 @@ function SummaryStatsContent() {
               </Typography>
             </AccordionSummary>
             <AccordionDetails sx={{ p: 0, backgroundColor: '#0088FF' }}>
-              <PotentialAreaCharts nineBox={nineBox} />
+              <PotentialAreaCharts nineBox={nineBox} totalManagers={totalManagers} />
             </AccordionDetails>
           </Accordion> 
         </Box>
