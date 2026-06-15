@@ -10,3 +10,4 @@ export { KpiCard } from "./KpiCard";
 export { SummaryStatsSkeleton } from "./LoadingSkeleton";
 export { NineBoxMatrix } from "./NineBoxMatrix";
 export { RoleSuccessionOverview } from "./RoleSuccessionOverview";
+export { PotentialAreaCharts } from "./PotentialAreaCharts";
