@@ -31,9 +31,14 @@ export function DashboardFiltersProvider({
   const {
     minGrade,
     maxGrade,
-    availableDomains: metaDomains,
+    availableDomains: metaDomainsRaw,
     isLoading: isMetaLoading,
   } = useManagerMeta();
+
+  // Жестко стабилизируем ссылку на массив доменов
+  const metaDomains = useMemo(() => {
+    return metaDomainsRaw || [];
+  }, [metaDomainsRaw]);
 
   const effectiveDomain = useMemo(() => {
     if (!domain) return undefined;
@@ -74,16 +79,18 @@ export function DashboardFiltersProvider({
     setSuccessorFilter(undefined);
   }, []);
 
-  const state: DashboardFiltersState = {
-    filters: {
-      gradeMin,
-      domain: effectiveDomain,
-    },
+  const filters = useMemo(() => ({
+    gradeMin,
+    domain: effectiveDomain,
+  }), [gradeMin, effectiveDomain]);
+
+  const state: DashboardFiltersState = useMemo(() => ({
+    filters,
     setGradeMin,
     setDomain,
     minGrade,
     maxGrade,
-    availableDomains: metaDomains || [],
+    availableDomains: metaDomains,
     searchName,
     setSearchName,
     debouncedSearchName,
@@ -95,7 +102,15 @@ export function DashboardFiltersProvider({
     successorFilter,
     setSuccessorFilter,
     resetAllFilters,
-  };
+  }), [
+    filters, setGradeMin, setDomain,
+    minGrade, maxGrade, metaDomains,
+    searchName, setSearchName, debouncedSearchName,
+    positionFilter, setPositionFilter, debouncedPositionFilter,
+    criticalFilter, setCriticalFilter,
+    successorFilter, setSuccessorFilter,
+    resetAllFilters,
+  ]);
 
   return (
     <DashboardFiltersContext.Provider value={state}>

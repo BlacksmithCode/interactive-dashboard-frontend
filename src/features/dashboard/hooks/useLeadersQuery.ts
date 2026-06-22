@@ -1,15 +1,31 @@
-import { useQuery } from "@tanstack/react-query";
-import { fetchLeaders, type ManagerListItem } from "@/entities/leader";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { fetchLeaders } from "@/entities/leader";
+import type { PaginatedResponse, ManagerListItem, PaginationParams } from "@/entities/leader";
+
+interface UseLeadersQueryFilters {
+  gradeMin?: number;
+  domains?: string[];
+  critical?: boolean;
+  hasSuccessor?: boolean;
+  searchName?: string;
+  positionFilter?: string;
+}
 
 /**
- * Хук для получения списка руководителей.
+ * Хук для получения списка руководителей с серверной пагинацией.
  * staleTime: 5 минут — данные считаются свежими, повторный запрос не выполняется.
- * Для метаданных (вызов с пустыми фильтрами) это исключает повторные запросы при монтировании.
+ * Все параметры (фильтры + пагинация + сортировка) включены в queryKey для автоматического перезапроса.
  */
-export function useLeadersQuery(filters: Parameters<typeof fetchLeaders>[0] = {}) {
-  return useQuery<ManagerListItem[]>({
-    queryKey: ["leaders", filters],
-    queryFn: () => fetchLeaders(filters),
+export function useLeadersQuery(
+  filters: UseLeadersQueryFilters = {},
+  pagination: PaginationParams = {},
+) {
+  const { page, pageSize, sortField, sortOrder } = pagination;
+  
+  return useQuery<PaginatedResponse<ManagerListItem>>({
+    queryKey: ["leaders", filters, page, pageSize, sortField, sortOrder],
+    queryFn: () => fetchLeaders(filters, { page, pageSize, sortField, sortOrder }),
     staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 }

@@ -15,10 +15,11 @@ export function useComputedSummaryStats() {
   const mergedCells = useMergedCells(nineBox);
 
   // 1. Получаем список критичных руководителей
-  const { data: criticalLeadersRaw = [] } = useLeadersQuery({
+  const { data: criticalLeadersPaginated } = useLeadersQuery({
     critical: true,
     gradeMin: filters.gradeMin,
-  });
+  }, { pageSize: 100 });
+  const criticalLeadersRaw = criticalLeadersPaginated?.items ?? [];
 
   const criticalLeaders = useMemo(() => {
     if (!filters.domain) return criticalLeadersRaw;
