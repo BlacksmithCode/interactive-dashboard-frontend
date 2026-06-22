@@ -10,7 +10,7 @@ export function useNineBoxQuery(filters: DashboardFilters) {
   const { role } = useAuth();
 
   return useQuery({
-    queryKey: ["nineBox", filters.gradeMin, filters.domain],
+    queryKey: ["nineBox", filters.gradeMin, filters.domain, filters.critical, filters.hasSuccessor, filters.searchName, filters.positionFilter],
     queryFn: () => fetchNineBox({ ...filters }),
     placeholderData: keepPreviousData,  // ← вот это
     enabled: role !== ROLES.MANAGER,

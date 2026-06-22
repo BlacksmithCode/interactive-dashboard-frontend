@@ -40,6 +40,10 @@ export interface DomainGistDto {
 export interface DashboardFilters {
   gradeMin?: number;
   domain?: string;
+  critical?: boolean;
+  hasSuccessor?: boolean;
+  searchName?: string;
+  positionFilter?: string;
 }
 
 /** Ключ объединённой ячейки для отображения 3×3 */

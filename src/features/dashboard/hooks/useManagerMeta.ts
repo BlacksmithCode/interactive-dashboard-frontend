@@ -5,7 +5,7 @@
  * между SummaryStats.tsx и LeadersSuccessors.tsx.
  */
 import { useQuery } from "@tanstack/react-query";
-import { fetchDashboardMeta } from "@/entities/dashboard";
+import { fetchDashboardMeta, type DashboardFilters } from "@/entities/dashboard";
 
 export interface ManagerMeta {
   minGrade: number | undefined;
@@ -16,11 +16,12 @@ export interface ManagerMeta {
 
 /**
  * Возвращает мета-информацию о руководителях (диапазон грейдов, список доменов).
+ * Учитывает все активные фильтры.
  */
-export function useManagerMeta(): ManagerMeta {
+export function useManagerMeta(filters?: DashboardFilters): ManagerMeta {
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboardMeta"],
-    queryFn: fetchDashboardMeta,
+    queryKey: ["dashboardMeta", filters],
+    queryFn: () => fetchDashboardMeta(filters),
     staleTime: 5 * 60 * 1000,
   });
 

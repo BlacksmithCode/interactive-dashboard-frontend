@@ -47,6 +47,16 @@ export function DashboardFiltersProvider({
     return undefined;
   }, [domain, metaDomains, isMetaLoading]);
 
+  // Формируем фильтры с учётом effectiveDomain
+  const filters = useMemo(() => ({
+    gradeMin,
+    domain: effectiveDomain,
+    critical: criticalFilter,
+    hasSuccessor: successorFilter,
+    searchName: debouncedSearchName || undefined,
+    positionFilter: debouncedPositionFilter || undefined,
+  }), [gradeMin, effectiveDomain, criticalFilter, successorFilter, debouncedSearchName, debouncedPositionFilter]);
+
   const setGradeMin = useCallback((value: number | undefined) => {
     setGradeMinRaw(value);
   }, []);
@@ -78,11 +88,6 @@ export function DashboardFiltersProvider({
     setCriticalFilter(undefined);
     setSuccessorFilter(undefined);
   }, []);
-
-  const filters = useMemo(() => ({
-    gradeMin,
-    domain: effectiveDomain,
-  }), [gradeMin, effectiveDomain]);
 
   const state: DashboardFiltersState = useMemo(() => ({
     filters,
