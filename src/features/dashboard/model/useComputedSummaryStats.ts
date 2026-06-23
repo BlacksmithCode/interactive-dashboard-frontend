@@ -9,24 +9,57 @@ import {
 } from "../hooks";
 
 export function useComputedSummaryStats() {
-  const { filters, minGrade, maxGrade } = useDashboardFilters();
-  const { data: stats, isLoading: sLoading, isError: sError } = useStatsQuery(filters);
-  const { data: nineBox, isLoading: nLoading, isError: nError } = useNineBoxQuery(filters);
+  const fullFilters = useDashboardFilters();
+  const filters = {
+    gradeMin: fullFilters.filters.gradeMin,
+    domain: fullFilters.filters.domain,
+    critical: fullFilters.criticalFilter,
+    hasSuccessor: fullFilters.successorFilter,
+    searchName: fullFilters.debouncedSearchName || undefined,
+    positionFilter: fullFilters.debouncedPositionFilter || undefined,
+  };
+  
+  const { data: stats, isLoading: sLoading, isError: sError } = useStatsQuery({
+    gradeMin: filters.gradeMin,
+    domain: filters.domain,
+    critical: filters.critical,
+    hasSuccessor: filters.hasSuccessor,
+    searchName: filters.searchName,
+    positionFilter: filters.positionFilter,
+  });
+  const { data: nineBox, isLoading: nLoading, isError: nError } = useNineBoxQuery({
+    gradeMin: filters.gradeMin,
+    domain: filters.domain,
+    critical: filters.critical,
+    hasSuccessor: filters.hasSuccessor,
+    searchName: filters.searchName,
+    positionFilter: filters.positionFilter,
+  });
   const mergedCells = useMergedCells(nineBox);
 
   // 1. Получаем список критичных руководителей
-  const { data: criticalLeadersRaw = [] } = useLeadersQuery({
+  const { data: criticalLeadersPaginated } = useLeadersQuery({
     critical: true,
     gradeMin: filters.gradeMin,
-  });
+    domains: filters.domain ? [filters.domain] : undefined,
+    hasSuccessor: filters.hasSuccessor,
+    searchName: filters.searchName,
+    positionFilter: filters.positionFilter,
+  }, { pageSize: 100 });
 
   const criticalLeaders = useMemo(() => {
-    if (!filters.domain) return criticalLeadersRaw;
-    return criticalLeadersRaw.filter((l) => l.domain === filters.domain);
-  }, [criticalLeadersRaw, filters.domain]);
+    return criticalLeadersPaginated?.items ?? [];
+  }, [criticalLeadersPaginated?.items]);
 
   // 2. Получаем общую статистику по доменам
-  const { data: gist } = useDomainGistQuery({ gradeMin: filters.gradeMin });
+  const { data: gist } = useDomainGistQuery({ 
+    gradeMin: filters.gradeMin,
+    domains: filters.domain ? [filters.domain] : undefined,
+    critical: filters.critical,
+    hasSuccessor: filters.hasSuccessor,
+    searchName: filters.searchName,
+    positionFilter: filters.positionFilter,
+  });
 
   const domainTotals = useMemo(() => {
     if (!gist) return null;
@@ -70,8 +103,8 @@ export function useComputedSummaryStats() {
     : 0;
 
   return {
-    minGrade,
-    maxGrade,
+    minGrade: fullFilters.minGrade,
+    maxGrade: fullFilters.maxGrade,
     sLoading,
     nLoading,
     sError,

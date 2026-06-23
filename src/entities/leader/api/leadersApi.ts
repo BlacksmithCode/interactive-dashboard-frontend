@@ -1,12 +1,17 @@
 import { api } from "@/shared/api/apiClient";
-import type { ManagerListItem, Successor, ManagerDetail, TeamMemberDto } from "../model/types";
+import type { ManagerListItem, PaginatedResponse, PaginationParams, Successor, ManagerDetail, TeamMemberDto } from "../model/types";
 
-export async function fetchLeaders(filters: {
-  gradeMin?: number;
-  domains?: string[];
-  critical?: boolean;
-  hasSuccessor?: boolean;
-} = {}): Promise<ManagerListItem[]> {
+export async function fetchLeaders(
+  filters: {
+    gradeMin?: number;
+    domains?: string[];
+    critical?: boolean;
+    hasSuccessor?: boolean;
+    searchName?: string;
+    positionFilter?: string;
+  } = {},
+  pagination: PaginationParams = {},
+): Promise<PaginatedResponse<ManagerListItem>> {
   const params = new URLSearchParams();
   if (filters.gradeMin !== undefined) params.append("gradeMin", filters.gradeMin.toString());
   if (filters.critical !== undefined) params.append("critical", filters.critical.toString());
@@ -14,7 +19,16 @@ export async function fetchLeaders(filters: {
   if (filters.domains && filters.domains.length > 0) {
     filters.domains.forEach(d => params.append("domains", d));
   }
-  const { data } = await api.get<ManagerListItem[]>("/api/employees/managers", { params });
+  // Серверный поиск (LIKE-фильтры)
+  if (filters.searchName) params.append("searchName", filters.searchName);
+  if (filters.positionFilter) params.append("positionFilter", filters.positionFilter);
+  // Параметры пагинации и сортировки
+  if (pagination.page !== undefined) params.append("page", pagination.page.toString());
+  if (pagination.pageSize !== undefined) params.append("pageSize", pagination.pageSize.toString());
+  if (pagination.sortField) params.append("sortField", pagination.sortField);
+  if (pagination.sortOrder) params.append("sortOrder", pagination.sortOrder);
+
+  const { data } = await api.get<PaginatedResponse<ManagerListItem>>("/api/employees/managers", { params });
   return data;
 }
 

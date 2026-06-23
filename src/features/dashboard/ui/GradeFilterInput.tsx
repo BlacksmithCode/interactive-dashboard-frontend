@@ -43,6 +43,7 @@ export const GradeFilterInput = memo(function GradeFilterInput({
   const lastEmittedValue = useRef(value);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const hadFocus = useRef(false);
+  const autoSetApplied = useRef(false);
 
   const applyValue = (num: number | undefined | null) => {
     if (num == null) {
@@ -66,11 +67,8 @@ export const GradeFilterInput = memo(function GradeFilterInput({
     if (raw === "") {
       setInput("");
       setError("");
-      if (autoSetDefault && fallbackGrade != null) {
-        applyValue(fallbackGrade);
-      } else {
-        applyValue(undefined);
-      }
+      onChange(undefined);
+      lastEmittedValue.current = undefined;
       return;
     }
 
@@ -167,19 +165,14 @@ export const GradeFilterInput = memo(function GradeFilterInput({
   };
 
   useEffect(() => {
-    if (autoSetDefault && value == null && fallbackGrade != null) {
-      setInput(fallbackGrade.toString());
-      onChange(fallbackGrade);
-      lastEmittedValue.current = fallbackGrade;
-    }
-  }, [autoSetDefault, fallbackGrade, value, onChange]);
-
-  useEffect(() => {
     if (value !== lastEmittedValue.current) {
       const newVal = value != null ? value.toString() : "";
       setInput(newVal);
       setError("");
       lastEmittedValue.current = value;
+      if (value != null) {
+        autoSetApplied.current = false;
+      }
     }
   }, [value]);
 

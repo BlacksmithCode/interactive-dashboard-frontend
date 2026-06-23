@@ -33,7 +33,8 @@ export function CriticalRolesPanel() {
     domains: filters.domain ? [filters.domain] : undefined 
   };
 
-  const { data: leaders = [], isLoading, isError, refetch } = useLeadersQuery(queryParams);
+  const { data: paginatedData, isLoading, isError, refetch } = useLeadersQuery(queryParams, { pageSize: 100 });
+  const leaders = paginatedData?.items ?? [];
 
   const summary = useMemo(() => {
     const total = leaders.length;

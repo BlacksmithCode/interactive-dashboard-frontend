@@ -10,7 +10,7 @@ export function useStatsQuery(filters: DashboardFilters) {
   const { role } = useAuth();
 
   return useQuery({
-    queryKey: ["stats", filters.gradeMin, filters.domain],
+    queryKey: ["stats", filters.gradeMin, filters.domain, filters.critical, filters.hasSuccessor, filters.searchName, filters.positionFilter],
     queryFn: () => fetchStats({ ...filters }),
     placeholderData: keepPreviousData,  // ← вот это
     enabled: role !== ROLES.MANAGER,

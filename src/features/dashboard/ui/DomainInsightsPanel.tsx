@@ -43,8 +43,15 @@ export function DomainInsightsPanel({
   maxPossibleGrade,
 }: DomainInsightsPanelProps) {
   const theme = useTheme();
-  const { filters, setGradeMin, setDomain, availableDomains } = useDashboardFilters();
-  const { data: gist, isLoading, isError } = useDomainGistQuery({ gradeMin: filters.gradeMin, domain: filters.domain });
+  const { filters, setGradeMin, setDomain, availableDomains, criticalFilter, successorFilter, debouncedSearchName, debouncedPositionFilter } = useDashboardFilters();
+  const { data: gist, isLoading, isError } = useDomainGistQuery({ 
+    gradeMin: filters.gradeMin, 
+    domains: filters.domain ? [filters.domain] : undefined,
+    critical: criticalFilter,
+    hasSuccessor: successorFilter,
+    searchName: debouncedSearchName,
+    positionFilter: debouncedPositionFilter,
+  });
 
   const currentGist = useMemo(() => gist || [], [gist]);
 

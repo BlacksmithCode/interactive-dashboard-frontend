@@ -8,6 +8,24 @@ export interface ManagerListItem {
   hasSuccessor: boolean;
 }
 
+/** Пагинированный ответ от сервера */
+export interface PaginatedResponse<T> {
+  items: T[];
+  totalCount: number;
+}
+
+/** Параметры сортировки для серверной пагинации */
+export type SortField = "fullName" | "grade" | "domain" | "position" | "critical";
+export type SortOrder = "asc" | "desc";
+
+/** Параметры пагинации и сортировки */
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+  sortField?: SortField;
+  sortOrder?: SortOrder;
+}
+
 /** Преемник (с /api/managers/{fullName}/successors) */
 export interface ManagerDetail {
   fullName: string;

@@ -26,8 +26,8 @@ export default function AdminPanel() {
   } = useAdminPanel();
 
   const { availableDomains } = useManagerMeta();
-  const { data: allManagers } = useLeadersQuery({});
-  const managerNames = Array.from(new Set(allManagers?.map((m) => m.fullName) || []));
+  const { data: allManagersData } = useLeadersQuery({}, { pageSize: 100 });
+  const managerNames = Array.from(new Set(allManagersData?.items?.map((m) => m.fullName) || []));
   
   const currentUsername = localStorage.getItem("username");
 
@@ -75,7 +75,7 @@ export default function AdminPanel() {
                 setNewUser(prev => {
                   const newState = { ...prev, fullName: newInputValue };
                   // Автоматически подставляем домен, если нашли совпадение по ФИО
-                  const manager = allManagers?.find(m => m.fullName === newInputValue);
+                  const manager = allManagersData?.items?.find(m => m.fullName === newInputValue);
                   if (manager && manager.domain) newState.domain = manager.domain;
                   return newState;
                 });
