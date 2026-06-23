@@ -43,8 +43,11 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"  
     volumes:
       - ./proxy/nginx.conf:/etc/nginx/conf.d/default.conf
+      - /home/team_user/certs/succdash.cer:/etc/nginx/certs/succdash.crt:ro
+      - /home/team_user/certs/succdash.key:/etc/ssl/private/succdash.key:ro
 
   # ==========================================
   # БЛОК МОНИТОРИНГА (Prometheus + Grafana)
