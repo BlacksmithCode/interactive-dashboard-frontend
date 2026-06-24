@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Box, Typography, Switch, FormControlLabel } from '@mui/material';
+import { Box, Typography, Switch, FormControlLabel, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material';
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip
 } from 'recharts';
@@ -163,6 +163,132 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
     return { potentialData: potData, performanceData: perfData };
   }, [nineBox]);
 
+  // Сводные таблицы для графиков
+  const [potSortField, setPotSortField] = useState<'label' | 'count'>('count');
+  const [potSortDirection, setPotSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [perfSortField, setPerfSortField] = useState<'label' | 'count'>('count');
+  const [perfSortDirection, setPerfSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const handlePotSort = (field: 'label' | 'count') => {
+    if (potSortField === field) {
+      setPotSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setPotSortField(field);
+      setPotSortDirection(field === 'label' ? 'asc' : 'desc');
+    }
+  };
+
+  const handlePerfSort = (field: 'label' | 'count') => {
+    if (perfSortField === field) {
+      setPerfSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setPerfSortField(field);
+      setPerfSortDirection(field === 'label' ? 'asc' : 'desc');
+    }
+  };
+
+  const potSummary = useMemo(() => {
+    const data = potentialData.map(d => ({
+      label: d.subject === 'A' ? 'A (Высокий)' : d.subject === 'B' ? 'B (Средний)' : 'C (Низкий)',
+      count: d.successors + d.nonSuccessors,
+    }));
+    data.sort((a, b) => {
+      if (potSortField === 'label') {
+        return potSortDirection === 'asc' ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label);
+      }
+      return potSortDirection === 'asc' ? a.count - b.count : b.count - a.count;
+    });
+    return data;
+  }, [potentialData, potSortField, potSortDirection]);
+
+  const perfSummary = useMemo(() => {
+    const data = performanceData.map(d => ({
+      label: d.subject === 'A' ? 'A (Высшая)' : d.subject === 'B' ? 'B (Высокая)' : d.subject === 'C' ? 'C (Нормальная)' : d.subject === 'D' ? 'D (Сниженная)' : 'E (Низкая)',
+      count: d.successors + d.nonSuccessors,
+    }));
+    data.sort((a, b) => {
+      if (perfSortField === 'label') {
+        return perfSortDirection === 'asc' ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label);
+      }
+      return perfSortDirection === 'asc' ? a.count - b.count : b.count - a.count;
+    });
+    return data;
+  }, [performanceData, perfSortField, perfSortDirection]);
+
+  const renderSummaryTable = (
+    data: Array<{ label: string; count: number }>,
+    onSort: (field: 'label' | 'count') => void,
+    sortField: 'label' | 'count',
+    sortDirection: 'asc' | 'desc'
+  ) => {
+    const total = data.reduce((sum, d) => sum + d.count, 0);
+    return (
+      <Box sx={{ mt: 2, width: '100%' }}>
+        <Table size="small" sx={{ bgcolor: 'rgba(0,0,0,0.15)', borderRadius: 1, fontSize: 13 }}>
+          <TableHead>
+            <TableRow sx={{ bgcolor: 'rgba(255,255,255,0.08)' }}>
+              <TableCell
+                component="th"
+                scope="col"
+                sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', userSelect: 'none', '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}
+                onClick={() => onSort('label')}
+              >
+                Оценка {sortField === 'label' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </TableCell>
+              <TableCell
+                component="th"
+                scope="col"
+                align="right"
+                sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', userSelect: 'none', '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}
+                onClick={() => onSort('count')}
+              >
+                Кол-во {sortField === 'count' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </TableCell>
+              <TableCell
+                component="th"
+                scope="col"
+                align="right"
+                sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', userSelect: 'none', '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}
+                onClick={() => onSort('count')}
+              >
+                % от всего
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.map((row) => (
+              <TableRow
+                key={row.label}
+                sx={{
+                  bgcolor: '#1daff7',
+                  color: 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  '&:hover': { bgcolor: 'rgba(29, 175, 247, 0.85)', outline: '1px solid rgba(255,255,255,0.3)' },
+                  '&:last-child td': { borderBottom: 0 },
+                  '& .MuiTableCell-root': { color: 'white',},
+                }}
+              >
+                <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{row.label}</TableCell>
+                <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{row.count}</TableCell>
+                <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  {Math.round((row.count / total) * 100)}%
+                </TableCell>
+              </TableRow>
+            ))}
+            <TableRow sx={{ bgcolor: 'rgba(255,255,255,0.08)' }}>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Всего</TableCell>
+              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>{total}</TableCell>
+              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                {totalManagers > 0 ? Math.round((total / totalManagers) * 100) : 0}%
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </Box>
+    );
+  };
+
   // Умный расчет осей
   const { potDomainMax, perfDomainMax } = useMemo(() => {
     const getChartMax = (data: Array<{ successors: number, nonSuccessors: number }>) => {
@@ -217,11 +343,15 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
       {/* Переключатель единого масштаба */}
       {(hasPotential && hasPerformance) && (
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', px: { xs: 1, md: 4 }, mb: 1 }}>
-          <FormControlLabel
-            control={<Switch checked={unifiedScale} onChange={(e) => setUnifiedScale(e.target.checked)} color="info" size="small" />}
-            label={<Typography variant="body2" sx={{ userSelect: 'none' }}>Единый масштаб</Typography>}
-            labelPlacement="start"
-          />
+          <Box 
+            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', borderRadius: 1, px: 1.5, py: 0.5, transition: 'all 0.2s ease', border: '1px solid transparent', '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.3)' } }}
+          >
+            <FormControlLabel
+              control={<Switch checked={unifiedScale} onChange={(e) => setUnifiedScale(e.target.checked)} color="info" size="small" />}
+              label={<Typography variant="body2" sx={{ userSelect: 'none' }}>Единый масштаб</Typography>}
+              labelPlacement="start"
+            />
+          </Box>
         </Box>
       )}
 
@@ -237,7 +367,7 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
       >
         {/* График Потенциала (Треугольник) */}
         <Box sx={{ flex: 1, width: '100%', maxWidth: 500 }}>
-          <Typography variant="subtitle1" sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold' }}>
+          <Typography variant="subtitle1" sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', cursor: 'pointer', borderRadius: 1, px: 2, py: 0.5, transition: 'all 0.2s ease', outline: '1px solid transparent', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', outlineColor: 'rgba(255,255,255,0.3)' } }}>
             Потенциал
           </Typography>
           <Box sx={{ height: 300, minHeight: 300, minWidth: 200, width: '100%' }}>
@@ -300,11 +430,12 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
               </Box>
             )}
           </Box>
+          {hasPotential && renderSummaryTable(potSummary, handlePotSort, potSortField, potSortDirection)}
         </Box>
 
         {/* График Результативности (Пятиугольник) */}
         <Box sx={{ flex: 1, width: '100%', maxWidth: 500 }}>
-          <Typography variant="subtitle1" sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold' }}>
+          <Typography variant="subtitle1" sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', cursor: 'pointer', borderRadius: 1, px: 2, py: 0.5, transition: 'all 0.2s ease', outline: '1px solid transparent', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', outlineColor: 'rgba(255,255,255,0.3)' } }}>
             Результативность
           </Typography>
           <Box sx={{ height: 300, minHeight: 300, minWidth: 200, width: '100%' }}>
@@ -360,6 +491,7 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
               </Box>
             )}
           </Box>
+          {hasPerformance && renderSummaryTable(perfSummary, handlePerfSort, perfSortField, perfSortDirection)}
         </Box>
       </Box>
 
@@ -368,7 +500,7 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
         <Box sx={{ display: 'flex', gap: 4, mt: 4, userSelect: 'none' }}>
           <Box 
             onClick={() => toggleSeries('successors')}
-            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', opacity: activeSeries === 'nonSuccessors' ? 0.4 : 1, transition: 'opacity 0.2s' }}
+            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', opacity: activeSeries === 'nonSuccessors' ? 0.4 : 1, transition: 'all 0.2s', borderRadius: 1, px: 1.5, py: 0.5, border: '1px solid transparent', '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.3)' } }}
           >
             <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#2f9d76' }} />
             <Typography variant="body2" sx={{ fontWeight: activeSeries === 'successors' ? 'bold' : 'normal' }}>
@@ -378,7 +510,7 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
           
           <Box 
             onClick={() => toggleSeries('nonSuccessors')}
-            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', opacity: activeSeries === 'successors' ? 0.4 : 1, transition: 'opacity 0.2s' }}
+            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', opacity: activeSeries === 'successors' ? 0.4 : 1, transition: 'all 0.2s', borderRadius: 1, px: 1.5, py: 0.5, border: '1px solid transparent', '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.3)' } }}
           >
             <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#ee5d48' }} />
             <Typography variant="body2" sx={{ fontWeight: activeSeries === 'nonSuccessors' ? 'bold' : 'normal' }}>

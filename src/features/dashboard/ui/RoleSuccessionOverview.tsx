@@ -9,14 +9,12 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis} from "recharts";
 import type { StatsResponse } from "@/entities/dashboard";
 import type { ManagerListItem } from "@/entities/leader";
 
 const SUCCESS_COLOR = "#69f0ae";
 const ERROR_COLOR = "#ee5d48";
 const NEUTRAL_COLOR = "#9e9e9e";
-const REST_COLOR = "rgba(255,255,255,0.2)";
 
 interface HorizontalBarProps {
   label: string;
@@ -27,25 +25,73 @@ interface HorizontalBarProps {
 }
 
 function HorizontalBar({ label, value, max, color, percentText }: HorizontalBarProps) {
-  const data = [{ name: "", value, rest: max - value }];
+  const percent = max > 0 ? (value / max) * 100 : 0;
   return (
-    <Box sx={{ display: "flex", alignItems: "center", mb: 1.5, height: 30 }}>
-      <Typography variant="body2" sx={{ width: 140, flexShrink: 0, color: "white", whiteSpace: "nowrap" }}>
-        {label}: {value}
-      </Typography>
-      <Box sx={{ flexGrow: 1, height: 30, mx: 1 }}>
-        <ResponsiveContainer width="99%" height={30} minWidth={1}>
-          <BarChart layout="vertical" data={data}>
-            <XAxis type="number" domain={[0, max]} hide />
-            <YAxis type="category" dataKey="name" hide />
-            <Bar dataKey="value" stackId="a" fill={color} />
-            <Bar dataKey="rest" stackId="a" fill={REST_COLOR} isAnimationActive={false} />
-          </BarChart>
-        </ResponsiveContainer>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        mb: 1.5,
+        height: 30,
+        borderRadius: 1,
+        border: "1px solid transparent",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        px: 1,
+        "&:hover": {
+          borderColor: "rgba(255,255,255,0.5)",
+          bgcolor: "rgba(255,255,255,0.08)",
+        },
+      }}
+    >
+      {/* Левая зона — label + значение */}
+      <Box sx={{ width: 160, flexShrink: 0, px: 1 }}>
+        <Typography variant="body2" sx={{ color: "white", whiteSpace: "nowrap", lineHeight: "30px", fontSize: 13 }}>
+          {label} {value}
+        </Typography>
       </Box>
-      <Typography variant="body2" sx={{ width: 50, textAlign: "right", color: "white", whiteSpace: "nowrap" }}>
-        {percentText}
-      </Typography>
+
+      {/* Центральная зона — бар с отступами сверху/снизу */}
+      <Box
+        sx={{
+          flex: "1 1 auto",
+          minWidth: 0,
+          height: 30,
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            height: 20,
+            bgcolor: "rgba(255,255,255,0.15)",
+            borderRadius: 1,
+            overflow: "hidden",
+            position: "relative",
+          }}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              height: "100%",
+              width: `${percent}%`,
+              bgcolor: color,
+              borderRadius: 1,
+              transition: "width 0.3s ease",
+            }}
+          />
+        </Box>
+      </Box>
+
+      {/* Правая зона — процент */}
+      <Box sx={{ width: 55, flexShrink: 0, px: 1, textAlign: "right" }}>
+        <Typography variant="body2" sx={{ color: "white", whiteSpace: "nowrap", lineHeight: "30px", fontSize: 13 }}>
+          {percentText}
+        </Typography>
+      </Box>
     </Box>
   );
 }
@@ -178,50 +224,50 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
     <Box sx={{ bgcolor: '#1DAFF7', color: 'white', p: 3, mb: 4, borderRadius: 2 }}>
       <Grid container spacing={4} sx={{ alignItems: "flex-start" }}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
+          <Typography variant="subtitle1" sx={{ mb: 1, cursor: "pointer", borderRadius: 1, px: 1.5, py: 0.5, transition: "all 0.2s ease", display: "inline-block", outline: "1px solid transparent", "&:hover": { bgcolor: "rgba(255,255,255,0.08)", outlineColor: "rgba(255,255,255,0.3)" } }}>
             Критичные роли
           </Typography>
           <HorizontalBar
-            label="Руководителей"
+            label="Руководителей:"
             value={criticalTotal}
             max={totalManagers}
             color={NEUTRAL_COLOR}
             percentText={`${criticalTotalPercent}%`}
           />
           <HorizontalBar
-            label="С преемниками"
+            label="С преемниками:"
             value={criticalWith}
             max={totalManagers}
             color={SUCCESS_COLOR}
             percentText={criticalWithPercent}
           />
           <HorizontalBar
-            label="Без преемников"
+            label="Без преемников:"
             value={criticalWithout}
             max={totalManagers}
             color={ERROR_COLOR}
             percentText={criticalWithoutPercent}
           />
 
-          <Typography variant="subtitle1" sx={{ mt: 4, mb: 1 }}>
+          <Typography variant="subtitle1" sx={{ mt: 4, mb: 1, cursor: "pointer", borderRadius: 1, px: 1.5, py: 0.5, transition: "all 0.2s ease", display: "inline-block", outline: "1px solid transparent", "&:hover": { bgcolor: "rgba(255,255,255,0.08)", outlineColor: "rgba(255,255,255,0.3)" } }}>
             Некритичные роли
           </Typography>
           <HorizontalBar
-            label="Руководителей"
+            label="Руководителей:"
             value={nonCriticalTotal}
             max={totalManagers}
             color={NEUTRAL_COLOR}
             percentText={`${nonCriticalTotalPercent}%`}
           />
           <HorizontalBar
-            label="С преемниками"
+            label="С преемниками:"
             value={nonCriticalWith}
             max={totalManagers}
             color={SUCCESS_COLOR}
             percentText={nonCriticalWithPercent}
           />
           <HorizontalBar
-            label="Без преемников"
+            label="Без преемников:"
             value={nonCriticalWithout}
             max={totalManagers}
             color={ERROR_COLOR}
@@ -327,7 +373,7 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
               <Table sx={{ tableLayout: "fixed", width: "100%" }}>
                 <TableBody>
                   {criticalPositions.map((item) => (
-                    <TableRow key={item.position} sx={{ display: "flex" }}>
+                    <TableRow key={item.position} sx={{ display: "flex", cursor: "pointer", transition: "all 0.2s ease", "&:hover": { bgcolor: "rgba(255,255,255,0.08)" } }}>
                       <TableCell
                         sx={{
                           flex: 2,

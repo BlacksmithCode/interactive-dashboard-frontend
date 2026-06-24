@@ -5,7 +5,7 @@ import {
 import { PieChart } from "@mui/x-charts/PieChart";
 import { useDomainGistQuery } from "../hooks";
 import { useDashboardFilters } from "../model/useDashboardFilters";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { GradeFilterInput } from "./GradeFilterInput";
 import { RoleGuard, ROLES } from "@/entities/user";
 
@@ -106,6 +106,8 @@ export function DomainInsightsPanel({
     { id: "without", value: chartData.totalWithout || 0, color: theme.palette.error.light },
   ];
 
+  const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
+
   return (
     <Card variant="outlined" sx={{ mb: 4, backgroundColor: CARD_BG, color: TEXT_COLOR, borderColor: 'rgba(255, 255, 255, 0.3)' }}>
       <Grid container spacing={3} sx={{ p: 3 }}>
@@ -144,6 +146,12 @@ export function DomainInsightsPanel({
                 p: 2,
                 display: "inline-block",
                 minWidth: 120,
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                outline: "2px solid transparent",
+                "&:hover": {
+                  outlineColor: "rgba(255,255,255,0.6)",
+                },
               }}
             >
               <Typography variant="h2" sx={{ fontWeight: "bold", color: TEXT_COLOR }}>
@@ -183,6 +191,10 @@ export function DomainInsightsPanel({
             <Typography color="error">Ошибка загрузки доменов</Typography>
           ) : (
             <Box sx={{ width: '100%', height: 300, minWidth: 250 }}>
+              <style>{`
+                .histogram-bar rect { cursor: pointer; transition: opacity 0.2s ease !important; }
+                .histogram-bar:hover rect { opacity: 0.7 !important; }
+              `}</style>
               <ResponsiveContainer width="99%" height={300} minWidth={1}>
                 <BarChart data={currentGist} margin={{ top: 20, right: 10, left: 0, bottom: 80 }} >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
@@ -190,8 +202,8 @@ export function DomainInsightsPanel({
                   <YAxis tick={{ fill: TEXT_COLOR }} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: '#0088FF' }}/>
                   <Legend wrapperStyle={{ bottom: 0 }} formatter={(value) => <span style={{ color: TEXT_COLOR }}>{value}</span>} />
-                  <Bar dataKey="managersWithSuccessors" name="С преемниками" fill={theme.palette.success.main} />
-                  <Bar dataKey="managersWithoutSuccessors" name="Без преемников" fill={theme.palette.error.main} />
+                  <Bar dataKey="managersWithSuccessors" name="С преемниками" fill={theme.palette.success.main} className="histogram-bar" />
+                  <Bar dataKey="managersWithoutSuccessors" name="Без преемников" fill={theme.palette.error.main} className="histogram-bar" />
                 </BarChart>
               </ResponsiveContainer>
             </Box>
@@ -225,21 +237,24 @@ export function DomainInsightsPanel({
                     : 0}%
                 </Typography>
               </Box>
-              <Box sx={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+              <Box sx={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", mx: 0 }}>
                 <PieChart
                   series={[{
                     data: pieData,
                     innerRadius: 60,
                     outerRadius: 80,
                   }]}
-                  width={160} height={160}
+                  width={180} height={180}
                   margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                  highlightScope={{ highlighted: "arc", faded: "series" }}
+                  onHighlightChange={(id) => setHoveredSlice(id as string | null)}
                   // @ts-expect-error - 'hidden' работает, но временно отсутствует в типах @mui/x-charts
                   slotProps={{ legend: { hidden: true } }}
                   sx={{
                     '& path': {
                       stroke: '#ffffff !important',
                       strokeWidth: '2px !important',
+                      transition: 'opacity 0.2s ease',
                     }
                   }}
                 />
@@ -254,13 +269,51 @@ export function DomainInsightsPanel({
               </Box>
             </Box>
             <Box sx={{ mt: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 0.5, 
+                  cursor: "pointer", 
+                  transition: "all 0.2s ease", 
+                  borderRadius: 1, 
+                  px: 1, 
+                  py: 0.25,
+                  outline: "1px solid transparent",
+                  opacity: hoveredSlice && hoveredSlice !== "without" ? 0.6 : 1,
+                  "&:hover": {
+                    bgcolor: "rgba(255,255,255,0.08)",
+                    outlineColor: "rgba(255,255,255,0.3)",
+                  }
+                }}
+                onMouseEnter={() => setHoveredSlice("without")}
+                onMouseLeave={() => setHoveredSlice(null)}
+              >
                 <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: theme.palette.error.main }} />
                 <Typography variant="caption" sx={{ color: TEXT_COLOR, whiteSpace: "nowrap" }}>
                   Без преемников: {chartData.totalWithout}
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 0.5, 
+                  cursor: "pointer", 
+                  transition: "all 0.2s ease", 
+                  borderRadius: 1, 
+                  px: 1, 
+                  py: 0.25,
+                  outline: "1px solid transparent",
+                  opacity: hoveredSlice && hoveredSlice !== "with" ? 0.6 : 1,
+                  "&:hover": {
+                    bgcolor: "rgba(255,255,255,0.08)",
+                    outlineColor: "rgba(255,255,255,0.3)",
+                  }
+                }}
+                onMouseEnter={() => setHoveredSlice("with")}
+                onMouseLeave={() => setHoveredSlice(null)}
+              >
                 <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: theme.palette.success.main }} />
                 <Typography variant="caption" sx={{ color: TEXT_COLOR, whiteSpace: "nowrap" }}>
                   С преемниками: {chartData.totalWith}
