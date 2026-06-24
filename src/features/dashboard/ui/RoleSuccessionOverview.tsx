@@ -14,7 +14,7 @@ import type { StatsResponse } from "@/entities/dashboard";
 import type { ManagerListItem } from "@/entities/leader";
 
 const SUCCESS_COLOR = "#69f0ae";
-const ERROR_COLOR = "#f44336";
+const ERROR_COLOR = "#ee5d48";
 const NEUTRAL_COLOR = "#9e9e9e";
 const REST_COLOR = "rgba(255,255,255,0.2)";
 
@@ -30,7 +30,7 @@ function HorizontalBar({ label, value, max, color, percentText }: HorizontalBarP
   const data = [{ name: "", value, rest: max - value }];
   return (
     <Box sx={{ display: "flex", alignItems: "center", mb: 1.5, height: 30 }}>
-      <Typography variant="body2" sx={{ width: 140, flexShrink: 0, color: "white" }}>
+      <Typography variant="body2" sx={{ width: 140, flexShrink: 0, color: "white", whiteSpace: "nowrap" }}>
         {label}: {value}
       </Typography>
       <Box sx={{ flexGrow: 1, height: 30, mx: 1 }}>
@@ -43,7 +43,7 @@ function HorizontalBar({ label, value, max, color, percentText }: HorizontalBarP
           </BarChart>
         </ResponsiveContainer>
       </Box>
-      <Typography variant="body2" sx={{ width: 50, textAlign: "right", color: "white" }}>
+      <Typography variant="body2" sx={{ width: 50, textAlign: "right", color: "white", whiteSpace: "nowrap" }}>
         {percentText}
       </Typography>
     </Box>

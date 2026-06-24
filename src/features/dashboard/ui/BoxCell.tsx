@@ -66,7 +66,7 @@ export function BoxCell({
               Результативность
             </Typography>
             {Array.from(perfCounts.entries()).map(([letter, count]) => (
-              <Box key={letter} sx={{ display: "flex", justifyContent: "space-between" }}>
+              <Box key={letter} sx={{ display: "flex", justifyContent: "space-between", whiteSpace: "nowrap" }}>
                 <Typography variant="body2">
                   {letter} ({PERF_MAP[letter] ?? letter})
                 </Typography>
@@ -81,7 +81,7 @@ export function BoxCell({
               Потенциал
             </Typography>
             {Array.from(potCounts.entries()).map(([letter, count]) => (
-              <Box key={letter} sx={{ display: "flex", justifyContent: "space-between" }}>
+              <Box key={letter} sx={{ display: "flex", justifyContent: "space-between", whiteSpace: "nowrap" }}>
                 <Typography variant="body2">
                   {letter} ({POT_MAP[letter] ?? letter})
                 </Typography>
@@ -103,7 +103,7 @@ export function BoxCell({
       placement="top"
       slotProps={{
         tooltip: {
-          sx: { backgroundColor: 'transparent', boxShadow: 'none' },
+          sx: { backgroundColor: 'transparent', boxShadow: 'none', userSelect: 'text' },
         },
         arrow: {
           sx: { color: 'rgba(0,0,0,0.75)' },

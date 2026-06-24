@@ -105,20 +105,20 @@ const CustomTooltip = ({ active, payload, label, totalManagers = 0 }: CustomTool
     const managerPercent = totalManagers > 0 ? Math.round((total / totalManagers) * 100) : 0;
     
     return (
-      <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 180 }}>
+      <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 200, pointerEvents: 'auto', userSelect: 'text' }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>{label}</Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Box sx={{ display: "flex", alignItems: "center", whiteSpace: "nowrap", gap: 2 }}>
             <Typography variant="body2">С преемниками:</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{successors} ({succPercent}%)</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{successors} ({succPercent}%)</Typography>
           </Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Box sx={{ display: "flex", alignItems: "center", whiteSpace: "nowrap", gap: 2 }}>
             <Typography variant="body2">Без преемников:</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{nonSuccessors} ({nonSuccPercent}%)</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{nonSuccessors} ({nonSuccPercent}%)</Typography>
           </Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between", borderTop: '1px solid rgba(255,255,255,0.3)', pt: 0.5, mt: 0.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", borderTop: '1px solid rgba(255,255,255,0.3)', pt: 0.5, mt: 0.5, whiteSpace: "nowrap", gap: 2 }}>
             <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Всего:</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{total} {totalManagers > 0 && `(${managerPercent}%)`}</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{total} {totalManagers > 0 && `(${managerPercent}%)`}</Typography>
           </Box>
         </Box>
       </Box>
@@ -256,7 +256,19 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
                     tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 10 }} 
                   />
                   
-                  <Tooltip content={<CustomTooltip totalManagers={totalManagers} />} />
+                  <Tooltip 
+                    content={<CustomTooltip totalManagers={totalManagers} />} 
+                    isAnimationActive={true}
+                    animationDuration={200}
+                    animationEasing="ease-out"
+                  />
+                  
+                  <Tooltip 
+                    content={<CustomTooltip totalManagers={totalManagers} />} 
+                    isAnimationActive={true}
+                    animationDuration={200}
+                    animationEasing="ease-out"
+                  />
                   
                   {(!activeSeries || activeSeries === 'successors') && (
                     <Radar
@@ -311,7 +323,12 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
                     tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 10 }} 
                   />
                   
-                  <Tooltip content={<CustomTooltip totalManagers={totalManagers} />} />
+                  <Tooltip 
+                    content={<CustomTooltip totalManagers={totalManagers} />} 
+                    isAnimationActive={true}
+                    animationDuration={200}
+                    animationEasing="ease-out"
+                  />
                   
                   {(!activeSeries || activeSeries === 'successors') && (
                     <Radar

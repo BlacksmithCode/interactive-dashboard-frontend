@@ -46,20 +46,20 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
     const total = withSucc + withoutSucc;
 
     return (
-      <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 150 }}>
+      <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 200, pointerEvents: 'auto', userSelect: 'text' }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>{data.domain}</Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <Typography variant="body2">С преемниками:</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{withSucc}</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{withSucc}</Typography>
           </Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <Typography variant="body2">Без преемников:</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{withoutSucc}</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{withoutSucc}</Typography>
           </Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between", borderTop: '1px solid rgba(255,255,255,0.3)', pt: 0.5, mt: 0.5 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: '1px solid rgba(255,255,255,0.3)', pt: 0.5, mt: 0.5 }}>
             <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Всего:</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{total}</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{total}</Typography>
           </Box>
         </Box>
       </Box>
@@ -213,13 +213,13 @@ export function DomainInsightsPanel({
               justifyContent: "center",
             }}
           >
-            <Typography variant="body2" sx={{ color: TEXT_COLOR, mb: 1 }}>
+            <Typography variant="body2" align="center" sx={{ color: TEXT_COLOR, mb: 1 }}>
               Процент охвата преемниками по доменам
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
               <Box sx={{ textAlign: 'center', minWidth: 50 }}>
                 <Typography variant="body2" sx={{ color: TEXT_COLOR }} />
-                <Typography variant="h6" sx={{ color: TEXT_COLOR, fontWeight: 'bold' }}>
+                <Typography variant="h6" sx={{ color: "#ef5350", fontWeight: 'bold' }}>
                   {chartData.totalWith + chartData.totalWithout > 0
                     ? Math.round((chartData.totalWithout / (chartData.totalWith + chartData.totalWithout)) * 100)
                     : 0}%
@@ -246,7 +246,7 @@ export function DomainInsightsPanel({
               </Box>
               <Box sx={{ textAlign: 'center', minWidth: 50 }}>
                 <Typography variant="body2" sx={{ color: TEXT_COLOR }} />
-                <Typography variant="h6" sx={{ color: TEXT_COLOR, fontWeight: 'bold' }}>
+                <Typography variant="h6" sx={{ color: "#2e7d32", fontWeight: 'bold' }}>
                   {chartData.totalWith + chartData.totalWithout > 0
                     ? Math.round((chartData.totalWith / (chartData.totalWith + chartData.totalWithout)) * 100)
                     : 0}%
@@ -256,13 +256,13 @@ export function DomainInsightsPanel({
             <Box sx={{ mt: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: theme.palette.error.main }} />
-                <Typography variant="caption" sx={{ color: TEXT_COLOR }}>
+                <Typography variant="caption" sx={{ color: TEXT_COLOR, whiteSpace: "nowrap" }}>
                   Без преемников: {chartData.totalWithout}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: theme.palette.success.main }} />
-                <Typography variant="caption" sx={{ color: TEXT_COLOR }}>
+                <Typography variant="caption" sx={{ color: TEXT_COLOR, whiteSpace: "nowrap" }}>
                   С преемниками: {chartData.totalWith}
                 </Typography>
               </Box>
