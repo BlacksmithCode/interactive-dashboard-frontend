@@ -13,7 +13,7 @@
       }
     ]
   },
-  "description": "Prometheus Blackbox Exporter Overview",
+  "description": "Мониторинг доступности сервисов HR-Метрика",
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
@@ -1066,7 +1066,7 @@
     ]
   },
   "timezone": "",
-  "title": "Prometheus Blackbox Exporter",
+  "title": "HR-Метрика - Blackbox Мониторинг",
   "uid": "xtkCtBkiz",
   "version": 2
 }
