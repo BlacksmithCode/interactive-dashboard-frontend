@@ -13,7 +13,7 @@
       }
     ]
   },
-  "description": "Мониторинг доступности сервисов HR-Метрика",
+  "description": "Мониторинг доступности всех сервисов HR-Метрика (frontend, backend, postgres, внешний URL)",
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,

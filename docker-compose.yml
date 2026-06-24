@@ -75,6 +75,10 @@ services:
     image: prom/blackbox-exporter:latest
     container_name: inno-blackbox
     restart: unless-stopped
+    extra_hosts:
+      - "succdash.innoca.local:host-gateway"
+    volumes:
+      - ./blackbox.yml:/etc/blackbox_exporter/config.yml:ro
 
   # Хранилище и сборщик метрик
   prometheus:
