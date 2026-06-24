@@ -89,6 +89,7 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.enable-lifecycle'
       - '--web.external-url=/monitoring/prometheus/'
+      - '--web.route-prefix=/'
     depends_on:
       - node_exporter
       - blackbox_exporter
