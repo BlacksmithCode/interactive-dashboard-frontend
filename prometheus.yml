@@ -16,7 +16,8 @@ scrape_configs:
       module: [http_2xx]
     static_configs:
       - targets:
-        - 'http://proxy:80'
+        - 'https://succdash.innoca.local'
+        - 'http://proxy:80/health'
         - 'http://inno-frontend:80'
     relabel_configs:
       - source_labels: [__address__]
