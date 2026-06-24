@@ -76,7 +76,9 @@ services:
     container_name: inno-blackbox
     restart: unless-stopped
     extra_hosts:
-      - "succdash.innoca.local:10.10.146.56"
+      - "succdash.innoca.local:host-gateway"
+    volumes:
+      - ./blackbox.yml:/etc/blackbox_exporter/config.yml:ro
 
   # Хранилище и сборщик метрик
   prometheus:

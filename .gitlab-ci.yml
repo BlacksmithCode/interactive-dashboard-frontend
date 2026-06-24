@@ -59,6 +59,7 @@ deploy:
   script:
     - ssh $DEPLOY_USER@$DEPLOY_SERVER_IP "mkdir -p /opt/inno/proxy /opt/inno/grafana/provisioning/datasources /opt/inno/grafana/provisioning/dashboards"
     - scp docker-compose.yml $DEPLOY_USER@$DEPLOY_SERVER_IP:/opt/inno/docker-compose.yml
+    - scp blackbox.yml $DEPLOY_USER@$DEPLOY_SERVER_IP:/opt/inno/blackbox.yml
     - scp proxy/nginx.conf $DEPLOY_USER@$DEPLOY_SERVER_IP:/opt/inno/proxy/nginx.conf
     - scp prometheus.yml $DEPLOY_USER@$DEPLOY_SERVER_IP:/opt/inno/prometheus.yml
     - scp grafana/provisioning/datasources/prometheus.yml $DEPLOY_USER@$DEPLOY_SERVER_IP:/opt/inno/grafana/provisioning/datasources/prometheus.yml
