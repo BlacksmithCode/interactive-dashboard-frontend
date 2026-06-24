@@ -82,19 +82,87 @@ const CustomTick = (props: CustomTickProps) => {
   );
 };
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+  totalManagers?: number;
+  seriesType?: 'successors' | 'nonSuccessors' | null;
+  chartData?: Array<{ subject: string; successors: number; nonSuccessors: number }>;
+}
+
 // Кастомный тултип для радарных графиков
-const CustomTooltip = ({ active, payload, label, totalManagers = 0 }: CustomTooltipProps) => {
+const CustomTooltip = ({ active, payload, label, totalManagers = 0, seriesType, chartData }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    const successors = data.successors || 0;
-    const nonSuccessors = data.nonSuccessors || 0;
-    const total = successors + nonSuccessors;
+    const currentSubject = label;
+    const currentSuccessors = data.successors || 0;
+    const currentNonSuccessors = data.nonSuccessors || 0;
+
+    // Если выбрана серия
+    if (seriesType && chartData) {
+      // Находим текущую точку
+      const currentPoint = chartData.find(d => d.subject === currentSubject);
+      if (!currentPoint) return null;
+
+      const currentValue = seriesType === 'successors' ? currentPoint.successors : currentPoint.nonSuccessors;
+
+      // Сравниваем с остальными точками
+      const others = chartData
+        .filter(d => d.subject !== currentSubject)
+        .map(d => {
+          const otherValue = seriesType === 'successors' ? d.successors : d.nonSuccessors;
+          const diff = currentValue - otherValue;
+          const percentDiff = otherValue > 0 ? Math.round((Math.abs(diff) / otherValue) * 100) : 0;
+          return {
+            label: d.subject,
+            value: otherValue,
+            diff,
+            percentDiff: diff > 0 ? `+${percentDiff}%` : diff < 0 ? `-${percentDiff}%` : '0%',
+            isGreater: diff > 0,
+          };
+        })
+        .sort((a, b) => b.value - a.value);
+
+      return (
+        <Box sx={{ backgroundColor: 'rgba(0,0,0,0.85)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 220, pointerEvents: 'auto', userSelect: 'text' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, fontSize: 13 }}>{currentSubject}</Typography>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 1, pb: 1, borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: seriesType === 'successors' ? '#2f9d76' : '#ee5d48', mr: 1 }} />
+            <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: 13 }}>
+              {seriesType === 'successors' ? 'С преемниками' : 'Без преемников'}: {currentValue}
+            </Typography>
+          </Box>
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block', mb: 0.5 }}>
+            Сравнение с другими:
+          </Typography>
+          {others.map((other) => (
+            <Box key={other.label} sx={{ display: "flex", alignItems: "center", fontSize: 12, mb: 0.3 }}>
+              <Typography sx={{ width: 25, fontWeight: 'bold' }}>{other.label}</Typography>
+              <Typography sx={{ width: 30, textAlign: 'right', mr: 1 }}>{other.value}</Typography>
+              <Typography
+                sx={{
+                  color: other.isGreater ? '#69f0ae' : '#ff6b6b',
+                  fontWeight: 'bold',
+                  fontSize: 11,
+                }}
+              >
+                {other.diff > 0 ? '▲' : other.diff < 0 ? '▼' : '•'} {other.percentDiff}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      );
+    }
+
+    // Если серия не выбрана — показываем successors vs nonSuccessors
+    const total = currentSuccessors + currentNonSuccessors;
 
     let succPercent = 0;
     let nonSuccPercent = 0;
     if (total > 0) {
-      succPercent = Math.round((successors / total) * 100);
-      nonSuccPercent = Math.round((nonSuccessors / total) * 100);
+      succPercent = Math.round((currentSuccessors / total) * 100);
+      nonSuccPercent = Math.round((currentNonSuccessors / total) * 100);
       const diff = 100 - (succPercent + nonSuccPercent);
       if (diff !== 0) {
         if (succPercent >= nonSuccPercent) succPercent += diff;
@@ -103,22 +171,24 @@ const CustomTooltip = ({ active, payload, label, totalManagers = 0 }: CustomTool
     }
 
     const managerPercent = totalManagers > 0 ? Math.round((total / totalManagers) * 100) : 0;
-    
+
     return (
-      <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 200, pointerEvents: 'auto', userSelect: 'text' }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>{label}</Typography>
+      <Box sx={{ backgroundColor: 'rgba(0,0,0,0.85)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 220, pointerEvents: 'auto', userSelect: 'text' }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, fontSize: 13 }}>{label}</Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
           <Box sx={{ display: "flex", alignItems: "center", whiteSpace: "nowrap", gap: 2 }}>
-            <Typography variant="body2">С преемниками:</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{successors} ({succPercent}%)</Typography>
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#2f9d76', mr: 0.5, flexShrink: 0 }} />
+            <Typography variant="body2" sx={{ fontSize: 12 }}>С преемниками:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto', fontSize: 12 }}>{currentSuccessors} ({succPercent}%)</Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", whiteSpace: "nowrap", gap: 2 }}>
-            <Typography variant="body2">Без преемников:</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{nonSuccessors} ({nonSuccPercent}%)</Typography>
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#ee5d48', mr: 0.5, flexShrink: 0 }} />
+            <Typography variant="body2" sx={{ fontSize: 12 }}>Без преемников:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto', fontSize: 12 }}>{currentNonSuccessors} ({nonSuccPercent}%)</Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", borderTop: '1px solid rgba(255,255,255,0.3)', pt: 0.5, mt: 0.5, whiteSpace: "nowrap", gap: 2 }}>
-            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Всего:</Typography>
-            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{total} {totalManagers > 0 && `(${managerPercent}%)`}</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: 12 }}>Всего:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto', fontSize: 12 }}>{total} {totalManagers > 0 && `(${managerPercent}%)`}</Typography>
           </Box>
         </Box>
       </Box>
@@ -387,14 +457,7 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
                   />
                   
                   <Tooltip 
-                    content={<CustomTooltip totalManagers={totalManagers} />} 
-                    isAnimationActive={true}
-                    animationDuration={200}
-                    animationEasing="ease-out"
-                  />
-                  
-                  <Tooltip 
-                    content={<CustomTooltip totalManagers={totalManagers} />} 
+                    content={<CustomTooltip totalManagers={totalManagers} seriesType={activeSeries} chartData={potentialData} />} 
                     isAnimationActive={true}
                     animationDuration={200}
                     animationEasing="ease-out"
@@ -455,7 +518,7 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
                   />
                   
                   <Tooltip 
-                    content={<CustomTooltip totalManagers={totalManagers} />} 
+                    content={<CustomTooltip totalManagers={totalManagers} seriesType={activeSeries} chartData={performanceData} />} 
                     isAnimationActive={true}
                     animationDuration={200}
                     animationEasing="ease-out"
