@@ -97,7 +97,6 @@ const CustomTooltip = ({ active, payload, label, totalManagers = 0 }: CustomTool
       nonSuccPercent = Math.round((nonSuccessors / total) * 100);
       const diff = 100 - (succPercent + nonSuccPercent);
       if (diff !== 0) {
-        // Балансируем округление, чтобы в сумме всегда было ровно 100%
         if (succPercent >= nonSuccPercent) succPercent += diff;
         else nonSuccPercent += diff;
       }
@@ -106,17 +105,22 @@ const CustomTooltip = ({ active, payload, label, totalManagers = 0 }: CustomTool
     const managerPercent = totalManagers > 0 ? Math.round((total / totalManagers) * 100) : 0;
     
     return (
-      <Box sx={{ backgroundColor: '#0088FF', color: 'white', p: 1.5, border: '1px solid rgba(255,255,255,0.3)', borderRadius: '8px', minWidth: 150 }}>
+      <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 180 }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>{label}</Typography>
-        <Typography variant="body2" sx={{ color: '#a7f3d0', display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-          <span>С преемниками:</span> <span style={{ fontWeight: 'bold', marginLeft: '16px' }}>{successors} ({succPercent}%)</span>
-        </Typography>
-        <Typography variant="body2" sx={{ color: '#fecaca', display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-          <span>Без преемников:</span> <span style={{ fontWeight: 'bold', marginLeft: '16px' }}>{nonSuccessors} ({nonSuccPercent}%)</span>
-        </Typography>
-        <Typography variant="body2" sx={{ fontWeight: 'bold', mt: 1, pt: 0.5, borderTop: '1px solid rgba(255,255,255,0.3)', display: 'flex', justifyContent: 'space-between' }}>
-          <span>Всего:</span> <span>{total} {totalManagers > 0 && `(${managerPercent}%)`}</span>
-        </Typography>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2">С преемниками:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{successors} ({succPercent}%)</Typography>
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2">Без преемников:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{nonSuccessors} ({nonSuccPercent}%)</Typography>
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "space-between", borderTop: '1px solid rgba(255,255,255,0.3)', pt: 0.5, mt: 0.5 }}>
+            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Всего:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{total} {totalManagers > 0 && `(${managerPercent}%)`}</Typography>
+          </Box>
+        </Box>
       </Box>
     );
   }

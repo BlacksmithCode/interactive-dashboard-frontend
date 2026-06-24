@@ -56,8 +56,8 @@ export function BoxCell({
       }
     });
     tooltipContent = (
-      <Box sx={{ minWidth: 200 }}>
-        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+      <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 200 }}>
+        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
           {meta.label}: {meta.description}
         </Typography>
         <Box sx={{ display: "flex", gap: 2 }}>
@@ -97,7 +97,19 @@ export function BoxCell({
   }
 
   return (
-    <Tooltip title={tooltipContent} arrow placement="top">
+    <Tooltip
+      title={tooltipContent}
+      arrow
+      placement="top"
+      slotProps={{
+        tooltip: {
+          sx: { backgroundColor: 'transparent', boxShadow: 'none' },
+        },
+        arrow: {
+          sx: { color: 'rgba(0,0,0,0.75)' },
+        },
+      }}
+    >
       <Card
         sx={{
           bgcolor: bg,
@@ -121,7 +133,7 @@ export function BoxCell({
           </Typography>
           <Box sx={{ mt: "auto", display: "flex", justifyContent: "space-between" }}>
             <Box sx={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
-              <Typography variant="body2">Руководителей:</Typography>
+              <Typography variant="body2">Руководители:</Typography>
               <Typography variant="body2">Преемники:</Typography>
               <Typography variant="body2">Не преемники:</Typography>
             </Box>

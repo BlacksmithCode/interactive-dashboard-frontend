@@ -37,6 +37,37 @@ const selectSx = {
   '& .MuiInputBase-input': { color: 'white' },
 };
 
+// Кастомный тултип в стиле BoxCell
+const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { domain: string; managersWithSuccessors: number; managersWithoutSuccessors: number } }> }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const withSucc = data.managersWithSuccessors || 0;
+    const withoutSucc = data.managersWithoutSuccessors || 0;
+    const total = withSucc + withoutSucc;
+
+    return (
+      <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 150 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>{data.domain}</Typography>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2">С преемниками:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{withSucc}</Typography>
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="body2">Без преемников:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{withoutSucc}</Typography>
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "space-between", borderTop: '1px solid rgba(255,255,255,0.3)', pt: 0.5, mt: 0.5 }}>
+            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Всего:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>{total}</Typography>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+  return null;
+};
+
 export function DomainInsightsPanel({
   totalManagers,
   minPossibleGrade,
@@ -157,7 +188,7 @@ export function DomainInsightsPanel({
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
                   <XAxis dataKey="domain" interval={0} angle={-25} textAnchor="end" tick={{ fontSize: 12, fill: TEXT_COLOR }} />
                   <YAxis tick={{ fill: TEXT_COLOR }} />
-                  <Tooltip contentStyle={{ backgroundColor: '#fff', color: '#000' }} cursor={{ fill: '#0088FF' }}/>
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#0088FF' }}/>
                   <Legend wrapperStyle={{ bottom: 0 }} formatter={(value) => <span style={{ color: TEXT_COLOR }}>{value}</span>} />
                   <Bar dataKey="managersWithSuccessors" name="С преемниками" fill={theme.palette.success.main} />
                   <Bar dataKey="managersWithoutSuccessors" name="Без преемников" fill={theme.palette.error.main} />
