@@ -71,6 +71,7 @@ deploy:
         docker login -u '$CI_REGISTRY_USER' -p '$CI_REGISTRY_PASSWORD' '$CI_REGISTRY' &&
         cd /opt/inno &&
         docker compose down frontend proxy prometheus grafana 2>/dev/null;
+        docker volume rm inno_prometheus_data inno_grafana_data 2>/dev/null;
         docker compose up -d frontend proxy prometheus grafana
       "
   rules:
