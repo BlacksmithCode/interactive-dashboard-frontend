@@ -37,17 +37,18 @@ export default function Login() {
         
         // Маппинг ошибок от бэкенда к пользовательским сообщениям
         const backendError = error.message || '';
-        if (
-          backendError.includes('disabled') ||
-          backendError.includes('Disabled') ||
-          backendError.includes('заблокирован') ||
-          backendError.includes('Заблокирован')
-        ) {
+        
+        // Проверяем точное сообщение от бэкенда
+        if (backendError.includes('Доступ запрещен') || backendError.includes('disabled') || backendError.includes('Disabled')) {
           setError("Доступ запрещен");
+        } else if (backendError.includes('Неверный логин или пароль')) {
+          setError("Неверный логин или пароль");
         } else if (backendError) {
           // Показываем реальное сообщение с бэкенда
           setError(backendError);
-        } else if (error.statusCode === 403 || error.statusCode === 401) {
+        } else if (error.statusCode === 403) {
+          setError("Доступ запрещен");
+        } else if (error.statusCode === 401) {
           setError("Неверный логин или пароль");
         } else {
           setError("Ошибка при входе");

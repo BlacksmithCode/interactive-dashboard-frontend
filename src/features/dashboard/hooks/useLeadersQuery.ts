@@ -3,7 +3,7 @@ import { fetchLeaders } from "@/entities/leader";
 import type { PaginatedResponse, ManagerListItem, PaginationParams } from "@/entities/leader";
 
 interface UseLeadersQueryFilters {
-  gradeMin?: number;
+  grade?: number;
   domains?: string[];
   critical?: boolean;
   hasSuccessor?: boolean;
@@ -18,6 +18,8 @@ interface UseLeadersQueryFilters {
  * 
  * ВАЖНО: placeholderData отключён для корректной работы серверной пагинации DataGrid.
  * keepPreviousData вызывал конфликт между старыми данными и новым paginationModel.
+ * 
+ * Параметр grade (ранее gradeMin) теперь передаёт точное значение грейда для фильтрации.
  */
 export function useLeadersQuery(
   filters: UseLeadersQueryFilters = {},

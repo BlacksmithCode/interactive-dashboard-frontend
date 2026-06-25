@@ -61,7 +61,7 @@ export function useLeadersSuccessors() {
 
   const leadersQuery = useLeadersQuery(
     {
-      gradeMin: filters.gradeMin,
+      grade: filters.gradeMin,
       domains: filters.domain ? [filters.domain] : undefined,
       critical: criticalFilter,
       hasSuccessor: successorFilter,

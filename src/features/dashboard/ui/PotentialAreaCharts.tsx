@@ -444,7 +444,7 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
           </Typography>
           <Box sx={{ height: 300, minHeight: 300, minWidth: 200, width: '100%' }}>
             {hasPotential ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={300} minHeight={300}>
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={potentialData}>
                   <PolarGrid stroke="rgba(255, 255, 255, 0.3)" />
                   <PolarAngleAxis 
@@ -505,7 +505,7 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
           </Typography>
           <Box sx={{ height: 300, minHeight: 300, minWidth: 200, width: '100%' }}>
             {hasPerformance ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={300} minHeight={300}>
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={performanceData}>
                   <PolarGrid stroke="rgba(255, 255, 255, 0.3)" />
                   <PolarAngleAxis 

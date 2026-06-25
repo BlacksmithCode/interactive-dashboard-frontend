@@ -1,15 +1,20 @@
+import { useState } from "react";
 import { 
   Box, Typography, Button, Dialog, DialogTitle, DialogContent, 
   DialogActions, TextField, MenuItem, Select, FormControl, 
-  InputLabel, Autocomplete, Snackbar, Alert
+  InputLabel, Autocomplete, Snackbar, Alert, Tabs, Tab
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { ROLES, ROLE_NAMES, RoleGuard } from "@/entities/user";
 import { gridLocaleRu } from "@/shared/config/locales/gridLocaleRu";
 import { useManagerMeta, useLeadersQuery } from "@/features/dashboard";
-import { useAdminPanel, getAdminColumns } from "@/features/admin";
+import { useAdminPanel, getAdminColumns, AuditLogTable } from "@/features/admin";
+
+type AdminTab = "users" | "audit";
 
 export default function AdminPanel() {
+  const [activeTab, setActiveTab] = useState<AdminTab>("users");
+
   const {
     users,
     isLoading,
@@ -42,24 +47,37 @@ export default function AdminPanel() {
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-            Управление пользователями
+            Панель администратора
           </Typography>
           <Button variant="contained" onClick={() => setIsModalOpen(true)}>Добавить пользователя</Button>
         </Box>
         
-        <Box sx={{ flexGrow: 1, minHeight: 500, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 1 }}>
-          <DataGrid
-            rows={users}
-            columns={columns}
-            loading={isLoading}
-            disableRowSelectionOnClick
-            localeText={gridLocaleRu}
-            initialState={{
-              pagination: { paginationModel: { pageSize: 15 } },
-            }}
-            pageSizeOptions={[15, 50, 100]}
-          />
+        {/* Вкладки */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
+            <Tab label="Пользователи" value="users" />
+            <Tab label="Журнал аудита" value="audit" />
+          </Tabs>
         </Box>
+
+        {/* Контент вкладок */}
+        {activeTab === "users" && (
+          <Box sx={{ flexGrow: 1, minHeight: 500, bgcolor: 'background.paper', borderRadius: 1, boxShadow: 1 }}>
+            <DataGrid
+              rows={users}
+              columns={columns}
+              loading={isLoading}
+              disableRowSelectionOnClick
+              localeText={gridLocaleRu}
+              initialState={{
+                pagination: { paginationModel: { pageSize: 15 } },
+              }}
+              pageSizeOptions={[15, 50, 100]}
+            />
+          </Box>
+        )}
+
+        {activeTab === "audit" && <AuditLogTable />}
 
         {/* Модальное окно регистрации */}
         <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} maxWidth="sm" fullWidth>

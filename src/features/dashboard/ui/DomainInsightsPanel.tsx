@@ -244,9 +244,9 @@ export function DomainInsightsPanel({
                     innerRadius: 60,
                     outerRadius: 80,
                   }]}
-                  width={180} height={180}
+                  width={180}
+                  height={180}
                   margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
-                  highlightScope={{ highlighted: "arc", faded: "series" }}
                   onHighlightChange={(id) => setHoveredSlice(id as string | null)}
                   // @ts-expect-error - 'hidden' работает, но временно отсутствует в типах @mui/x-charts
                   slotProps={{ legend: { hidden: true } }}
