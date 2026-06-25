@@ -7,6 +7,8 @@ interface BoxCellProps extends NineBoxCell {
   totalManagers?: number;
   sourceKeys?: readonly string[];
   rawCells?: Record<string, NineBoxCell>;
+  isMax?: boolean;
+  managerPercent?: number;
 }
 
 export function BoxCell({
@@ -17,6 +19,8 @@ export function BoxCell({
   totalManagers = 0,
   sourceKeys,
   rawCells,
+  isMax = false,
+  managerPercent,
 }: BoxCellProps) {
   const meta = boxMeta[code] ?? { label: "—", description: "" };
   const bg = categoryColor[code] ?? "#fff";
@@ -37,67 +41,79 @@ export function BoxCell({
       }
     }
   }
-  const managerPercent = totalManagers > 0 ? Math.round((managers / totalManagers) * 100) : 0;
+  const finalManagerPercent = totalManagers > 0 ? (managerPercent ?? Math.round((managers / totalManagers) * 100)) : 0;
   const showPercent = totalManagers > 0;
 
-  // Содержимое тултипа
-  let tooltipContent: React.ReactNode = `${meta.label}: ${meta.description}`;
+  // Собираем детальную информацию для тултипа
+  const perfCounts = new Map<string, number>();
+  const potCounts = new Map<string, number>();
+
   if (sourceKeys && rawCells) {
-    const perfCounts = new Map<string, number>();
-    const potCounts = new Map<string, number>();
     sourceKeys.forEach((key) => {
       const cell = rawCells[key];
-      if (cell) {
-        const m = cell.managers || 0;
-        const pot = key.charAt(0);
-        const perf = key.charAt(1);
-        perfCounts.set(perf, (perfCounts.get(perf) || 0) + m);
-        potCounts.set(pot, (potCounts.get(pot) || 0) + m);
-      }
+      if (!cell) return;
+      // Ключ формата "AD": key[0] = потенциал, key[1] = результативность
+      const potKey = key[0];
+      const perfKey = key[1];
+      perfCounts.set(perfKey, (perfCounts.get(perfKey) || 0) + cell.managers);
+      potCounts.set(potKey, (potCounts.get(potKey) || 0) + cell.managers);
     });
-    tooltipContent = (
-      <Box sx={{ minWidth: 200 }}>
-        <Typography variant="subtitle2" sx={{ mb: 1 }}>
-          {meta.label}: {meta.description}
-        </Typography>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: "bold", mb: 0.5 }}>
-              Результативность
-            </Typography>
-            {Array.from(perfCounts.entries()).map(([letter, count]) => (
-              <Box key={letter} sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography variant="body2">
-                  {letter} ({PERF_MAP[letter] ?? letter})
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: "bold", ml: 1 }}>
-                  {count}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: "bold", mb: 0.5 }}>
-              Потенциал
-            </Typography>
-            {Array.from(potCounts.entries()).map(([letter, count]) => (
-              <Box key={letter} sx={{ display: "flex", justifyContent: "space-between" }}>
-                <Typography variant="body2">
-                  {letter} ({POT_MAP[letter] ?? letter})
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: "bold", ml: 1 }}>
-                  {count}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        </Box>
-      </Box>
-    );
   }
 
+  const tooltipContent = (
+    <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 200 }}>
+      <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+        {meta.label}: {meta.description}
+      </Typography>
+      <Box sx={{ display: "flex", gap: 2 }}>
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="body2" sx={{ fontWeight: "bold", mb: 0.5 }}>
+            Результативность
+          </Typography>
+          {Array.from(perfCounts.entries()).map(([letter, count]) => (
+            <Box key={letter} sx={{ display: "flex", justifyContent: "space-between", whiteSpace: "nowrap" }}>
+              <Typography variant="body2">
+                {letter} ({PERF_MAP[letter] ?? letter})
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: "bold", ml: 1 }}>
+                {count}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+        <Box sx={{ flex: 1 }}>
+          <Typography variant="body2" sx={{ fontWeight: "bold", mb: 0.5 }}>
+            Потенциал
+          </Typography>
+          {Array.from(potCounts.entries()).map(([letter, count]) => (
+            <Box key={letter} sx={{ display: "flex", justifyContent: "space-between", whiteSpace: "nowrap" }}>
+              <Typography variant="body2">
+                {letter} ({POT_MAP[letter] ?? letter})
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: "bold", ml: 1 }}>
+                {count}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+    </Box>
+  );
+
   return (
-    <Tooltip title={tooltipContent} arrow placement="top">
+    <Tooltip
+      title={tooltipContent}
+      arrow
+      placement="top"
+      slotProps={{
+        tooltip: {
+          sx: { backgroundColor: 'transparent', boxShadow: 'none', userSelect: 'text' },
+        },
+        arrow: {
+          sx: { color: 'rgba(0,0,0,0.75)' },
+        },
+      }}
+    >
       <Card
         sx={{
           bgcolor: bg,
@@ -105,8 +121,15 @@ export function BoxCell({
           display: "flex",
           flexDirection: "column",
           textAlign: "center",
-          cursor: "help",
+          cursor: "pointer",
           color: "white",
+          transition: "all 0.2s ease",
+          outline: isMax ? "3px solid #fff" : "2px solid transparent",
+          outlineOffset: "-3px",
+          "&:hover": {
+            outlineColor: isMax ? "#fff" : "rgba(255,255,255,0.6)",
+            opacity: 0.85,
+          },
         }}
       >
         <CardContent sx={{ flexGrow: 1, p: 1, display: "flex", flexDirection: "column" }}>
@@ -121,7 +144,7 @@ export function BoxCell({
           </Typography>
           <Box sx={{ mt: "auto", display: "flex", justifyContent: "space-between" }}>
             <Box sx={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
-              <Typography variant="body2">Руководителей:</Typography>
+              <Typography variant="body2">Руководители:</Typography>
               <Typography variant="body2">Преемники:</Typography>
               <Typography variant="body2">Не преемники:</Typography>
             </Box>
@@ -142,7 +165,7 @@ export function BoxCell({
                     alignItems: "flex-end",
                   }}
                 >
-                  <Typography variant="body2">{managerPercent}%</Typography>
+                  <Typography variant="body2">{finalManagerPercent}%</Typography>
                   <Typography variant="body2">{succPercent}%</Typography>
                   <Typography variant="body2">{nonSuccPercent}%</Typography>
                 </Box>

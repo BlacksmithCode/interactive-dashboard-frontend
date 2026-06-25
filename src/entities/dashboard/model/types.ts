@@ -47,7 +47,10 @@ export interface DashboardFilters {
 }
 
 /** Ключ объединённой ячейки для отображения 3×3 */
-export type MergedKey = "AD_AE" | "AC" | "AA_AB" | "BD_BE" | "BC" | "BA_BB" | "CD_CE" | "CB_CC" | "CA";
+export type MergedKey =
+  | "AD_AE" | "AC" | "AA_AB"
+  | "BD_BE" | "BC" | "BA_BB"
+  | "CD_CE" | "CB_CC" | "CA";
 
 /** Метаданные объединённой ячейки 9-box */
 export interface MergedCellMeta {

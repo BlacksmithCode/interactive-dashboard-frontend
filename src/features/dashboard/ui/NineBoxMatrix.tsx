@@ -3,8 +3,8 @@ import { Box, Typography, Card, CardContent } from "@mui/material";
 import { rowsOrder, potentialLabels, performanceLabels } from "../config/nineBoxMeta";
 import { BoxCell } from "./BoxCell";
 import type { MergedCells } from "../hooks/useMergedCells";
-import { MERGE_RULES } from "../hooks/useMergedCells";
 import type { NineBoxResponse } from "@/entities/dashboard";
+import { MERGE_RULES } from "../hooks/useMergedCells";
 
 interface NineBoxMatrixProps {
   mergedCells: MergedCells;
@@ -16,6 +16,32 @@ export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
     (sum, cell) => sum + (cell?.managers ?? 0),
     0
   );
+
+  const maxManagers = Math.max(...Object.values(mergedCells).map((c) => c?.managers ?? 0));
+
+  // Fair rounding: гарантируем, что сумма процентов строго равна 100%
+  const percentMap = new Map<string, number>();
+  if (totalManagers > 0) {
+    const rawPercents = Object.entries(mergedCells).map(([code, cell]) => ({
+      code,
+      raw: (cell?.managers ?? 0) / totalManagers * 100,
+    }));
+
+    const baseSum = rawPercents.reduce((sum, r) => sum + Math.floor(r.raw), 0);
+    const remainderCount = Math.max(0, 100 - baseSum);
+
+    const withRemainder = rawPercents.map((r, i) => ({
+      ...r,
+      remainder: r.raw - Math.floor(r.raw),
+      index: i,
+    }));
+
+    withRemainder.sort((a, b) => b.remainder - a.remainder);
+
+    withRemainder.forEach((item, i) => {
+      percentMap.set(item.code, Math.floor(item.raw) + (i < remainderCount ? 1 : 0));
+    });
+  }
 
   return (
     <Box sx={{ p: 2, borderRadius: 2, color: "white" }}>
@@ -103,6 +129,8 @@ export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
                   totalManagers={totalManagers}
                   sourceKeys={MERGE_RULES[code]}
                   rawCells={nineBox.cells}
+                  isMax={mergedCells[code]?.managers === maxManagers}
+                  managerPercent={percentMap.get(code) ?? 0}
                 />
               ))}
             </React.Fragment>

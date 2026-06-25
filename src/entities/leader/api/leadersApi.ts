@@ -3,7 +3,7 @@ import type { ManagerListItem, PaginatedResponse, PaginationParams, Successor, M
 
 export async function fetchLeaders(
   filters: {
-    gradeMin?: number;
+    grade?: number;
     domains?: string[];
     critical?: boolean;
     hasSuccessor?: boolean;
@@ -13,7 +13,7 @@ export async function fetchLeaders(
   pagination: PaginationParams = {},
 ): Promise<PaginatedResponse<ManagerListItem>> {
   const params = new URLSearchParams();
-  if (filters.gradeMin !== undefined) params.append("gradeMin", filters.gradeMin.toString());
+  if (filters.grade !== undefined) params.append("grade", filters.grade.toString());
   if (filters.critical !== undefined) params.append("critical", filters.critical.toString());
   if (filters.hasSuccessor !== undefined) params.append("hasSuccessor", filters.hasSuccessor.toString());
   if (filters.domains && filters.domains.length > 0) {

@@ -37,11 +37,11 @@ export default function Layout() {
           </Box>
 
           {/* Центральная часть - Профиль */}
-          <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "baseline", justifyContent: "center", gap: 1 }}>
+          <Box sx={{ display: { xs: "none", sm: "flex" }, flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
             <Typography variant="subtitle1" sx={{ fontWeight: "bold", color: "text.primary" }}>
               {displayFullName}
             </Typography>
-            <Typography variant="caption" sx={{ color: "text.secondary", position: "relative", top: "0.25em" }}>
+            <Typography variant="caption" sx={{ color: "text.secondary", textTransform: "lowercase" }}>
               {formatRole(role || "")}
             </Typography>
           </Box>

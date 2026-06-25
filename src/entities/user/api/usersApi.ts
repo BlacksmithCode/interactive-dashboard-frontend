@@ -26,9 +26,33 @@ export interface RegisterRequest {
   role: string;
 }
 
+/** Валидация пароля по требованиям бэкенда:
+ * - минимум 8 символов
+ * - хотя бы одна латинская буква
+ * - хотя бы одна цифра
+ * @returns null если пароль валиден, или текст ошибки
+ */
+export function validatePassword(password: string): string | null {
+  if (password.length < 8) return "Пароль должен содержать не менее 8 символов";
+  const hasLetter = /[a-zA-Z]/.test(password);
+  const hasDigit = /\d/.test(password);
+  if (!hasLetter || !hasDigit) return "Пароль должен содержать как буквы, так и цифры";
+  return null;
+}
+
 export async function loginUser(username: string, password: string): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>("/api/users/login", { username, password });
   return data;
+}
+
+/** Выход из системы с отправкой запроса на бэкенд */
+export async function logoutUser(): Promise<void> {
+  try {
+    await api.post("/api/users/logout");
+  } catch (error) {
+    // Игнорируем ошибки при логауте — пользователь всё равно выйдет из системы
+    console.warn("Logout API call failed, clearing local state anyway", error);
+  }
 }
 
 export async function fetchUsers(): Promise<UserResponse[]> {
@@ -37,6 +61,10 @@ export async function fetchUsers(): Promise<UserResponse[]> {
 }
 
 export async function registerUser(user: RegisterRequest): Promise<void> {
+  const error = validatePassword(user.password || "");
+  if (error) {
+    throw new Error(error);
+  }
   await api.post("/api/users/register", user);
 }
 

@@ -127,7 +127,7 @@ export const LeaderDetails = ({
             columns={teamColumns}
             getRowId={(row) => row.fullName}
             pageSizeOptions={[5, 10]}
-            localeText={{ ...gridLocaleRu, noRowsLabel: "Ничего не найдено" }}
+            localeText={{ ...gridLocaleRu, noRowsLabel: "Нет результатов" }}
             initialState={{
               pagination: { paginationModel: { pageSize: 5 } },
             }}
@@ -193,9 +193,9 @@ export const LeaderDetails = ({
           <DataGrid
             rows={successors}
             columns={successorColumns}
-            getRowId={(row) => `${row.fullName}_${row.successorStatus}`}
+            getRowId={(row) => `${row.fullName}_${row.successorStatus ?? 'N/A'}`}
             pageSizeOptions={[5, 10]}
-            localeText={{ ...gridLocaleRu, noRowsLabel: "Ничего не найдено" }}
+            localeText={{ ...gridLocaleRu, noRowsLabel: "Нет результатов" }}
             initialState={{
               pagination: { paginationModel: { pageSize: 5 } },
             }}

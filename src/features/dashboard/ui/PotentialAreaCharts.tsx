@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Box, Typography, Switch, FormControlLabel } from '@mui/material';
+import { Box, Typography, Switch, FormControlLabel, Table, TableHead, TableRow, TableCell, TableBody } from '@mui/material';
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip
 } from 'recharts';
@@ -82,41 +82,115 @@ const CustomTick = (props: CustomTickProps) => {
   );
 };
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+  totalManagers?: number;
+  seriesType?: 'successors' | 'nonSuccessors' | null;
+  chartData?: Array<{ subject: string; successors: number; nonSuccessors: number }>;
+}
+
 // Кастомный тултип для радарных графиков
-const CustomTooltip = ({ active, payload, label, totalManagers = 0 }: CustomTooltipProps) => {
+const CustomTooltip = ({ active, payload, label, totalManagers = 0, seriesType, chartData }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    const successors = data.successors || 0;
-    const nonSuccessors = data.nonSuccessors || 0;
-    const total = successors + nonSuccessors;
+    const currentSubject = label;
+    const currentSuccessors = data.successors || 0;
+    const currentNonSuccessors = data.nonSuccessors || 0;
+
+    // Если выбрана серия
+    if (seriesType && chartData) {
+      // Находим текущую точку
+      const currentPoint = chartData.find(d => d.subject === currentSubject);
+      if (!currentPoint) return null;
+
+      const currentValue = seriesType === 'successors' ? currentPoint.successors : currentPoint.nonSuccessors;
+
+      // Сравниваем с остальными точками
+      const others = chartData
+        .filter(d => d.subject !== currentSubject)
+        .map(d => {
+          const otherValue = seriesType === 'successors' ? d.successors : d.nonSuccessors;
+          const diff = currentValue - otherValue;
+          const percentDiff = otherValue > 0 ? Math.round((Math.abs(diff) / otherValue) * 100) : 0;
+          return {
+            label: d.subject,
+            value: otherValue,
+            diff,
+            percentDiff: diff > 0 ? `+${percentDiff}%` : diff < 0 ? `-${percentDiff}%` : '0%',
+            isGreater: diff > 0,
+          };
+        })
+        .sort((a, b) => b.value - a.value);
+
+      return (
+        <Box sx={{ backgroundColor: 'rgba(0,0,0,0.85)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 220, pointerEvents: 'auto', userSelect: 'text' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, fontSize: 13 }}>{currentSubject}</Typography>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 1, pb: 1, borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: seriesType === 'successors' ? '#2f9d76' : '#ee5d48', mr: 1 }} />
+            <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: 13 }}>
+              {seriesType === 'successors' ? 'С преемниками' : 'Без преемников'}: {currentValue}
+            </Typography>
+          </Box>
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', display: 'block', mb: 0.5 }}>
+            Сравнение с другими:
+          </Typography>
+          {others.map((other) => (
+            <Box key={other.label} sx={{ display: "flex", alignItems: "center", fontSize: 12, mb: 0.3 }}>
+              <Typography sx={{ width: 25, fontWeight: 'bold' }}>{other.label}</Typography>
+              <Typography sx={{ width: 30, textAlign: 'right', mr: 1 }}>{other.value}</Typography>
+              <Typography
+                sx={{
+                  color: other.isGreater ? '#69f0ae' : '#ff6b6b',
+                  fontWeight: 'bold',
+                  fontSize: 11,
+                }}
+              >
+                {other.diff > 0 ? '▲' : other.diff < 0 ? '▼' : '•'} {other.percentDiff}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      );
+    }
+
+    // Если серия не выбрана — показываем successors vs nonSuccessors
+    const total = currentSuccessors + currentNonSuccessors;
 
     let succPercent = 0;
     let nonSuccPercent = 0;
     if (total > 0) {
-      succPercent = Math.round((successors / total) * 100);
-      nonSuccPercent = Math.round((nonSuccessors / total) * 100);
+      succPercent = Math.round((currentSuccessors / total) * 100);
+      nonSuccPercent = Math.round((currentNonSuccessors / total) * 100);
       const diff = 100 - (succPercent + nonSuccPercent);
       if (diff !== 0) {
-        // Балансируем округление, чтобы в сумме всегда было ровно 100%
         if (succPercent >= nonSuccPercent) succPercent += diff;
         else nonSuccPercent += diff;
       }
     }
 
     const managerPercent = totalManagers > 0 ? Math.round((total / totalManagers) * 100) : 0;
-    
+
     return (
-      <Box sx={{ backgroundColor: '#0088FF', color: 'white', p: 1.5, border: '1px solid rgba(255,255,255,0.3)', borderRadius: '8px', minWidth: 150 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>{label}</Typography>
-        <Typography variant="body2" sx={{ color: '#a7f3d0', display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-          <span>С преемниками:</span> <span style={{ fontWeight: 'bold', marginLeft: '16px' }}>{successors} ({succPercent}%)</span>
-        </Typography>
-        <Typography variant="body2" sx={{ color: '#fecaca', display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-          <span>Без преемников:</span> <span style={{ fontWeight: 'bold', marginLeft: '16px' }}>{nonSuccessors} ({nonSuccPercent}%)</span>
-        </Typography>
-        <Typography variant="body2" sx={{ fontWeight: 'bold', mt: 1, pt: 0.5, borderTop: '1px solid rgba(255,255,255,0.3)', display: 'flex', justifyContent: 'space-between' }}>
-          <span>Всего:</span> <span>{total} {totalManagers > 0 && `(${managerPercent}%)`}</span>
-        </Typography>
+      <Box sx={{ backgroundColor: 'rgba(0,0,0,0.85)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 220, pointerEvents: 'auto', userSelect: 'text' }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1, fontSize: 13 }}>{label}</Typography>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", whiteSpace: "nowrap", gap: 2 }}>
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#2f9d76', mr: 0.5, flexShrink: 0 }} />
+            <Typography variant="body2" sx={{ fontSize: 12 }}>С преемниками:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto', fontSize: 12 }}>{currentSuccessors} ({succPercent}%)</Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", whiteSpace: "nowrap", gap: 2 }}>
+            <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: '#ee5d48', mr: 0.5, flexShrink: 0 }} />
+            <Typography variant="body2" sx={{ fontSize: 12 }}>Без преемников:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto', fontSize: 12 }}>{currentNonSuccessors} ({nonSuccPercent}%)</Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", borderTop: '1px solid rgba(255,255,255,0.3)', pt: 0.5, mt: 0.5, whiteSpace: "nowrap", gap: 2 }}>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', fontSize: 12 }}>Всего:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto', fontSize: 12 }}>{total} {totalManagers > 0 && `(${managerPercent}%)`}</Typography>
+          </Box>
+        </Box>
       </Box>
     );
   }
@@ -131,6 +205,8 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
     const potCounts = { A: { succ: 0, non: 0 }, B: { succ: 0, non: 0 }, C: { succ: 0, non: 0 } };
     const perfCounts = { A: { succ: 0, non: 0 }, B: { succ: 0, non: 0 }, C: { succ: 0, non: 0 }, D: { succ: 0, non: 0 }, E: { succ: 0, non: 0 } };
 
+    // Бэкенд возвращает ключи в формате "AA", "AB", "AC"...
+    // key[0] = потенциал (A/B/C), key[1] = результативность (A/B/C/D/E)
     Object.entries(nineBox.cells).forEach(([key, cell]) => {
       const potKey = key[0] as 'A' | 'B' | 'C';
       const perfKey = key[1] as 'A' | 'B' | 'C' | 'D' | 'E';
@@ -158,6 +234,132 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
 
     return { potentialData: potData, performanceData: perfData };
   }, [nineBox]);
+
+  // Сводные таблицы для графиков
+  const [potSortField, setPotSortField] = useState<'label' | 'count'>('count');
+  const [potSortDirection, setPotSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [perfSortField, setPerfSortField] = useState<'label' | 'count'>('count');
+  const [perfSortDirection, setPerfSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const handlePotSort = (field: 'label' | 'count') => {
+    if (potSortField === field) {
+      setPotSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setPotSortField(field);
+      setPotSortDirection(field === 'label' ? 'asc' : 'desc');
+    }
+  };
+
+  const handlePerfSort = (field: 'label' | 'count') => {
+    if (perfSortField === field) {
+      setPerfSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setPerfSortField(field);
+      setPerfSortDirection(field === 'label' ? 'asc' : 'desc');
+    }
+  };
+
+  const potSummary = useMemo(() => {
+    const data = potentialData.map(d => ({
+      label: d.subject === 'A' ? 'A (Высокий)' : d.subject === 'B' ? 'B (Средний)' : 'C (Низкий)',
+      count: d.successors + d.nonSuccessors,
+    }));
+    data.sort((a, b) => {
+      if (potSortField === 'label') {
+        return potSortDirection === 'asc' ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label);
+      }
+      return potSortDirection === 'asc' ? a.count - b.count : b.count - a.count;
+    });
+    return data;
+  }, [potentialData, potSortField, potSortDirection]);
+
+  const perfSummary = useMemo(() => {
+    const data = performanceData.map(d => ({
+      label: d.subject === 'A' ? 'A (Высшая)' : d.subject === 'B' ? 'B (Высокая)' : d.subject === 'C' ? 'C (Нормальная)' : d.subject === 'D' ? 'D (Сниженная)' : 'E (Низкая)',
+      count: d.successors + d.nonSuccessors,
+    }));
+    data.sort((a, b) => {
+      if (perfSortField === 'label') {
+        return perfSortDirection === 'asc' ? a.label.localeCompare(b.label) : b.label.localeCompare(a.label);
+      }
+      return perfSortDirection === 'asc' ? a.count - b.count : b.count - a.count;
+    });
+    return data;
+  }, [performanceData, perfSortField, perfSortDirection]);
+
+  const renderSummaryTable = (
+    data: Array<{ label: string; count: number }>,
+    onSort: (field: 'label' | 'count') => void,
+    sortField: 'label' | 'count',
+    sortDirection: 'asc' | 'desc'
+  ) => {
+    const total = data.reduce((sum, d) => sum + d.count, 0);
+    return (
+      <Box sx={{ mt: 2, width: '100%' }}>
+        <Table size="small" sx={{ bgcolor: 'rgba(0,0,0,0.15)', borderRadius: 1, fontSize: 13 }}>
+          <TableHead>
+            <TableRow sx={{ bgcolor: 'rgba(255,255,255,0.08)' }}>
+              <TableCell
+                component="th"
+                scope="col"
+                sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', userSelect: 'none', '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}
+                onClick={() => onSort('label')}
+              >
+                Оценка {sortField === 'label' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </TableCell>
+              <TableCell
+                component="th"
+                scope="col"
+                align="right"
+                sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', userSelect: 'none', '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}
+                onClick={() => onSort('count')}
+              >
+                Кол-во {sortField === 'count' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </TableCell>
+              <TableCell
+                component="th"
+                scope="col"
+                align="right"
+                sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', userSelect: 'none', '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}
+                onClick={() => onSort('count')}
+              >
+                % от всего
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.map((row) => (
+              <TableRow
+                key={row.label}
+                sx={{
+                  bgcolor: '#1daff7',
+                  color: 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  '&:hover': { bgcolor: 'rgba(29, 175, 247, 0.85)', outline: '1px solid rgba(255,255,255,0.3)' },
+                  '&:last-child td': { borderBottom: 0 },
+                  '& .MuiTableCell-root': { color: 'white',},
+                }}
+              >
+                <TableCell sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{row.label}</TableCell>
+                <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{row.count}</TableCell>
+                <TableCell align="right" sx={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  {Math.round((row.count / total) * 100)}%
+                </TableCell>
+              </TableRow>
+            ))}
+            <TableRow sx={{ bgcolor: 'rgba(255,255,255,0.08)' }}>
+              <TableCell sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>Всего</TableCell>
+              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>{total}</TableCell>
+              <TableCell align="right" sx={{ color: 'white', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                {totalManagers > 0 ? Math.round((total / totalManagers) * 100) : 0}%
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </Box>
+    );
+  };
 
   // Умный расчет осей
   const { potDomainMax, perfDomainMax } = useMemo(() => {
@@ -213,11 +415,15 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
       {/* Переключатель единого масштаба */}
       {(hasPotential && hasPerformance) && (
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', px: { xs: 1, md: 4 }, mb: 1 }}>
-          <FormControlLabel
-            control={<Switch checked={unifiedScale} onChange={(e) => setUnifiedScale(e.target.checked)} color="info" size="small" />}
-            label={<Typography variant="body2" sx={{ userSelect: 'none' }}>Единый масштаб</Typography>}
-            labelPlacement="start"
-          />
+          <Box 
+            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', borderRadius: 1, px: 1.5, py: 0.5, transition: 'all 0.2s ease', border: '1px solid transparent', '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.3)' } }}
+          >
+            <FormControlLabel
+              control={<Switch checked={unifiedScale} onChange={(e) => setUnifiedScale(e.target.checked)} color="info" size="small" />}
+              label={<Typography variant="body2" sx={{ userSelect: 'none' }}>Единый масштаб</Typography>}
+              labelPlacement="start"
+            />
+          </Box>
         </Box>
       )}
 
@@ -233,12 +439,12 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
       >
         {/* График Потенциала (Треугольник) */}
         <Box sx={{ flex: 1, width: '100%', maxWidth: 500 }}>
-          <Typography variant="subtitle1" sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold' }}>
+          <Typography variant="subtitle1" sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', cursor: 'pointer', borderRadius: 1, px: 2, py: 0.5, transition: 'all 0.2s ease', outline: '1px solid transparent', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', outlineColor: 'rgba(255,255,255,0.3)' } }}>
             Потенциал
           </Typography>
           <Box sx={{ height: 300, minHeight: 300, minWidth: 200, width: '100%' }}>
             {hasPotential ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={300} minHeight={300}>
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={potentialData}>
                   <PolarGrid stroke="rgba(255, 255, 255, 0.3)" />
                   <PolarAngleAxis 
@@ -252,7 +458,12 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
                     tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 10 }} 
                   />
                   
-                  <Tooltip content={<CustomTooltip totalManagers={totalManagers} />} />
+                  <Tooltip 
+                    content={<CustomTooltip totalManagers={totalManagers} seriesType={activeSeries} chartData={potentialData} />} 
+                    isAnimationActive={true}
+                    animationDuration={200}
+                    animationEasing="ease-out"
+                  />
                   
                   {(!activeSeries || activeSeries === 'successors') && (
                     <Radar
@@ -284,16 +495,17 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
               </Box>
             )}
           </Box>
+          {hasPotential && renderSummaryTable(potSummary, handlePotSort, potSortField, potSortDirection)}
         </Box>
 
         {/* График Результативности (Пятиугольник) */}
         <Box sx={{ flex: 1, width: '100%', maxWidth: 500 }}>
-          <Typography variant="subtitle1" sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold' }}>
+          <Typography variant="subtitle1" sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', cursor: 'pointer', borderRadius: 1, px: 2, py: 0.5, transition: 'all 0.2s ease', outline: '1px solid transparent', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', outlineColor: 'rgba(255,255,255,0.3)' } }}>
             Результативность
           </Typography>
           <Box sx={{ height: 300, minHeight: 300, minWidth: 200, width: '100%' }}>
             {hasPerformance ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={300} minHeight={300}>
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={performanceData}>
                   <PolarGrid stroke="rgba(255, 255, 255, 0.3)" />
                   <PolarAngleAxis 
@@ -307,7 +519,12 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
                     tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 10 }} 
                   />
                   
-                  <Tooltip content={<CustomTooltip totalManagers={totalManagers} />} />
+                  <Tooltip 
+                    content={<CustomTooltip totalManagers={totalManagers} seriesType={activeSeries} chartData={performanceData} />} 
+                    isAnimationActive={true}
+                    animationDuration={200}
+                    animationEasing="ease-out"
+                  />
                   
                   {(!activeSeries || activeSeries === 'successors') && (
                     <Radar
@@ -339,6 +556,7 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
               </Box>
             )}
           </Box>
+          {hasPerformance && renderSummaryTable(perfSummary, handlePerfSort, perfSortField, perfSortDirection)}
         </Box>
       </Box>
 
@@ -347,7 +565,7 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
         <Box sx={{ display: 'flex', gap: 4, mt: 4, userSelect: 'none' }}>
           <Box 
             onClick={() => toggleSeries('successors')}
-            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', opacity: activeSeries === 'nonSuccessors' ? 0.4 : 1, transition: 'opacity 0.2s' }}
+            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', opacity: activeSeries === 'nonSuccessors' ? 0.4 : 1, transition: 'all 0.2s', borderRadius: 1, px: 1.5, py: 0.5, border: '1px solid transparent', '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.3)' } }}
           >
             <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#2f9d76' }} />
             <Typography variant="body2" sx={{ fontWeight: activeSeries === 'successors' ? 'bold' : 'normal' }}>
@@ -357,7 +575,7 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
           
           <Box 
             onClick={() => toggleSeries('nonSuccessors')}
-            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', opacity: activeSeries === 'successors' ? 0.4 : 1, transition: 'opacity 0.2s' }}
+            sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', opacity: activeSeries === 'successors' ? 0.4 : 1, transition: 'all 0.2s', borderRadius: 1, px: 1.5, py: 0.5, border: '1px solid transparent', '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.3)' } }}
           >
             <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: '#ee5d48' }} />
             <Typography variant="body2" sx={{ fontWeight: activeSeries === 'nonSuccessors' ? 'bold' : 'normal' }}>

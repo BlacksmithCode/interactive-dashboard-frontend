@@ -5,7 +5,7 @@ import {
 import { PieChart } from "@mui/x-charts/PieChart";
 import { useDomainGistQuery } from "../hooks";
 import { useDashboardFilters } from "../model/useDashboardFilters";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { GradeFilterInput } from "./GradeFilterInput";
 import { RoleGuard, ROLES } from "@/entities/user";
 
@@ -35,6 +35,37 @@ const selectSx = {
   '& .MuiInputLabel-root': { color: 'white !important' },
   '& .MuiInputLabel-root.Mui-focused': { color: 'white !important' },
   '& .MuiInputBase-input': { color: 'white' },
+};
+
+// Кастомный тултип в стиле BoxCell
+const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { domain: string; managersWithSuccessors: number; managersWithoutSuccessors: number } }> }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const withSucc = data.managersWithSuccessors || 0;
+    const withoutSucc = data.managersWithoutSuccessors || 0;
+    const total = withSucc + withoutSucc;
+
+    return (
+      <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 200, pointerEvents: 'auto', userSelect: 'text' }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>{data.domain}</Typography>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Typography variant="body2">С преемниками:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{withSucc}</Typography>
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Typography variant="body2">Без преемников:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{withoutSucc}</Typography>
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: '1px solid rgba(255,255,255,0.3)', pt: 0.5, mt: 0.5 }}>
+            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Всего:</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{total}</Typography>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+  return null;
 };
 
 export function DomainInsightsPanel({
@@ -75,6 +106,8 @@ export function DomainInsightsPanel({
     { id: "without", value: chartData.totalWithout || 0, color: theme.palette.error.light },
   ];
 
+  const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
+
   return (
     <Card variant="outlined" sx={{ mb: 4, backgroundColor: CARD_BG, color: TEXT_COLOR, borderColor: 'rgba(255, 255, 255, 0.3)' }}>
       <Grid container spacing={3} sx={{ p: 3 }}>
@@ -113,6 +146,12 @@ export function DomainInsightsPanel({
                 p: 2,
                 display: "inline-block",
                 minWidth: 120,
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                outline: "2px solid transparent",
+                "&:hover": {
+                  outlineColor: "rgba(255,255,255,0.6)",
+                },
               }}
             >
               <Typography variant="h2" sx={{ fontWeight: "bold", color: TEXT_COLOR }}>
@@ -152,15 +191,19 @@ export function DomainInsightsPanel({
             <Typography color="error">Ошибка загрузки доменов</Typography>
           ) : (
             <Box sx={{ width: '100%', height: 300, minWidth: 250 }}>
+              <style>{`
+                .histogram-bar rect { cursor: pointer; transition: opacity 0.2s ease !important; }
+                .histogram-bar:hover rect { opacity: 0.7 !important; }
+              `}</style>
               <ResponsiveContainer width="99%" height={300} minWidth={1}>
                 <BarChart data={currentGist} margin={{ top: 20, right: 10, left: 0, bottom: 80 }} >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
                   <XAxis dataKey="domain" interval={0} angle={-25} textAnchor="end" tick={{ fontSize: 12, fill: TEXT_COLOR }} />
                   <YAxis tick={{ fill: TEXT_COLOR }} />
-                  <Tooltip contentStyle={{ backgroundColor: '#fff', color: '#000' }} cursor={{ fill: '#0088FF' }}/>
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#0088FF' }}/>
                   <Legend wrapperStyle={{ bottom: 0 }} formatter={(value) => <span style={{ color: TEXT_COLOR }}>{value}</span>} />
-                  <Bar dataKey="managersWithSuccessors" name="С преемниками" fill={theme.palette.success.main} />
-                  <Bar dataKey="managersWithoutSuccessors" name="Без преемников" fill={theme.palette.error.main} />
+                  <Bar dataKey="managersWithSuccessors" name="С преемниками" fill={theme.palette.success.main} className="histogram-bar" />
+                  <Bar dataKey="managersWithoutSuccessors" name="Без преемников" fill={theme.palette.error.main} className="histogram-bar" />
                 </BarChart>
               </ResponsiveContainer>
             </Box>
@@ -182,40 +225,43 @@ export function DomainInsightsPanel({
               justifyContent: "center",
             }}
           >
-            <Typography variant="body2" sx={{ color: TEXT_COLOR, mb: 1 }}>
+            <Typography variant="body2" align="center" sx={{ color: TEXT_COLOR, mb: 1 }}>
               Процент охвата преемниками по доменам
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
               <Box sx={{ textAlign: 'center', minWidth: 50 }}>
                 <Typography variant="body2" sx={{ color: TEXT_COLOR }} />
-                <Typography variant="h6" sx={{ color: TEXT_COLOR, fontWeight: 'bold' }}>
+                <Typography variant="h6" sx={{ color: "#ef5350", fontWeight: 'bold' }}>
                   {chartData.totalWith + chartData.totalWithout > 0
                     ? Math.round((chartData.totalWithout / (chartData.totalWith + chartData.totalWithout)) * 100)
                     : 0}%
                 </Typography>
               </Box>
-              <Box sx={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+              <Box sx={{ position: "relative", display: "inline-flex", alignItems: "center", justifyContent: "center", mx: 0 }}>
                 <PieChart
                   series={[{
                     data: pieData,
                     innerRadius: 60,
                     outerRadius: 80,
                   }]}
-                  width={160} height={160}
+                  width={180}
+                  height={180}
                   margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
+                  onHighlightChange={(id) => setHoveredSlice(id as string | null)}
                   // @ts-expect-error - 'hidden' работает, но временно отсутствует в типах @mui/x-charts
                   slotProps={{ legend: { hidden: true } }}
                   sx={{
                     '& path': {
                       stroke: '#ffffff !important',
                       strokeWidth: '2px !important',
+                      transition: 'opacity 0.2s ease',
                     }
                   }}
                 />
               </Box>
               <Box sx={{ textAlign: 'center', minWidth: 50 }}>
                 <Typography variant="body2" sx={{ color: TEXT_COLOR }} />
-                <Typography variant="h6" sx={{ color: TEXT_COLOR, fontWeight: 'bold' }}>
+                <Typography variant="h6" sx={{ color: "#2e7d32", fontWeight: 'bold' }}>
                   {chartData.totalWith + chartData.totalWithout > 0
                     ? Math.round((chartData.totalWith / (chartData.totalWith + chartData.totalWithout)) * 100)
                     : 0}%
@@ -223,15 +269,53 @@ export function DomainInsightsPanel({
               </Box>
             </Box>
             <Box sx={{ mt: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 0.5, 
+                  cursor: "pointer", 
+                  transition: "all 0.2s ease", 
+                  borderRadius: 1, 
+                  px: 1, 
+                  py: 0.25,
+                  outline: "1px solid transparent",
+                  opacity: hoveredSlice && hoveredSlice !== "without" ? 0.6 : 1,
+                  "&:hover": {
+                    bgcolor: "rgba(255,255,255,0.08)",
+                    outlineColor: "rgba(255,255,255,0.3)",
+                  }
+                }}
+                onMouseEnter={() => setHoveredSlice("without")}
+                onMouseLeave={() => setHoveredSlice(null)}
+              >
                 <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: theme.palette.error.main }} />
-                <Typography variant="caption" sx={{ color: TEXT_COLOR }}>
+                <Typography variant="caption" sx={{ color: TEXT_COLOR, whiteSpace: "nowrap" }}>
                   Без преемников: {chartData.totalWithout}
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 0.5, 
+                  cursor: "pointer", 
+                  transition: "all 0.2s ease", 
+                  borderRadius: 1, 
+                  px: 1, 
+                  py: 0.25,
+                  outline: "1px solid transparent",
+                  opacity: hoveredSlice && hoveredSlice !== "with" ? 0.6 : 1,
+                  "&:hover": {
+                    bgcolor: "rgba(255,255,255,0.08)",
+                    outlineColor: "rgba(255,255,255,0.3)",
+                  }
+                }}
+                onMouseEnter={() => setHoveredSlice("with")}
+                onMouseLeave={() => setHoveredSlice(null)}
+              >
                 <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: theme.palette.success.main }} />
-                <Typography variant="caption" sx={{ color: TEXT_COLOR }}>
+                <Typography variant="caption" sx={{ color: TEXT_COLOR, whiteSpace: "nowrap" }}>
                   С преемниками: {chartData.totalWith}
                 </Typography>
               </Box>

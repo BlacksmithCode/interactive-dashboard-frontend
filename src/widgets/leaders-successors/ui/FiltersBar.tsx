@@ -45,16 +45,12 @@ interface FiltersBarProps {
   filteredNameOptions: string[];
   filteredPositionOptions: string[];
   filteredDomainOptions: string[];
-  availableCriticalOptions: string[];
-  availableSuccessorOptions: string[];
 }
 
 export const FiltersBar = ({
   filteredNameOptions,
   filteredPositionOptions,
   filteredDomainOptions,
-  availableCriticalOptions,
-  availableSuccessorOptions,
 }: FiltersBarProps) => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const positionInputRef = useRef<HTMLInputElement>(null);
@@ -217,9 +213,7 @@ export const FiltersBar = ({
         renderInput={(params) => <TextField {...params} label="Домен" />}
       />
       <Autocomplete
-        options={["true", "false"].filter(
-          (v) => availableCriticalOptions.includes(v) || criticalFilter === (v === "true")
-        )}
+        options={["true", "false"]}
         value={criticalFilter !== undefined ? criticalFilter.toString() : null}
         noOptionsText="Нет вариантов"
         clearText=""
@@ -237,9 +231,7 @@ export const FiltersBar = ({
         renderInput={(params) => <TextField {...params} label="Критичность" />}
       />
       <Autocomplete
-        options={["true", "false"].filter(
-          (v) => availableSuccessorOptions.includes(v) || successorFilter === (v === "true")
-        )}
+        options={["true", "false"]}
         value={successorFilter !== undefined ? successorFilter.toString() : null}
         noOptionsText="Нет вариантов"
         clearText=""

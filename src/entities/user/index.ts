@@ -5,6 +5,7 @@ export {
   updateUserRole,
   toggleUserBlock,
   deleteUser,
+  validatePassword,
 } from "./api/usersApi";
 
 export type { AuthResponse, UserResponse, RegisterRequest } from "./api/usersApi";

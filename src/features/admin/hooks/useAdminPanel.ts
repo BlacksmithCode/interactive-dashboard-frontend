@@ -44,8 +44,9 @@ export function useAdminPanel() {
       setSuccess("Пользователь успешно зарегистрирован");
       loadUsers();
     } catch (error) {
-      console.error(error);
-      setError("Ошибка при регистрации (возможно логин уже занят)");
+      const err = error as { message?: string };
+      // Показываем конкретное сообщение об ошибке от валидации
+      setError(err.message || "Ошибка при регистрации (возможно логин уже занят)");
     }
   };
 

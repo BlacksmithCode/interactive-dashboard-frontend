@@ -6,6 +6,14 @@ export interface ManagerListItem {
   grade: number;
   critical: boolean;
   hasSuccessor: boolean;
+  assessment360?: string;
+  era?: string;
+  developmentProgram?: string;
+  careerStatus?: string;
+  potential?: string;
+  performance?: string;
+  box?: string;
+  boxInterpretation?: string;
 }
 
 /** Пагинированный ответ от сервера */
@@ -38,27 +46,23 @@ export interface ManagerDetail {
   readiness: string | null;
 }
 
-export interface Successor {
-  fullName: string;
-  grade: string;
-  assessment360: string;
-  performance: string;
-  potential: string;
-  era: string;
-  developmentProgram: string;
-  successorStatus: string,
-  readiness: string,
-  isApproved: boolean;
-  approvedBy: string;
-  approvalDate: string;
-}
-
 export interface TeamMemberDto {
   fullName: string;
-  grade?: string;        
+  grade?: number;        
   assessment360?: string;
   performance?: string;
   potential?: string;
   era?: string;
   developmentProgram?: string;
+  careerStatus?: string;
+  box?: string;
+  boxInterpretation?: string;
+}
+
+export interface Successor extends TeamMemberDto {
+  approvedBy?: string;
+  approvalDate?: string;
+  successorStatus?: string;
+  readiness?: string;
+  isApproved?: boolean;
 }

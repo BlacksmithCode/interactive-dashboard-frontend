@@ -2,7 +2,9 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/entities/user";
-import { TextField, Button, Box, Typography, Alert, Paper, AppBar, Toolbar, IconButton, useTheme } from "@mui/material";
+import { TextField, Button, Box, Typography, Alert, Paper, AppBar, Toolbar, IconButton, InputAdornment, useTheme } from "@mui/material";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { useColorMode } from "@/shared/theme/useColorMode";
@@ -12,6 +14,7 @@ import { loginUser } from "@/entities/user";
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -32,13 +35,23 @@ export default function Login() {
       } catch (err) {
         const error = err as { message?: string; statusCode?: number };
         
-        if (error.message?.toLowerCase().includes("disabled") || error.message?.toLowerCase().includes("заблокирован")) {
-          setError("Учетная запись заблокирована");
-        } else if (error.statusCode === 403 || error.statusCode === 401) {
-          // Маскируем 403 ошибку от бэкенда под нормальное сообщение для пользователя
+        // Маппинг ошибок от бэкенда к пользовательским сообщениям
+        const backendError = error.message || '';
+        
+        // Проверяем точное сообщение от бэкенда
+        if (backendError.includes('Доступ запрещен') || backendError.includes('disabled') || backendError.includes('Disabled')) {
+          setError("Доступ запрещен");
+        } else if (backendError.includes('Неверный логин или пароль')) {
+          setError("Неверный логин или пароль");
+        } else if (backendError) {
+          // Показываем реальное сообщение с бэкенда
+          setError(backendError);
+        } else if (error.statusCode === 403) {
+          setError("Доступ запрещен");
+        } else if (error.statusCode === 401) {
           setError("Неверный логин или пароль");
         } else {
-          setError(error.message || "Ошибка при входе");
+          setError("Ошибка при входе");
         }
       } finally {
         setIsLoading(false);
@@ -104,12 +117,26 @@ export default function Login() {
         />
         <TextField
           label="Пароль"
-          type="password"
+          type={showPassword ? "text" : "password"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           fullWidth
           required
           margin="normal"
+          slotProps={{
+            input: {
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
+          }}
         />
       <Button type="submit" disabled={isLoading} variant="contained" color="primary" size="large" fullWidth sx={{ mt: 3, py: 1.5, fontWeight: 'bold' }}>
         {isLoading ? "Вход..." : "Войти"}

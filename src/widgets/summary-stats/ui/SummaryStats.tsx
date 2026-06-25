@@ -1,7 +1,7 @@
 //import { useNavigate } from "react-router-dom";
 import { Box, Alert, LinearProgress, Typography, 
-  Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
-import { DashboardFiltersProvider, useComputedSummaryStats } from "@/features/dashboard";
+  Accordion, AccordionSummary, AccordionDetails, Button } from "@mui/material";
+import { DashboardFiltersProvider, useComputedSummaryStats, useDashboardFilters } from "@/features/dashboard";
 import {
   RoleSuccessionOverview,
   NineBoxMatrix,
@@ -9,7 +9,11 @@ import {
   DomainInsightsPanel,
   PotentialAreaCharts,
 } from "@/features/dashboard/ui";
+import { downloadPdfExport } from "@/features/dashboard/api/export";
+import { downloadFile } from "@/shared/lib/download";
+import { useAuth, ROLES } from "@/entities/user";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import DownloadIcon from '@mui/icons-material/Download';
 
 export default function SummaryStats() {
   return (
@@ -21,6 +25,8 @@ export default function SummaryStats() {
 
 function SummaryStatsContent() {
 //  const navigate = useNavigate();
+  const { role } = useAuth();
+  const { filters } = useDashboardFilters();
   const {
     minGrade,
     maxGrade,
@@ -34,6 +40,20 @@ function SummaryStatsContent() {
     computedStats,
     totalManagers,
   } = useComputedSummaryStats();
+
+  const isPdfExportAvailable = role !== ROLES.MANAGER;
+
+  const handleExportPdf = async () => {
+    try {
+      const blob = await downloadPdfExport({
+        gradeMin: filters.gradeMin,
+        domain: filters.domain,
+      });
+      downloadFile(blob, "dashboard_report.pdf");
+    } catch (err) {
+      console.error("Ошибка при экспорте PDF:", err);
+    }
+  };
 
   if (!computedStats && !nineBox && (sLoading || nLoading)) {
     return <SummaryStatsSkeleton />;
@@ -60,6 +80,18 @@ function SummaryStatsContent() {
   return (
     <Box>
       {(sLoading || nLoading) && <LinearProgress />}
+
+      {isPdfExportAvailable && (
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            onClick={handleExportPdf}
+          >
+            Экспорт в PDF
+          </Button>
+        </Box>
+      )}
 
       <DomainInsightsPanel
         totalManagers={totalManagers}

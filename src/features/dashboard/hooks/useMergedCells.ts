@@ -19,6 +19,7 @@ export type MergedCells = Record<MergedKey, NineBoxCell>;
 
 /**
  * Хук агрегации сырых ячеек 9-box в объединённые категории 3×3.
+ * Бэкенд возвращает ключи в формате "AA", "AB", "AC"... — фронтенд агрегирует их.
  * Результат мемоизирован — пересчитывается только при изменении nineBox.
  */
 export function useMergedCells(nineBox: NineBoxResponse | undefined): MergedCells | null {

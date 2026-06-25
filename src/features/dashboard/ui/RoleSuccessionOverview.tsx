@@ -9,14 +9,12 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import { BarChart, Bar, ResponsiveContainer, XAxis, YAxis} from "recharts";
 import type { StatsResponse } from "@/entities/dashboard";
 import type { ManagerListItem } from "@/entities/leader";
 
-const SUCCESS_COLOR = "#4caf50";
-const ERROR_COLOR = "#f44336";
+const SUCCESS_COLOR = "#69f0ae";
+const ERROR_COLOR = "#ee5d48";
 const NEUTRAL_COLOR = "#9e9e9e";
-const REST_COLOR = "rgba(255,255,255,0.2)";
 
 interface HorizontalBarProps {
   label: string;
@@ -27,25 +25,73 @@ interface HorizontalBarProps {
 }
 
 function HorizontalBar({ label, value, max, color, percentText }: HorizontalBarProps) {
-  const data = [{ name: "", value, rest: max - value }];
+  const percent = max > 0 ? (value / max) * 100 : 0;
   return (
-    <Box sx={{ display: "flex", alignItems: "center", mb: 1.5, height: 30 }}>
-      <Typography variant="body2" sx={{ width: 140, flexShrink: 0, color: "white" }}>
-        {label}: {value}
-      </Typography>
-      <Box sx={{ flexGrow: 1, height: 30, mx: 1 }}>
-        <ResponsiveContainer width="99%" height={30} minWidth={1}>
-          <BarChart layout="vertical" data={data}>
-            <XAxis type="number" domain={[0, max]} hide />
-            <YAxis type="category" dataKey="name" hide />
-            <Bar dataKey="value" stackId="a" fill={color} />
-            <Bar dataKey="rest" stackId="a" fill={REST_COLOR} isAnimationActive={false} />
-          </BarChart>
-        </ResponsiveContainer>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        mb: 1.5,
+        height: 30,
+        borderRadius: 1,
+        border: "1px solid transparent",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        px: 1,
+        "&:hover": {
+          borderColor: "rgba(255,255,255,0.5)",
+          bgcolor: "rgba(255,255,255,0.08)",
+        },
+      }}
+    >
+      {/* Левая зона — label + значение */}
+      <Box sx={{ width: 160, flexShrink: 0, px: 1 }}>
+        <Typography variant="body2" sx={{ color: "white", whiteSpace: "nowrap", lineHeight: "30px", fontSize: 13 }}>
+          {label} {value}
+        </Typography>
       </Box>
-      <Typography variant="body2" sx={{ width: 50, textAlign: "right", color: "white" }}>
-        {percentText}
-      </Typography>
+
+      {/* Центральная зона — бар с отступами сверху/снизу */}
+      <Box
+        sx={{
+          flex: "1 1 auto",
+          minWidth: 0,
+          height: 30,
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            height: 20,
+            bgcolor: "rgba(255,255,255,0.15)",
+            borderRadius: 1,
+            overflow: "hidden",
+            position: "relative",
+          }}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              height: "100%",
+              width: `${percent}%`,
+              bgcolor: color,
+              borderRadius: 1,
+              transition: "width 0.3s ease",
+            }}
+          />
+        </Box>
+      </Box>
+
+      {/* Правая зона — процент */}
+      <Box sx={{ width: 55, flexShrink: 0, px: 1, textAlign: "right" }}>
+        <Typography variant="body2" sx={{ color: "white", whiteSpace: "nowrap", lineHeight: "30px", fontSize: 13 }}>
+          {percentText}
+        </Typography>
+      </Box>
     </Box>
   );
 }
@@ -64,19 +110,26 @@ interface RoleSuccessionOverviewProps {
 export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }: RoleSuccessionOverviewProps) {
   // --- Группировка должностей ---
   const criticalPositionsRaw = useMemo(() => {
-    const map = new Map<string, number>();
+    const map = new Map<string, { count: number; withSuccessors: number; withoutSuccessors: number }>();
     criticalLeaders.forEach((m) => {
-      map.set(m.position, (map.get(m.position) || 0) + 1);
+      const entry = map.get(m.position) || { count: 0, withSuccessors: 0, withoutSuccessors: 0 };
+      entry.count += 1;
+      if (m.hasSuccessor) {
+        entry.withSuccessors += 1;
+      } else {
+        entry.withoutSuccessors += 1;
+      }
+      map.set(m.position, entry);
     });
-    return Array.from(map, ([position, count]) => ({
+    return Array.from(map, ([position, data]) => ({
       position,
-      count,
+      ...data,
       displayPosition: capitalizeFirstLetter(position),
     }));
   }, [criticalLeaders]);
 
   // --- Сортировка ---
-  const [sortField, setSortField] = useState<"position" | "count">("count");
+  const [sortField, setSortField] = useState<"position" | "count" | "withSuccessors" | "withoutSuccessors">("count");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   const criticalPositions = useMemo(() => {
@@ -86,6 +139,10 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
         return sortDirection === "asc"
           ? a.displayPosition.localeCompare(b.displayPosition)
           : b.displayPosition.localeCompare(a.displayPosition);
+      } else if (sortField === "withSuccessors") {
+        return sortDirection === "asc" ? a.withSuccessors - b.withSuccessors : b.withSuccessors - a.withSuccessors;
+      } else if (sortField === "withoutSuccessors") {
+        return sortDirection === "asc" ? a.withoutSuccessors - b.withoutSuccessors : b.withoutSuccessors - a.withoutSuccessors;
       } else {
         return sortDirection === "asc" ? a.count - b.count : b.count - a.count;
       }
@@ -93,12 +150,12 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
     return sorted;
   }, [criticalPositionsRaw, sortField, sortDirection]);
 
-  const handleSort = (field: "position" | "count") => {
+  const handleSort = (field: "position" | "count" | "withSuccessors" | "withoutSuccessors") => {
     if (sortField === field) {
       setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
-      setSortDirection(field === "count" ? "desc" : "asc");
+      setSortDirection(field === "position" ? "asc" : "desc");
     }
   };
 
@@ -167,50 +224,50 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
     <Box sx={{ bgcolor: '#1DAFF7', color: 'white', p: 3, mb: 4, borderRadius: 2 }}>
       <Grid container spacing={4} sx={{ alignItems: "flex-start" }}>
         <Grid size={{ xs: 12, md: 6 }}>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
+          <Typography variant="subtitle1" sx={{ mb: 1, cursor: "pointer", borderRadius: 1, px: 1.5, py: 0.5, transition: "all 0.2s ease", display: "inline-block", outline: "1px solid transparent", "&:hover": { bgcolor: "rgba(255,255,255,0.08)", outlineColor: "rgba(255,255,255,0.3)" } }}>
             Критичные роли
           </Typography>
           <HorizontalBar
-            label="Руководителей"
+            label="Руководителей:"
             value={criticalTotal}
             max={totalManagers}
             color={NEUTRAL_COLOR}
             percentText={`${criticalTotalPercent}%`}
           />
           <HorizontalBar
-            label="С преемниками"
+            label="С преемниками:"
             value={criticalWith}
             max={totalManagers}
             color={SUCCESS_COLOR}
             percentText={criticalWithPercent}
           />
           <HorizontalBar
-            label="Без преемников"
+            label="Без преемников:"
             value={criticalWithout}
             max={totalManagers}
             color={ERROR_COLOR}
             percentText={criticalWithoutPercent}
           />
 
-          <Typography variant="subtitle1" sx={{ mt: 4, mb: 1 }}>
+          <Typography variant="subtitle1" sx={{ mt: 4, mb: 1, cursor: "pointer", borderRadius: 1, px: 1.5, py: 0.5, transition: "all 0.2s ease", display: "inline-block", outline: "1px solid transparent", "&:hover": { bgcolor: "rgba(255,255,255,0.08)", outlineColor: "rgba(255,255,255,0.3)" } }}>
             Некритичные роли
           </Typography>
           <HorizontalBar
-            label="Руководителей"
+            label="Руководителей:"
             value={nonCriticalTotal}
             max={totalManagers}
             color={NEUTRAL_COLOR}
             percentText={`${nonCriticalTotalPercent}%`}
           />
           <HorizontalBar
-            label="С преемниками"
+            label="С преемниками:"
             value={nonCriticalWith}
             max={totalManagers}
             color={SUCCESS_COLOR}
             percentText={nonCriticalWithPercent}
           />
           <HorizontalBar
-            label="Без преемников"
+            label="Без преемников:"
             value={nonCriticalWithout}
             max={totalManagers}
             color={ERROR_COLOR}
@@ -242,7 +299,7 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                     sx={{
                       flex: 2,
                       fontWeight: "bold",
-                      borderBottom: "none", // или "none"
+                      borderBottom: "none",
                       padding: "8px 12px",
                       cursor: "pointer",
                       whiteSpace: "nowrap",
@@ -256,7 +313,43 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                   <TableCell
                     component="th"
                     scope="col"
-                    align="right"
+                    align="center"
+                    sx={{
+                      flex: 1,
+                      fontWeight: "bold",
+                      borderBottom: "none",
+                      padding: "8px 12px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      userSelect: "none",
+                      color: "white",
+                    }}
+                    onClick={() => handleSort("withSuccessors")}
+                  >
+                    С преемниками {sortField === "withSuccessors" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </TableCell>
+                  <TableCell
+                    component="th"
+                    scope="col"
+                    align="center"
+                    sx={{
+                      flex: 1,
+                      fontWeight: "bold",
+                      borderBottom: "none",
+                      padding: "8px 12px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      userSelect: "none",
+                      color: "white",
+                    }}
+                    onClick={() => handleSort("withoutSuccessors")}
+                  >
+                    Без преемников {sortField === "withoutSuccessors" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </TableCell>
+                  <TableCell
+                    component="th"
+                    scope="col"
+                    align="center"
                     sx={{
                       flex: 1,
                       fontWeight: "bold",
@@ -269,7 +362,7 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                     }}
                     onClick={() => handleSort("count")}
                   >
-                    Количество руководителей {sortField === "count" && (sortDirection === "asc" ? "↑" : "↓")}
+                    Всего {sortField === "count" && (sortDirection === "asc" ? "↑" : "↓")}
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -280,12 +373,12 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
               <Table sx={{ tableLayout: "fixed", width: "100%" }}>
                 <TableBody>
                   {criticalPositions.map((item) => (
-                    <TableRow key={item.position} sx={{ display: "flex" }}>
+                    <TableRow key={item.position} sx={{ display: "flex", cursor: "pointer", transition: "all 0.2s ease", "&:hover": { bgcolor: "rgba(255,255,255,0.08)" } }}>
                       <TableCell
                         sx={{
                           flex: 2,
-                      borderBottom: "1px solid",
-                      borderColor: "divider",
+                          borderBottom: "1px solid",
+                          borderColor: "divider",
                           padding: "6px 12px",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
@@ -296,11 +389,35 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                         {item.displayPosition}
                       </TableCell>
                       <TableCell
-                        align="right"
+                        align="center"
                         sx={{
                           flex: 1,
-                      borderBottom: "1px solid",
-                      borderColor: "divider",
+                          borderBottom: "1px solid",
+                          borderColor: "divider",
+                          padding: "6px 12px",
+                          color: SUCCESS_COLOR,
+                        }}
+                      >
+                        {item.withSuccessors}
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          flex: 1,
+                          borderBottom: "1px solid",
+                          borderColor: "divider",
+                          padding: "6px 12px",
+                          color: ERROR_COLOR,
+                        }}
+                      >
+                        {item.withoutSuccessors}
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          flex: 1,
+                          borderBottom: "1px solid",
+                          borderColor: "divider",
                           padding: "6px 12px",
                           color: "white",
                         }}
@@ -325,10 +442,22 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                     Всего должностей: {criticalPositionsRaw.length}
                   </TableCell>
                   <TableCell
-                    align="right"
+                    align="center"
+                    sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: SUCCESS_COLOR }}
+                  >
+                    {criticalPositionsRaw.reduce((sum, item) => sum + item.withSuccessors, 0)}
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: ERROR_COLOR }}
+                  >
+                    {criticalPositionsRaw.reduce((sum, item) => sum + item.withoutSuccessors, 0)}
+                  </TableCell>
+                  <TableCell
+                    align="center"
                     sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: "white" }}
                   >
-                    Всего руководителей: {criticalTotal}
+                    {criticalPositionsRaw.reduce((sum, item) => sum + item.count, 0)}
                   </TableCell>
                 </TableRow>
               </TableHead>
