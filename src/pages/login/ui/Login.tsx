@@ -35,13 +35,22 @@ export default function Login() {
       } catch (err) {
         const error = err as { message?: string; statusCode?: number };
         
-        if (error.message?.toLowerCase().includes("disabled") || error.message?.toLowerCase().includes("заблокирован")) {
-          setError("Учетная запись заблокирована");
+        // Маппинг ошибок от бэкенда к пользовательским сообщениям
+        const backendError = error.message || '';
+        if (
+          backendError.includes('disabled') ||
+          backendError.includes('Disabled') ||
+          backendError.includes('заблокирован') ||
+          backendError.includes('Заблокирован')
+        ) {
+          setError("Доступ запрещен");
+        } else if (backendError) {
+          // Показываем реальное сообщение с бэкенда
+          setError(backendError);
         } else if (error.statusCode === 403 || error.statusCode === 401) {
-          // Маскируем 403 ошибку от бэкенда под нормальное сообщение для пользователя
           setError("Неверный логин или пароль");
         } else {
-          setError(error.message || "Ошибка при входе");
+          setError("Ошибка при входе");
         }
       } finally {
         setIsLoading(false);

@@ -1,8 +1,8 @@
 /** Стандартизированная структура ошибки API */
 export interface ApiErrorResponse {
-  message: string;
-  statusCode: number;
+  message?: string;
   error?: string;
+  statusCode?: number;
 }
 
 /** Нормализованная ошибка для UI-слоя */

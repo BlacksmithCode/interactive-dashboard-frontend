@@ -6,7 +6,7 @@ import type { ApiErrorResponse, NormalizedError } from "../types/errors";
 function normalizeError(error: AxiosError<ApiErrorResponse>): NormalizedError {
   if (error.response) {
     return {
-      message: error.response.data?.message ?? error.message,
+      message: error.response.data?.error ?? error.response.data?.message ?? error.message,
       statusCode: error.response.status,
       isNetworkError: false,
     };

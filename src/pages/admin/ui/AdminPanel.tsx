@@ -66,7 +66,14 @@ export default function AdminPanel() {
           <DialogTitle sx={{ fontWeight: 'bold' }}>Регистрация пользователя</DialogTitle>
           <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: '20px !important' }}>
             <TextField label="Логин" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} fullWidth />
-            <TextField label="Пароль" type="password" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} fullWidth />
+            <TextField 
+              label="Пароль" 
+              type="password" 
+              value={newUser.password} 
+              onChange={e => setNewUser({...newUser, password: e.target.value})} 
+              fullWidth
+              helperText="Мин. 8 символов, буквы и цифры"
+            />
             <Autocomplete
               freeSolo
               options={managerNames}

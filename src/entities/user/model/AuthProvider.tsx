@@ -3,6 +3,7 @@ import { AuthContext } from "./AuthContext";
 import { removeAuthToken, isLoggedIn, setAuthToken, getAuthHeader } from "./token";
 import { setOnUnauthorizedHandler, setTokenProvider } from "@/shared/api/apiClient";
 import { useQueryClient } from "@tanstack/react-query";
+import { logoutUser } from "../api/usersApi";
 
 // Привязываем функцию получения токена к глобальному API-клиенту
 setTokenProvider(getAuthHeader);
@@ -26,7 +27,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setRole(data.role);
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    // Отправляем запрос на бэкенд для логирования выхода
+    await logoutUser();
+    
     removeAuthToken();
     localStorage.removeItem("role");
     localStorage.removeItem("username");
