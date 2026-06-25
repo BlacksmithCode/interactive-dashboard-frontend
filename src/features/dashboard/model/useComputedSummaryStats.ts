@@ -40,7 +40,7 @@ export function useComputedSummaryStats() {
   // 1. Получаем список критичных руководителей
   const { data: criticalLeadersPaginated } = useLeadersQuery({
     critical: true,
-    gradeMin: filters.gradeMin,
+    grade: filters.gradeMin,
     domains: filters.domain ? [filters.domain] : undefined,
     hasSuccessor: filters.hasSuccessor,
     searchName: filters.searchName,
