@@ -1,8 +1,10 @@
 import { useEffect } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Box } from "@mui/material";
 import { useAuth, ROLES } from "@/entities/user";
 import { PanelSwitcher, type PanelOption } from "@/shared/ui/PanelSwitcher";
+import { SummaryStats } from "@/features/summary-stats";
+import { LeadersSuccessors } from "@/features/leaders-successors";
 
 type PanelType = "summary" | "leaders";
 
@@ -21,22 +23,18 @@ export default function Dashboard() {
     : "summary";
 
   useEffect(() => {
-    // Если это Менеджер и он на вкладке "Сводная статистика" (которая у него скрыта),
-    // принудительно кидаем его на таблицу руководителей.
     if (role === ROLES.MANAGER && activePanel === "summary") {
       navigate("leaders", { replace: true });
     }
   }, [role, activePanel, navigate]);
 
-  // Блокируем рендер вкладки "Сводная статистика" для менеджера, 
-  // чтобы хуки не успели отправить запросы, на которые бэкенд вернет 403.
   if (role === ROLES.MANAGER && activePanel === "summary") {
     return null;
   }
 
   const handleToggle = (newPanel: PanelType) => {
     if (activePanel !== newPanel) {
-      navigate(newPanel);
+      navigate(newPanel === "summary" ? "/dashboard" : "/dashboard/leaders");
     }
   };
 
@@ -51,7 +49,7 @@ export default function Dashboard() {
           />
         </Box>
       )}
-      <Outlet />
+      {activePanel === "summary" ? <SummaryStats /> : <LeadersSuccessors />}
     </Box>
   );
 }

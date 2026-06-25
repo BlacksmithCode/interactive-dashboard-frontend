@@ -8,36 +8,37 @@ import {
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ClearIcon from "@mui/icons-material/Clear";
 import { useDashboardFilters, GradeFilterInput } from "@/features/dashboard";
+import { colors } from "@/shared/theme/tokens";
 
 // Общие стили для полей фильтров (синий фон, белый текст и рамка)
 const commonFilterSx = {
-  backgroundColor: '#0088FF',
+  backgroundColor: colors.bluePrimary,
   borderRadius: 1,
   '& .MuiOutlinedInput-root': {
     '& fieldset': {
-      borderColor: 'white',
+      borderColor: colors.white,
       borderWidth: '1px',
     },
     '&:hover fieldset': {
-      borderColor: 'white',
+      borderColor: colors.white,
       borderWidth: '1px',
     },
     '&.Mui-focused fieldset': {
-      borderColor: 'white',
+      borderColor: colors.white,
       borderWidth: '1px',
     },
   },
   '& .MuiInputLabel-root': {
-    color: 'white',
+    color: colors.white,
     '&.Mui-focused': {
-      color: 'white',
+      color: colors.white,
     },
   },
   '& .MuiInputBase-input, & .MuiSelect-select': {
-    color: 'white',
+    color: colors.white,
   },
   '& .MuiSvgIcon-root, & .MuiAutocomplete-clearIndicator, & .MuiAutocomplete-popupIndicator': {
-    color: 'white',
+    color: colors.white,
   },
 };
 
@@ -84,16 +85,16 @@ export const FiltersBar = ({
         mb: 3, 
         flexWrap: "wrap", 
         alignItems: "center",
-        backgroundColor: '#1DAFF7', // Задаем фон всей панели фильтров
-        p: 2,                       // Внутренние отступы, чтобы элементы не прилипали к краям фона
-        borderRadius: 2             // Скругление как у остальных карточек
+        backgroundColor: colors.bluePrimary,
+        p: 2,
+        borderRadius: 2
       }}
       useFlexGap
     >
       {/* Поле поиска по ФИО */}
       <Autocomplete
         freeSolo
-      disableClearable={!searchName}
+        disableClearable={!searchName}
         clearOnBlur={false}
         selectOnFocus
         openOnFocus
@@ -102,7 +103,7 @@ export const FiltersBar = ({
         clearText=""
         closeText=""
         openText=""
-      value={searchName || null}
+        value={searchName || null}
         inputValue={searchName}
         onInputChange={(_, newValue) => {
           const cleaned = newValue.replace(/[^а-яА-ЯёЁa-zA-Z \-.]/g, "");
@@ -155,7 +156,7 @@ export const FiltersBar = ({
       {/* Поле должности */}
       <Autocomplete
         freeSolo
-      disableClearable={!positionFilter}
+        disableClearable={!positionFilter}
         clearOnBlur={false}
         selectOnFocus
         openOnFocus
@@ -164,7 +165,7 @@ export const FiltersBar = ({
         clearText=""
         closeText=""
         openText=""
-      value={positionFilter || null}
+        value={positionFilter || null}
         inputValue={positionFilter}
         onInputChange={(_, newValue) => setPositionFilter(newValue)}
         onKeyDown={(e) => {
@@ -181,9 +182,7 @@ export const FiltersBar = ({
         sx={{ minWidth: 200, ...commonFilterSx }}
         forcePopupIcon={!positionFilter}
         clearIcon={<ClearIcon fontSize="small" />}
-        renderInput={(params) => (
-          <TextField {...params} label="Должность" inputRef={positionInputRef} />
-        )}
+        renderInput={(params) => <TextField {...params} label="Должность" inputRef={positionInputRef} />}
       />
 
       <GradeFilterInput
@@ -255,11 +254,11 @@ export const FiltersBar = ({
         onClick={resetAllFilters}
         startIcon={<RestartAltIcon />}
         sx={{ 
-          color: 'white',
-          ml: 'auto !important', // Прижимаем кнопку к правому краю
-          textTransform: 'none', // Делаем текст более современным (без капса)
-          fontWeight: 600,       // Чуть усиливаем вес текста
-          px: 2,                 // Добавляем воздуха по бокам
+          color: colors.white,
+          ml: 'auto !important',
+          textTransform: 'none',
+          fontWeight: 600,
+          px: 2,
           '&:hover': {
             backgroundColor: 'rgba(255, 255, 255, 0.15)',
           }

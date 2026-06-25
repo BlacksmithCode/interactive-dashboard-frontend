@@ -11,11 +11,11 @@ import type { ManagerListItem, ManagerDetail, Successor, TeamMemberDto } from "@
 import { gridLocaleRu } from "@/shared/config/locales/gridLocaleRu";
 import { teamColumns, successorColumns } from "../config/columns";
 import { capitalizeFirstLetter } from "../lib/utils";
+import { colors } from "@/shared/theme/tokens";
 
-// --- Константы цветов для шапок таблиц ---
-const TEAM_HEADER_BG = "#2e7d32"; // Зеленый фон для команды
-const SUCC_HEADER_BG = "#0088FF"; // Синий фон для преемников
-const HEADER_TEXT_COLOR = "#ffffff"; // Белый текст и иконки
+const TEAM_HEADER_BG = colors.greenPrimary;
+const SUCC_HEADER_BG = colors.bluePrimary;
+const HEADER_TEXT_COLOR = colors.white;
 
 interface LeaderDetailsProps {
   selectedLeader: ManagerListItem | null;
@@ -153,16 +153,14 @@ export const LeaderDetails = ({
                 fill: HEADER_TEXT_COLOR,
               },
               "& .MuiDataGrid-columnSeparator": {
-                color: "rgba(255, 255, 255, 0.5)",
+                color: colors.greyDivider,
               },
-              // Убираем синее выделение при клике
               "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
                 outline: "none",
               },
               "& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within": {
                 outline: "none",
               },
-              // Делаем курсор pointer при наведении на строку
               "& .MuiDataGrid-row:hover": {
                 cursor: "pointer",
               },
@@ -221,16 +219,14 @@ export const LeaderDetails = ({
                 fill: HEADER_TEXT_COLOR,
               },
               "& .MuiDataGrid-columnSeparator": {
-                color: "rgba(255, 255, 255, 0.5)",
+                color: colors.greyDivider,
               },
-              // Убираем синее выделение при клике
               "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
                 outline: "none",
               },
               "& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within": {
                 outline: "none",
               },
-              // Делаем курсор pointer при наведении на строку
               "& .MuiDataGrid-row:hover": {
                 cursor: "pointer",
               },

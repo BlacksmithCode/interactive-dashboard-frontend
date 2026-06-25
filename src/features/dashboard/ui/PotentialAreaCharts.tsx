@@ -4,6 +4,7 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip
 } from 'recharts';
 import type { NineBoxResponse } from '@/entities/dashboard';
+import { MERGE_RULES } from '../hooks/useMergedCells';
 
 interface PotentialAreaChartsProps {
   nineBox: NineBoxResponse;
@@ -205,17 +206,24 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
     const potCounts = { A: { succ: 0, non: 0 }, B: { succ: 0, non: 0 }, C: { succ: 0, non: 0 } };
     const perfCounts = { A: { succ: 0, non: 0 }, B: { succ: 0, non: 0 }, C: { succ: 0, non: 0 }, D: { succ: 0, non: 0 }, E: { succ: 0, non: 0 } };
 
-    // Бэкенд возвращает ключи в формате "AA", "AB", "AC"...
-    // key[0] = потенциал (A/B/C), key[1] = результативность (A/B/C/D/E)
-    Object.entries(nineBox.cells).forEach(([key, cell]) => {
-      const potKey = key[0] as 'A' | 'B' | 'C';
-      const perfKey = key[1] as 'A' | 'B' | 'C' | 'D' | 'E';
-      
-      potCounts[potKey].succ += cell.successors;
-      potCounts[potKey].non += cell.nonSuccessors;
+    // Бэкенд возвращает merged-ключи (AD_AE, AC, AA_AB...).
+    // Разбираем каждый merged-ключ на исходные ячейки (AD, AE) через MERGE_RULES
+    // и делим данные поровну, чтобы не задваивать счётчики.
+    Object.entries(nineBox.cells).forEach(([mergedKey, cell]) => {
+      const originalKeys = MERGE_RULES[mergedKey as keyof typeof MERGE_RULES];
+      if (!originalKeys) return;
 
-      perfCounts[perfKey].succ += cell.successors;
-      perfCounts[perfKey].non += cell.nonSuccessors;
+      const share = 1 / originalKeys.length;
+      originalKeys.forEach((key) => {
+        const potKey = key[0] as 'A' | 'B' | 'C';
+        const perfKey = key[1] as 'A' | 'B' | 'C' | 'D' | 'E';
+        
+        potCounts[potKey].succ += Math.round(cell.successors * share);
+        potCounts[potKey].non += Math.round(cell.nonSuccessors * share);
+
+        perfCounts[perfKey].succ += Math.round(cell.successors * share);
+        perfCounts[perfKey].non += Math.round(cell.nonSuccessors * share);
+      });
     });
 
     const potData = [

@@ -3,15 +3,12 @@ import { Box, Typography, Card, CardContent } from "@mui/material";
 import { rowsOrder, potentialLabels, performanceLabels } from "../config/nineBoxMeta";
 import { BoxCell } from "./BoxCell";
 import type { MergedCells } from "../hooks/useMergedCells";
-import type { NineBoxResponse } from "@/entities/dashboard";
-import { MERGE_RULES } from "../hooks/useMergedCells";
 
 interface NineBoxMatrixProps {
   mergedCells: MergedCells;
-  nineBox: NineBoxResponse;
 }
 
-export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
+export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
   const totalManagers = Object.values(mergedCells).reduce(
     (sum, cell) => sum + (cell?.managers ?? 0),
     0
@@ -19,7 +16,6 @@ export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
 
   const maxManagers = Math.max(...Object.values(mergedCells).map((c) => c?.managers ?? 0));
 
-  // Fair rounding: гарантируем, что сумма процентов строго равна 100%
   const percentMap = new Map<string, number>();
   if (totalManagers > 0) {
     const rawPercents = Object.entries(mergedCells).map(([code, cell]) => ({
@@ -45,7 +41,6 @@ export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
 
   return (
     <Box sx={{ p: 2, borderRadius: 2, color: "white" }}>
-      {/* Внешняя сетка 2x2 */}
       <Box
         sx={{
           display: "grid",
@@ -54,17 +49,14 @@ export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
           gap: 1,
         }}
       >
-        {/* Левая верхняя – пустая */}
         <Box />
 
-        {/* Правая верхняя – заголовок Результативности */}
         <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
           <Typography variant="caption" sx={{ fontWeight: "bold" }}>
             Результативность (вторая оценка) →
           </Typography>
         </Box>
 
-        {/* Левая нижняя – повёрнутый Потенциал, центрирован по вертикали */}
         <Box
           sx={{
             display: "flex",
@@ -84,7 +76,6 @@ export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
           </Typography>
         </Box>
 
-        {/* Правая нижняя – внутренняя сетка 4x4 (4 колонки, 4 строки) */}
         <Box
           sx={{
             display: "grid",
@@ -93,7 +84,6 @@ export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
             gap: 1,
           }}
         >
-          {/* Первая строка: левая ячейка пустая, затем заголовки трёх колонок */}
           <Box />
           {performanceLabels.map((label) => (
             <Card key={label} sx={{ bgcolor: "transparent", boxShadow: "none" }}>
@@ -105,10 +95,8 @@ export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
             </Card>
           ))}
 
-          {/* Три строки данных */}
           {rowsOrder.map((row, rowIndex) => (
             <React.Fragment key={rowIndex}>
-              {/* Левая ячейка строки – метка потенциала */}
               <Box
                 sx={{
                   display: "flex",
@@ -120,15 +108,12 @@ export function NineBoxMatrix({ mergedCells, nineBox }: NineBoxMatrixProps) {
                   {potentialLabels[rowIndex]}
                 </Typography>
               </Box>
-              {/* Три ячейки матрицы */}
               {row.map((code) => (
                 <BoxCell
                   key={code}
                   code={code}
                   {...mergedCells[code]}
                   totalManagers={totalManagers}
-                  sourceKeys={MERGE_RULES[code]}
-                  rawCells={nineBox.cells}
                   isMax={mergedCells[code]?.managers === maxManagers}
                   managerPercent={percentMap.get(code) ?? 0}
                 />

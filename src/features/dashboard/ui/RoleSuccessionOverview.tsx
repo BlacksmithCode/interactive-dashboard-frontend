@@ -11,10 +11,11 @@ import {
 } from "@mui/material";
 import type { StatsResponse } from "@/entities/dashboard";
 import type { ManagerListItem } from "@/entities/leader";
+import { colors } from "@/shared/theme/tokens";
 
-const SUCCESS_COLOR = "#69f0ae";
-const ERROR_COLOR = "#ee5d48";
-const NEUTRAL_COLOR = "#9e9e9e";
+const SUCCESS_COLOR = colors.greenLight;
+const ERROR_COLOR = colors.redAccent;
+const NEUTRAL_COLOR = colors.greyNeutral;
 
 interface HorizontalBarProps {
   label: string;

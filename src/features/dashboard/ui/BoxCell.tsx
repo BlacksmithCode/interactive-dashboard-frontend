@@ -1,12 +1,11 @@
 import { Card, CardContent, Typography, Box, Tooltip } from "@mui/material";
 import type { NineBoxCell, MergedKey } from "@/entities/dashboard";
 import { boxMeta, categoryColor, PERF_MAP, POT_MAP } from "../config/nineBoxMeta";
+import { MERGE_RULES } from "../hooks/useMergedCells";
 
 interface BoxCellProps extends NineBoxCell {
   code: MergedKey;
   totalManagers?: number;
-  sourceKeys?: readonly string[];
-  rawCells?: Record<string, NineBoxCell>;
   isMax?: boolean;
   managerPercent?: number;
 }
@@ -17,8 +16,6 @@ export function BoxCell({
   successors,
   nonSuccessors,
   totalManagers = 0,
-  sourceKeys,
-  rawCells,
   isMax = false,
   managerPercent,
 }: BoxCellProps) {
@@ -33,7 +30,6 @@ export function BoxCell({
     nonSuccPercent = Math.round((nonSuccessors / total) * 100);
     const diff = 100 - (succPercent + nonSuccPercent);
     if (diff !== 0) {
-      // Корректируем большее значение, чтобы не трогать маленькое
       if (succPercent >= nonSuccPercent) {
         succPercent += diff;
       } else {
@@ -44,24 +40,22 @@ export function BoxCell({
   const finalManagerPercent = totalManagers > 0 ? (managerPercent ?? Math.round((managers / totalManagers) * 100)) : 0;
   const showPercent = totalManagers > 0;
 
-  // Собираем детальную информацию для тултипа
   const perfCounts = new Map<string, number>();
   const potCounts = new Map<string, number>();
+  const originalKeys = MERGE_RULES[code];
 
-  if (sourceKeys && rawCells) {
-    sourceKeys.forEach((key) => {
-      const cell = rawCells[key];
-      if (!cell) return;
-      // Ключ формата "AD": key[0] = потенциал, key[1] = результативность
+  if (originalKeys) {
+    originalKeys.forEach((key) => {
       const potKey = key[0];
       const perfKey = key[1];
-      perfCounts.set(perfKey, (perfCounts.get(perfKey) || 0) + cell.managers);
-      potCounts.set(potKey, (potCounts.get(potKey) || 0) + cell.managers);
+      const share = Math.round(managers / originalKeys.length);
+      perfCounts.set(perfKey, (perfCounts.get(perfKey) || 0) + share);
+      potCounts.set(potKey, (potCounts.get(potKey) || 0) + share);
     });
   }
 
   const tooltipContent = (
-    <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 200 }}>
+    <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 220 }}>
       <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
         {meta.label}: {meta.description}
       </Typography>
@@ -100,6 +94,8 @@ export function BoxCell({
     </Box>
   );
 
+  const displayCode = code.replace("_", " + ");
+
   return (
     <Tooltip
       title={tooltipContent}
@@ -134,7 +130,7 @@ export function BoxCell({
       >
         <CardContent sx={{ flexGrow: 1, p: 1, display: "flex", flexDirection: "column" }}>
           <Typography variant="caption" sx={{ alignSelf: "flex-start", fontWeight: "bold", color: "white" }}>
-            {code.replace("_", " + ")}
+            {displayCode}
           </Typography>
           <Typography variant="subtitle2" sx={{ mt: 0.5, fontWeight: "bold", color: "white" }}>
             {meta.label}

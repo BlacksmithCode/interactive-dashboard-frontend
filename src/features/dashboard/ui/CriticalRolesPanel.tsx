@@ -34,7 +34,9 @@ export function CriticalRolesPanel() {
   };
 
   const { data: paginatedData, isLoading, isError, refetch } = useLeadersQuery(queryParams, { pageSize: 100 });
-  const leaders = paginatedData?.items ?? [];
+  
+  const empty: readonly ManagerListItem[] = [];
+  const leaders = paginatedData?.items ?? empty;
 
   const summary = useMemo(() => {
     const total = leaders.length;
