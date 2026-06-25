@@ -1,25 +1,25 @@
 import type { NineBoxCell } from "@/entities/dashboard";
 
 /**
- * Суммирует значения нескольких ячеек 9-box по списку ключей.
- * Используется для агрегации пар ячеек в объединённую категорию 3×3.
+ * Суммирует ячейки nineBox по заданным ключам.
+ * Возвращает объединённую ячейку с суммой managers, successors и nonSuccessors.
  */
 export function sumCells(
   cells: Record<string, NineBoxCell>,
-  keys: readonly string[],
+  keys: readonly string[]
 ): NineBoxCell {
   let managers = 0;
   let successors = 0;
   let nonSuccessors = 0;
 
-  for (const key of keys) {
+  keys.forEach((key) => {
     const cell = cells[key];
     if (cell) {
       managers += cell.managers;
       successors += cell.successors;
       nonSuccessors += cell.nonSuccessors;
     }
-  }
+  });
 
   return { managers, successors, nonSuccessors };
 }

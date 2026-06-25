@@ -205,6 +205,8 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
     const potCounts = { A: { succ: 0, non: 0 }, B: { succ: 0, non: 0 }, C: { succ: 0, non: 0 } };
     const perfCounts = { A: { succ: 0, non: 0 }, B: { succ: 0, non: 0 }, C: { succ: 0, non: 0 }, D: { succ: 0, non: 0 }, E: { succ: 0, non: 0 } };
 
+    // Бэкенд возвращает ключи в формате "AA", "AB", "AC"...
+    // key[0] = потенциал (A/B/C), key[1] = результативность (A/B/C/D/E)
     Object.entries(nineBox.cells).forEach(([key, cell]) => {
       const potKey = key[0] as 'A' | 'B' | 'C';
       const perfKey = key[1] as 'A' | 'B' | 'C' | 'D' | 'E';

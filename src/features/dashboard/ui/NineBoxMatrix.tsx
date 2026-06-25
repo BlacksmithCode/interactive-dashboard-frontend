@@ -3,8 +3,8 @@ import { Box, Typography, Card, CardContent } from "@mui/material";
 import { rowsOrder, potentialLabels, performanceLabels } from "../config/nineBoxMeta";
 import { BoxCell } from "./BoxCell";
 import type { MergedCells } from "../hooks/useMergedCells";
-import { MERGE_RULES } from "../hooks/useMergedCells";
 import type { NineBoxResponse } from "@/entities/dashboard";
+import { MERGE_RULES } from "../hooks/useMergedCells";
 
 interface NineBoxMatrixProps {
   mergedCells: MergedCells;

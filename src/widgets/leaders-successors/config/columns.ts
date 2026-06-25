@@ -1,63 +1,79 @@
 import type { GridColDef } from "@mui/x-data-grid";
 import type { ManagerListItem, Successor } from "@/entities/leader";
-import { capitalizeFirstLetter } from "../lib/utils";
 import { PERF_MAP, POT_MAP } from "@/features/dashboard";
 
-// Колонки таблицы руководителей
+// Колонки таблицы руководителей (главная таблица)
 export const leaderColumns: GridColDef<ManagerListItem>[] = [
   { 
     field: "fullName", 
     headerName: "ФИО", 
     flex: 1, 
-    minWidth: 180, 
-    filterable: false,
-    valueGetter: (value) => value || "Нет данных"
-  },
-  { 
-    field: "position", 
-    headerName: "Должность", 
-    flex: 1, 
-    minWidth: 200, 
-    filterable: false,
-    valueGetter: (value) => capitalizeFirstLetter(value) || "Нет данных"
-  },
-  { 
-    field: "domain", 
-    headerName: "Домен", 
-    width: 160, 
-    filterable: false,
+    minWidth: 160,
     valueGetter: (value) => value || "Нет данных"
   },
   { 
     field: "grade", 
     headerName: "Грейд", 
-    width: 80, 
-    align: "center", 
-    headerAlign: "center", 
-    filterable: false,
-    valueGetter: (value) => (value !== undefined && value !== null) ? value : "Нет данных"
+    width: 80,
+    valueGetter: (value) => (value !== undefined && value !== null) ? String(value) : "Нет данных"
   },
-  {
-    field: "hasSuccessor",
-    headerName: "Преемник",
-    width: 120,
-    align: "center",
-    headerAlign: "center",
-    valueGetter: (value) => value === true ? "Да" : value === false ? "Нет" : "Нет данных",
-    filterable: false
+  { 
+    field: "potential", 
+    headerName: "Потенциал", 
+    width: 140,
+    valueGetter: (value) => {
+      if (!value) return "Нет данных";
+      return POT_MAP[value as string] ? `${value} (${POT_MAP[value as string]})` : value;
+    }
   },
-  {
-    field: "critical",
-    headerName: "Критичность",
+  { 
+    field: "performance", 
+    headerName: "Результативность", 
+    width: 160,
+    valueGetter: (value) => {
+      if (!value) return "Нет данных";
+      return PERF_MAP[value as string] ? `${value} (${PERF_MAP[value as string]})` : value;
+    }
+  },
+  { 
+    field: "assessment360", 
+    headerName: "Оценка 360", 
     width: 120,
-    align: "center",
-    headerAlign: "center",
-    valueGetter: (value) => value === true ? "Да" : value === false ? "Нет" : "Нет данных",
-    filterable: false
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "era", 
+    headerName: "ЭРА", 
+    width: 80,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "box", 
+    headerName: "BOX", 
+    width: 80,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "boxInterpretation", 
+    headerName: "Интерпретация BOX", 
+    width: 160,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "developmentProgram", 
+    headerName: "Программа развития", 
+    flex: 1,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "careerStatus", 
+    headerName: "Статус карьерного маршрута", 
+    width: 160,
+    valueGetter: (value) => value || "Нет данных"
   },
 ];
 
-// Колонки таблицы команды
+// Колонки таблицы команды (подчинённые)
 export const teamColumns: GridColDef[] = [
   { 
     field: "fullName", 
@@ -73,28 +89,28 @@ export const teamColumns: GridColDef[] = [
     valueGetter: (value) => value || "Нет данных"
   },
   { 
-    field: "assessment360", 
-    headerName: "Оценка 360", 
-    width: 120,
-    valueGetter: (value) => value || "Нет данных"
+    field: "potential", 
+    headerName: "Потенциал", 
+    width: 140,
+    valueGetter: (value) => {
+      if (!value) return "Нет данных";
+      return POT_MAP[value as string] ? `${value} (${POT_MAP[value as string]})` : value;
+    }
   },
   { 
     field: "performance", 
-    headerName: "Результат-ть", 
-    width: 150,
+    headerName: "Результативность", 
+    width: 160,
     valueGetter: (value) => {
       if (!value) return "Нет данных";
       return PERF_MAP[value as string] ? `${value} (${PERF_MAP[value as string]})` : value;
     }
   },
   { 
-    field: "potential", 
-    headerName: "Потенциал", 
-    width: 130,
-    valueGetter: (value) => {
-      if (!value) return "Нет данных";
-      return POT_MAP[value as string] ? `${value} (${POT_MAP[value as string]})` : value;
-    }
+    field: "assessment360", 
+    headerName: "Оценка 360", 
+    width: 120,
+    valueGetter: (value) => value || "Нет данных"
   },
   { 
     field: "era", 
@@ -103,9 +119,27 @@ export const teamColumns: GridColDef[] = [
     valueGetter: (value) => value || "Нет данных"
   },
   { 
+    field: "box", 
+    headerName: "BOX", 
+    width: 80,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "boxInterpretation", 
+    headerName: "Интерпретация BOX", 
+    width: 160,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
     field: "developmentProgram", 
     headerName: "Программа развития", 
     flex: 1,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "careerStatus", 
+    headerName: "Статус карьерного маршрута", 
+    width: 160,
     valueGetter: (value) => value || "Нет данных"
   },
 ];
@@ -114,15 +148,81 @@ export const teamColumns: GridColDef[] = [
 export const successorColumns: GridColDef<Successor>[] = [
   { 
     field: "fullName", 
-    headerName: "ФИО преемника", 
+    headerName: "ФИО", 
     flex: 1, 
-    minWidth: 180,
+    minWidth: 160,
     valueGetter: (value) => value || "Нет данных"
   },
   { 
     field: "grade", 
     headerName: "Грейд", 
     width: 80,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "potential", 
+    headerName: "Потенциал", 
+    width: 140,
+    valueGetter: (value) => {
+      if (!value) return "Нет данных";
+      return POT_MAP[value as string] ? `${value} (${POT_MAP[value as string]})` : value;
+    }
+  },
+  { 
+    field: "performance", 
+    headerName: "Результативность", 
+    width: 160,
+    valueGetter: (value) => {
+      if (!value) return "Нет данных";
+      return PERF_MAP[value as string] ? `${value} (${PERF_MAP[value as string]})` : value;
+    }
+  },
+  { 
+    field: "assessment360", 
+    headerName: "Оценка 360", 
+    width: 120,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "era", 
+    headerName: "ЭРА", 
+    width: 80,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "box", 
+    headerName: "BOX", 
+    width: 80,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "boxInterpretation", 
+    headerName: "Интерпретация BOX", 
+    width: 160,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "developmentProgram", 
+    headerName: "Программа развития", 
+    flex: 1,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "careerStatus", 
+    headerName: "Статус карьерного маршрута", 
+    width: 160,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "approvedBy", 
+    headerName: "Кто заявил", 
+    width: 160,
+    valueGetter: (value) => value || "Нет данных"
+  },
+  { 
+    field: "approvalDate", 
+    headerName: "Дата назначения", 
+    width: 130,
     valueGetter: (value) => value || "Нет данных"
   },
   { 
@@ -135,60 +235,6 @@ export const successorColumns: GridColDef<Successor>[] = [
     field: "readiness", 
     headerName: "Готовность", 
     width: 120,
-    valueGetter: (value) => value || "Нет данных"
-  },
-  { 
-    field: "assessment360", 
-    headerName: "Оценка 360", 
-    width: 120,
-    valueGetter: (value) => value || "Нет данных"
-  },
-  { 
-    field: "performance", 
-    headerName: "Результат-ть", 
-    width: 160,
-    valueGetter: (value) => {
-      if (!value) return "Нет данных";
-      return PERF_MAP[value as string] ? `${value} (${PERF_MAP[value as string]})` : value;
-    }
-  },
-  { 
-    field: "potential", 
-    headerName: "Потенциал", 
-    width: 130,
-    valueGetter: (value) => {
-      if (!value) return "Нет данных";
-      return POT_MAP[value as string] ? `${value} (${POT_MAP[value as string]})` : value;
-    }
-  },
-  { 
-    field: "era", 
-    headerName: "ЭРА", 
-    width: 100,
-    valueGetter: (value) => value || "Нет данных"
-  },
-  { 
-    field: "developmentProgram", 
-    headerName: "Программа развития", 
-    width: 180,
-    valueGetter: (value) => value || "Нет данных"
-  },
-  { 
-    field: "isApproved", 
-    headerName: "Согласован", 
-    width: 110,
-    valueGetter: (value) => value === true ? "Да" : value === false ? "Нет" : "Нет данных"
-  },
-  { 
-    field: "approvedBy", 
-    headerName: "Кем согласован", 
-    width: 150,
-    valueGetter: (value) => value || "Нет данных"
-  },
-  { 
-    field: "approvalDate", 
-    headerName: "Дата согласования", 
-    width: 130,
     valueGetter: (value) => value || "Нет данных"
   },
 ];

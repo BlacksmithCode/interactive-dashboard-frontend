@@ -4,13 +4,16 @@ import { Box, Alert, Button, Typography, Accordion, AccordionSummary, AccordionD
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DataGrid, type GridSortModel, type GridPaginationModel } from "@mui/x-data-grid";
 import { useSearchParams } from "react-router-dom";
-import { DashboardFiltersProvider, useLeadersSuccessors, FIELD_MAP } from "@/features/dashboard";
+import { DashboardFiltersProvider, useLeadersSuccessors, useDashboardFilters, FIELD_MAP } from "@/features/dashboard";
+import { downloadExcelExport } from "@/features/dashboard/api/export";
+import { downloadFile } from "@/shared/lib/download";
 import { gridLocaleRu } from "@/shared/config/locales/gridLocaleRu";
-import { getRowClassName } from "../lib/utils";
 import { leaderColumns } from "../config/columns";
 import { FiltersBar } from "./FiltersBar";
 import { LeaderDetails } from "./LeaderDetails";
-import {useMemo} from "react";
+import { useMemo, useCallback, useEffect, useRef, useState } from "react";
+import type { DashboardFilters } from "@/entities/dashboard";
+import DownloadIcon from '@mui/icons-material/Download';
 
 // --- Константы цветов для шапки таблицы ---
 const LEADERS_HEADER_BG = "#ee5d48"; // Красный фон
@@ -32,11 +35,13 @@ export default function LeadersSuccessors() {
 }
 
 function LeadersSuccessorsContent() {
+  const [exportLoading, setExportLoading] = useState(false);
   const {
     // Список
     leaders,
     totalCount,
     leadersLoading,
+    leadersFetching,
     leadersError,
     refetchLeaders,
 
@@ -59,12 +64,10 @@ function LeadersSuccessorsContent() {
     isListExpanded,
     setIsListExpanded,
 
-    // Фильтры
+    // Фильтры (для передачи в FiltersBar)
     filteredNameOptions,
     filteredPositionOptions,
     filteredDomainOptions,
-    availableCriticalOptions,
-    availableSuccessorOptions,
 
     // Детали
     managerDetail,
@@ -80,27 +83,122 @@ function LeadersSuccessorsContent() {
     refetchSucc,
   } = useLeadersSuccessors();
 
-  // 1. Модель пагинации остается мемоизированной
-  const paginationModel = useMemo(() => ({
-    page,
-    pageSize,
-  }), [page, pageSize]);
+  const { filters } = useDashboardFilters();
 
-  // 2. Умный обработчик пагинации с защитой от ложного сброса
-  const handlePaginationModelChange = (model: GridPaginationModel) => {    
-    // Если мы находимся на странице больше 0, и DataGrid пытается сбросить нас в 0
-    // при неизменном размере страницы — это ложный внутренний триггер MUI. Блокируем его.
-    if (page > 0 && model.page === 0 && model.pageSize === pageSize) {
-      return;
-    }
-
-    if (model.page !== page) {
-      setPage(model.page);
-    }
-    if (model.pageSize !== pageSize) {
-      setPageSize(model.pageSize);
+  const handleExportExcel = async () => {
+    setExportLoading(true);
+    try {
+      const blob = await downloadExcelExport({
+        gradeMin: filters.gradeMin,
+        domain: filters.domain,
+        critical: filters.critical,
+        hasSuccessor: filters.hasSuccessor,
+        searchName: filters.searchName,
+        positionFilter: filters.positionFilter,
+      });
+      downloadFile(blob, "export.xlsx");
+    } catch (err) {
+      console.error("Ошибка при экспорте Excel:", err);
+    } finally {
+      setExportLoading(false);
     }
   };
+
+  // Ref для отслеживания ожидаемой страницы (после клика пользователя)
+  const expectedPageRef = useRef<number | null>(null);
+  // Ref для таймера сброса expectedPageRef
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Модель пагинации — мемоизирована для стабильной ссылки
+  const paginationModel = useMemo(() => ({ page, pageSize }), [page, pageSize]);
+
+  // Функция сброса expectedPageRef с задержкой
+  const scheduleExpectedPageReset = useCallback((expectedPage: number) => {
+    if (resetTimerRef.current) {
+      clearTimeout(resetTimerRef.current);
+    }
+    resetTimerRef.current = setTimeout(() => {
+      // Сбрасываем expectedPageRef только если страница всё ещё та же самая
+      // И данные уже загрузились (leaders.length > 0 или totalCount > 0)
+      if (expectedPageRef.current === expectedPage && (leaders.length > 0 || totalCount > 0)) {
+        console.log('[DataGrid] Page synchronized (delayed), resetting expectedPageRef');
+        expectedPageRef.current = null;
+      }
+    }, 500); // Увеличил до 500мс для надёжности
+  }, [leaders.length, totalCount]);
+
+  // Обработчик пагинации — обновляем только наш state
+  const handlePaginationModelChange = useCallback((model: GridPaginationModel) => {
+    console.log('[DataGrid] onPaginationModelChange:', model, 'current page:', page, 'expectedPage:', expectedPageRef.current, 'leaders.length:', leaders.length);
+    
+    // Если DataGrid пытается сбросить страницу, но мы ожидаем другую — игнорируем
+    if (expectedPageRef.current !== null && model.page !== expectedPageRef.current) {
+      console.log('[DataGrid] 🚫 Blocking reverse reset: expected', expectedPageRef.current, 'got', model.page);
+      return;
+    }
+    
+    // Дополнительная защита: если мы на странице > 0, данные загружены, и DataGrid пытается сбросить на 0 — игнорируем
+    if (page > 0 && model.page === 0 && leaders.length > 0) {
+      console.log('[DataGrid] 🚫 Blocking late reset: page', page, '-> 0 with data loaded');
+      return;
+    }
+    
+    if (model.page !== page) {
+      console.log('[DataGrid] ✅ Setting page:', model.page);
+      expectedPageRef.current = model.page;
+      setPage(model.page);
+      // Планируем сброс expectedPageRef с задержкой
+      scheduleExpectedPageReset(model.page);
+    }
+    if (model.pageSize !== pageSize) {
+      console.log('[DataGrid] Setting pageSize:', model.pageSize);
+      setPageSize(model.pageSize);
+    }
+  }, [page, pageSize, setPage, setPageSize, scheduleExpectedPageReset, leaders.length]);
+
+  // Cleanup таймера при размонтировании
+  useEffect(() => {
+    return () => {
+      if (resetTimerRef.current) {
+        clearTimeout(resetTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Отладка: лог при изменении page
+  useEffect(() => {
+    console.log('[DataGrid] page changed to:', page, 'leaders.length:', leaders.length, 'totalCount:', totalCount, 'expectedPageRef:', expectedPageRef.current);
+  }, [page, leaders.length, totalCount]);
+
+  // Отладка: лог при монтировании/размонтировании компонента
+  useEffect(() => {
+    console.log('[DataGrid] Component mounted');
+    return () => {
+      console.log('[DataGrid] Component unmounting');
+    };
+  }, []);
+
+  // Сброс пагинации на страницу 0 при изменении любых фильтров
+  const prevFiltersRef = useRef<DashboardFilters | null>(null);
+  useEffect(() => {
+    const prev = prevFiltersRef.current;
+    const current = filters;
+    if (
+      !prev ||
+      prev.gradeMin !== current.gradeMin ||
+      prev.domain !== current.domain ||
+      prev.critical !== current.critical ||
+      prev.hasSuccessor !== current.hasSuccessor ||
+      prev.searchName !== current.searchName ||
+      prev.positionFilter !== current.positionFilter
+    ) {
+      prevFiltersRef.current = current;
+      if (page !== 0) {
+        console.log('[Filters] Resetting page to 0 due to filter change');
+        setPage(0);
+      }
+    }
+  }, [filters, page, setPage]);
 
   // Модель сортировки
   const sortModel: GridSortModel = sortField
@@ -147,70 +245,141 @@ function LeadersSuccessorsContent() {
         filteredNameOptions={filteredNameOptions}
         filteredPositionOptions={filteredPositionOptions}
         filteredDomainOptions={filteredDomainOptions}
-        availableCriticalOptions={availableCriticalOptions}
-        availableSuccessorOptions={availableSuccessorOptions}
       />
 
+      {/* Кнопка экспорта в Excel */}
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+        <Button
+          variant="outlined"
+          startIcon={<DownloadIcon />}
+          onClick={handleExportExcel}
+          disabled={exportLoading || leadersLoading}
+        >
+          {exportLoading ? "Подготовка..." : "Экспорт в Excel"}
+        </Button>
+      </Box>
+
       {/* Таблица руководителей */}
-      <Box
-        sx={{
-          width: "100%",
-          "& .header-red": {
-            backgroundColor: LEADERS_HEADER_BG,
-            color: HEADER_TEXT_COLOR,
-            "& .MuiSvgIcon-root": { color: HEADER_TEXT_COLOR },
-          },
-        }}
-      >
-        <DataGrid
-          rows={leaders}
-          columns={leaderColumns}
-          getRowId={(row) => row.fullName}
-          loading={leadersLoading}
-          localeText={gridLocaleRu}
-          rowHeight={40}
-          // ─── Серверная пагинация ───
-          pagination={true}
-          paginationMode="server"
-          rowCount={totalCount}
-          paginationModel={paginationModel}
-          onPaginationModelChange={handlePaginationModelChange}
-          pageSizeOptions={[10, 20, 50, 100]}
-          // ─── Серверная сортировка ───
-          sortingMode="server"
-          sortModel={sortModel}
-          onSortModelChange={handleSortModelChange}
-          // ─── Внешний вид ───
-          disableColumnMenu
-          disableRowSelectionOnClick
-          hideFooterSelectedRowCount
-          getRowClassName={(params) => getRowClassName(params)}
-          onRowClick={(params) => handleSelectLeader(params.row)}
-          columnHeaderHeight={46}
-          sx={{
-            "& .MuiDataGrid-columnHeaders": {
-              backgroundColor: LEADERS_HEADER_BG,
-              color: HEADER_TEXT_COLOR,
-            },
-            "& .MuiDataGrid-columnHeader": {
-              backgroundColor: LEADERS_HEADER_BG,
-              color: HEADER_TEXT_COLOR,
-            },
-            "& .MuiDataGrid-columnHeaderTitle": {
-              color: HEADER_TEXT_COLOR,
-              fontWeight: "bold",
-            },
-            "& .MuiDataGrid-sortIcon": {
-              color: HEADER_TEXT_COLOR,
-            },
-            "& .MuiDataGrid-menuIconButton": {
-              color: HEADER_TEXT_COLOR,
-            },
-            "& .MuiDataGrid-row:hover": {
-              cursor: "pointer",
-            },
-          }}
-        />
+      <Box sx={{ width: "100%" }}>
+        {selectedLeader ? (
+          /* Показываем одну строку с выбранным руководителем */
+          <Box>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
+              <Button variant="outlined" size="small" onClick={handleResetSelection}>
+                Сбросить выбор
+              </Button>
+            </Box>
+            <DataGrid
+              rows={[selectedLeader]}
+              columns={leaderColumns}
+              getRowId={(row) => row.fullName}
+              loading={false}
+              localeText={{ ...gridLocaleRu, noRowsLabel: "Нет результатов" }}
+              rowHeight={40}
+              disableColumnMenu
+              disableRowSelectionOnClick
+              hideFooterSelectedRowCount
+              columnHeaderHeight={46}
+              sx={{
+                "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-container--top": {
+                  backgroundColor: LEADERS_HEADER_BG,
+                },
+                "& .MuiDataGrid-columnHeader": {
+                  backgroundColor: LEADERS_HEADER_BG,
+                  color: HEADER_TEXT_COLOR,
+                },
+                "& .MuiDataGrid-columnHeaders .MuiDataGrid-filler, & .MuiDataGrid-container--top .MuiDataGrid-filler": {
+                  backgroundColor: LEADERS_HEADER_BG,
+                },
+                "& .MuiDataGrid-columnHeaderTitle": {
+                  color: HEADER_TEXT_COLOR,
+                  fontWeight: "bold",
+                },
+                "& .MuiDataGrid-columnHeaders .MuiIconButton-root, & .MuiDataGrid-columnHeaders .MuiSvgIcon-root": {
+                  color: HEADER_TEXT_COLOR,
+                  backgroundColor: "transparent !important",
+                },
+                "& .MuiDataGrid-columnHeaders .MuiSvgIcon-root path": {
+                  fill: HEADER_TEXT_COLOR,
+                },
+                "& .MuiDataGrid-columnSeparator": {
+                  color: "rgba(255, 255, 255, 0.5)",
+                },
+                "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
+                  outline: "none",
+                },
+                "& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within": {
+                  outline: "none",
+                },
+                "& .MuiDataGrid-row:hover": {
+                  cursor: "pointer",
+                },
+              }}
+            />
+          </Box>
+        ) : (
+          /* Полная таблица */
+          <DataGrid
+            rows={leaders}
+            columns={leaderColumns}
+            getRowId={(row) => row.fullName}
+            loading={leadersLoading || leadersFetching}
+            localeText={{ ...gridLocaleRu, noRowsLabel: "Нет результатов" }}
+            rowHeight={40}
+            // ─── Серверная пагинация ───
+            pagination={true}
+            paginationMode="server"
+            rowCount={totalCount}
+            paginationModel={paginationModel}
+            onPaginationModelChange={handlePaginationModelChange}
+            pageSizeOptions={[10, 20, 50, 100]}
+            // ─── Серверная сортировка ───
+            sortingMode="server"
+            sortModel={sortModel}
+            onSortModelChange={handleSortModelChange}
+            // ─── Внешний вид ───
+            disableColumnMenu
+            disableRowSelectionOnClick
+            hideFooterSelectedRowCount
+            onRowClick={(params) => handleSelectLeader(params.row)}
+            columnHeaderHeight={46}
+            sx={{
+              "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-container--top": {
+                backgroundColor: LEADERS_HEADER_BG,
+              },
+              "& .MuiDataGrid-columnHeader": {
+                backgroundColor: LEADERS_HEADER_BG,
+                color: HEADER_TEXT_COLOR,
+              },
+              "& .MuiDataGrid-columnHeaders .MuiDataGrid-filler, & .MuiDataGrid-container--top .MuiDataGrid-filler": {
+                backgroundColor: LEADERS_HEADER_BG,
+              },
+              "& .MuiDataGrid-columnHeaderTitle": {
+                color: HEADER_TEXT_COLOR,
+                fontWeight: "bold",
+              },
+              "& .MuiDataGrid-columnHeaders .MuiIconButton-root, & .MuiDataGrid-columnHeaders .MuiSvgIcon-root": {
+                color: HEADER_TEXT_COLOR,
+                backgroundColor: "transparent !important",
+              },
+              "& .MuiDataGrid-columnHeaders .MuiSvgIcon-root path": {
+                fill: HEADER_TEXT_COLOR,
+              },
+              "& .MuiDataGrid-columnSeparator": {
+                color: "rgba(255, 255, 255, 0.5)",
+              },
+              "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
+                outline: "none",
+              },
+              "& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within": {
+                outline: "none",
+              },
+              "& .MuiDataGrid-row:hover": {
+                cursor: "pointer",
+              },
+            }}
+          />
+        )}
       </Box>
 
       {/* Детали выбранного руководителя */}
