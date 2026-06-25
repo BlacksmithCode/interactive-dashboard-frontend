@@ -68,7 +68,7 @@ deploy:
     - scp image.tar $DEPLOY_USER@$DEPLOY_SERVER_IP:/tmp/image.tar
     - ssh $DEPLOY_USER@$DEPLOY_SERVER_IP "
         docker load -i /tmp/image.tar &&
-        docker tag $DOCKER_IMAGE it-camp.innoca.local/rsreu-team/interactive-dashboard-frontend:latest &&
+        docker tag $DOCKER_IMAGE ${TARGET_REGISTRY}/interactive-dashboard-frontend:latest &&
         docker login -u '$CI_REGISTRY_USER' -p '$CI_REGISTRY_PASSWORD' '$CI_REGISTRY' &&
         cd /opt/inno &&
         docker compose down frontend proxy prometheus grafana 2>/dev/null;
