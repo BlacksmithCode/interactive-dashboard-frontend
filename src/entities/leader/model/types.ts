@@ -23,14 +23,35 @@ export interface PaginatedResponse<T> {
 }
 
 /** Параметры сортировки для серверной пагинации */
-export type SortField = "fullName" | "grade" | "domain" | "position" | "critical";
+export type SortField = 
+  | "fullName" 
+  | "grade" 
+  | "domain" 
+  | "position" 
+  | "critical"
+  | "potential"
+  | "performance"
+  | "assessment360"
+  | "era"
+  | "box"
+  | "boxInterpretation"
+  | "developmentProgram"
+  | "careerStatus";
 export type SortOrder = "asc" | "desc";
 
-/** Параметры пагинации и сортировки */
+/** Параметры пагинации и сортировки (UI) */
 export interface PaginationParams {
   page?: number;
   pageSize?: number;
   sortField?: SortField;
+  sortOrder?: SortOrder;
+}
+
+/** Параметры пагинации и сортировки для сервера (с snake_case полями) */
+export interface ServerPaginationParams {
+  page?: number;
+  pageSize?: number;
+  sortField?: string;
   sortOrder?: SortOrder;
 }
 

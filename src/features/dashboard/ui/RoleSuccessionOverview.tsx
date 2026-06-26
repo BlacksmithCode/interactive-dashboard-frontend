@@ -8,13 +8,15 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  useTheme,
 } from "@mui/material";
 import type { StatsResponse } from "@/entities/dashboard";
 import type { ManagerListItem } from "@/entities/leader";
+import { colors } from "@/shared/theme/tokens";
 
-const SUCCESS_COLOR = "#69f0ae";
-const ERROR_COLOR = "#ee5d48";
-const NEUTRAL_COLOR = "#9e9e9e";
+const SUCCESS_COLOR = colors.success;
+const ERROR_COLOR = colors.error;
+const NEUTRAL_COLOR = colors.primaryHover;
 
 interface HorizontalBarProps {
   label: string;
@@ -108,6 +110,15 @@ interface RoleSuccessionOverviewProps {
 }
 
 export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }: RoleSuccessionOverviewProps) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
+  const headerBg = isDark ? colors.surfaceDark : colors.primaryHover;
+  const footerBg = isDark ? colors.surfaceDark : colors.primaryHover;
+  const containerBg = isDark ? colors.surfaceVariantDark : colors.primary;
+  const rowHoverBg = 'rgba(255,255,255,0.08)';
+  const dividerColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+
   // --- Группировка должностей ---
   const criticalPositionsRaw = useMemo(() => {
     const map = new Map<string, { count: number; withSuccessors: number; withoutSuccessors: number }>();
@@ -221,7 +232,16 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
   const [nonCriticalWithPercent, nonCriticalWithoutPercent] = getSubPercentPair(nonCriticalTotal, nonCriticalWith, nonCriticalWithout);
 
   return (
-    <Box sx={{ bgcolor: '#1DAFF7', color: 'white', p: 3, mb: 4, borderRadius: 2 }}>
+    <Box sx={{
+      bgcolor: containerBg,
+      color: 'white',
+      p: 3,
+      mb: 4,
+      borderRadius: 2,
+      outline: '2px solid transparent',
+      transition: 'outline-color 0.2s ease',
+      '&:hover': { outlineColor: colors.primary },
+    }}>
       <Grid container spacing={4} sx={{ alignItems: "flex-start" }}>
         <Grid size={{ xs: 12, md: 6 }}>
           <Typography variant="subtitle1" sx={{ mb: 1, cursor: "pointer", borderRadius: 1, px: 1.5, py: 0.5, transition: "all 0.2s ease", display: "inline-block", outline: "1px solid transparent", "&:hover": { bgcolor: "rgba(255,255,255,0.08)", outlineColor: "rgba(255,255,255,0.3)" } }}>
@@ -284,14 +304,17 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
               height: 300,
               display: "flex",
               flexDirection: "column",
-          border: "1px solid",
-          borderColor: "divider",
               borderRadius: 1,
+              overflow: 'hidden',
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+              outline: '2px solid transparent',
+              transition: 'outline-color 0.2s ease',
+              '&:hover': { outlineColor: colors.primary },
             }}
           >
             <Table sx={{ tableLayout: "fixed", width: "100%" }}>
               {/* ШАПКА ТАБЛИЦЫ */}
-              <TableHead sx={{ display: "block", backgroundColor: '#0088FF' }}>
+              <TableHead sx={{ bgcolor: headerBg }}>
                 <TableRow sx={{ display: "flex" }}>
                   <TableCell
                     component="th"
@@ -373,12 +396,12 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
               <Table sx={{ tableLayout: "fixed", width: "100%" }}>
                 <TableBody>
                   {criticalPositions.map((item) => (
-                    <TableRow key={item.position} sx={{ display: "flex", cursor: "pointer", transition: "all 0.2s ease", "&:hover": { bgcolor: "rgba(255,255,255,0.08)" } }}>
+                    <TableRow key={item.position} sx={{ display: "flex", cursor: "pointer", transition: "all 0.2s ease", "&:hover": { bgcolor: rowHoverBg } }}>
                       <TableCell
                         sx={{
                           flex: 2,
                           borderBottom: "1px solid",
-                          borderColor: "divider",
+                          borderColor: dividerColor,
                           padding: "6px 12px",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
@@ -393,9 +416,10 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                         sx={{
                           flex: 1,
                           borderBottom: "1px solid",
-                          borderColor: "divider",
+                          borderColor: dividerColor,
                           padding: "6px 12px",
                           color: SUCCESS_COLOR,
+                          fontWeight: 'bold',
                         }}
                       >
                         {item.withSuccessors}
@@ -405,9 +429,10 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                         sx={{
                           flex: 1,
                           borderBottom: "1px solid",
-                          borderColor: "divider",
+                          borderColor: dividerColor,
                           padding: "6px 12px",
                           color: ERROR_COLOR,
+                          fontWeight: 'bold',
                         }}
                       >
                         {item.withoutSuccessors}
@@ -417,9 +442,10 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                         sx={{
                           flex: 1,
                           borderBottom: "1px solid",
-                          borderColor: "divider",
+                          borderColor: dividerColor,
                           padding: "6px 12px",
                           color: "white",
+                          fontWeight: 'bold',
                         }}
                       >
                         {item.count}
@@ -432,8 +458,7 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
 
             {/* ПОДВАЛ С ИТОГАМИ */}
             <Table sx={{ tableLayout: "fixed", width: "100%" }}>
-              <TableHead>
-                <TableRow sx={{ display: "flex", backgroundColor: '#0088FF', borderRadius: '0 0 4px 4px' }}>
+              <TableRow sx={{ display: "flex", bgcolor: footerBg }}>
                   <TableCell
                     component="th"
                     scope="row"
@@ -460,7 +485,6 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                     {criticalPositionsRaw.reduce((sum, item) => sum + item.count, 0)}
                   </TableCell>
                 </TableRow>
-              </TableHead>
             </Table>
           </Box>
         </Grid>

@@ -3,7 +3,6 @@
  * Централизованный экспорт всех компонентов для чистоты импортов.
  */
 export { BoxCell } from "./BoxCell";
-export { CriticalRolesPanel } from "./CriticalRolesPanel";
 export { DomainInsightsPanel } from "./DomainInsightsPanel";
 export { GradeFilterInput } from "./GradeFilterInput";
 export { KpiCard } from "./KpiCard";

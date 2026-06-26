@@ -4,42 +4,12 @@ import {
   TextField,
   Button,
   Stack,
+  useTheme,
 } from "@mui/material";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ClearIcon from "@mui/icons-material/Clear";
 import { useDashboardFilters, GradeFilterInput } from "@/features/dashboard";
-
-// Общие стили для полей фильтров (синий фон, белый текст и рамка)
-const commonFilterSx = {
-  backgroundColor: '#0088FF',
-  borderRadius: 1,
-  '& .MuiOutlinedInput-root': {
-    '& fieldset': {
-      borderColor: 'white',
-      borderWidth: '1px',
-    },
-    '&:hover fieldset': {
-      borderColor: 'white',
-      borderWidth: '1px',
-    },
-    '&.Mui-focused fieldset': {
-      borderColor: 'white',
-      borderWidth: '1px',
-    },
-  },
-  '& .MuiInputLabel-root': {
-    color: 'white',
-    '&.Mui-focused': {
-      color: 'white',
-    },
-  },
-  '& .MuiInputBase-input, & .MuiSelect-select': {
-    color: 'white',
-  },
-  '& .MuiSvgIcon-root, & .MuiAutocomplete-clearIndicator, & .MuiAutocomplete-popupIndicator': {
-    color: 'white',
-  },
-};
+import { colors } from "@/shared/theme/tokens";
 
 interface FiltersBarProps {
   filteredNameOptions: string[];
@@ -47,11 +17,45 @@ interface FiltersBarProps {
   filteredDomainOptions: string[];
 }
 
+const getFilterSx = (isDark: boolean) => ({
+  backgroundColor: isDark ? 'rgba(39,41,66,0.7)' : colors.primary,
+  borderRadius: 1,
+  '& .MuiOutlinedInput-root': {
+    '& fieldset': {
+      borderColor: colors.white,
+      borderWidth: '1px',
+    },
+    '&:hover fieldset': {
+      borderColor: colors.white,
+      borderWidth: '1px',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: colors.white,
+      borderWidth: '1px',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    color: colors.white,
+    '&.Mui-focused': {
+      color: colors.white,
+    },
+  },
+  '& .MuiInputBase-input, & .MuiSelect-select': {
+    color: colors.white,
+  },
+  '& .MuiSvgIcon-root, & .MuiAutocomplete-clearIndicator, & .MuiAutocomplete-popupIndicator': {
+    color: colors.white,
+  },
+});
+
 export const FiltersBar = ({
   filteredNameOptions,
   filteredPositionOptions,
   filteredDomainOptions,
 }: FiltersBarProps) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const commonFilterSx = getFilterSx(isDark);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const positionInputRef = useRef<HTMLInputElement>(null);
 
@@ -84,16 +88,16 @@ export const FiltersBar = ({
         mb: 3, 
         flexWrap: "wrap", 
         alignItems: "center",
-        backgroundColor: '#1DAFF7', // Задаем фон всей панели фильтров
-        p: 2,                       // Внутренние отступы, чтобы элементы не прилипали к краям фона
-        borderRadius: 2             // Скругление как у остальных карточек
+        backgroundColor: isDark ? 'rgba(39,41,66,0.7)' : colors.primary,
+        p: 2,
+        borderRadius: 2
       }}
       useFlexGap
     >
       {/* Поле поиска по ФИО */}
       <Autocomplete
         freeSolo
-      disableClearable={!searchName}
+        disableClearable={!searchName}
         clearOnBlur={false}
         selectOnFocus
         openOnFocus
@@ -102,7 +106,7 @@ export const FiltersBar = ({
         clearText=""
         closeText=""
         openText=""
-      value={searchName || null}
+        value={searchName || null}
         inputValue={searchName}
         onInputChange={(_, newValue) => {
           const cleaned = newValue.replace(/[^а-яА-ЯёЁa-zA-Z \-.]/g, "");
@@ -155,7 +159,7 @@ export const FiltersBar = ({
       {/* Поле должности */}
       <Autocomplete
         freeSolo
-      disableClearable={!positionFilter}
+        disableClearable={!positionFilter}
         clearOnBlur={false}
         selectOnFocus
         openOnFocus
@@ -164,7 +168,7 @@ export const FiltersBar = ({
         clearText=""
         closeText=""
         openText=""
-      value={positionFilter || null}
+        value={positionFilter || null}
         inputValue={positionFilter}
         onInputChange={(_, newValue) => setPositionFilter(newValue)}
         onKeyDown={(e) => {
@@ -181,9 +185,7 @@ export const FiltersBar = ({
         sx={{ minWidth: 200, ...commonFilterSx }}
         forcePopupIcon={!positionFilter}
         clearIcon={<ClearIcon fontSize="small" />}
-        renderInput={(params) => (
-          <TextField {...params} label="Должность" inputRef={positionInputRef} />
-        )}
+        renderInput={(params) => <TextField {...params} label="Должность" inputRef={positionInputRef} />}
       />
 
       <GradeFilterInput
@@ -255,11 +257,11 @@ export const FiltersBar = ({
         onClick={resetAllFilters}
         startIcon={<RestartAltIcon />}
         sx={{ 
-          color: 'white',
-          ml: 'auto !important', // Прижимаем кнопку к правому краю
-          textTransform: 'none', // Делаем текст более современным (без капса)
-          fontWeight: 600,       // Чуть усиливаем вес текста
-          px: 2,                 // Добавляем воздуха по бокам
+          color: colors.white,
+          ml: 'auto !important',
+          textTransform: 'none',
+          fontWeight: 600,
+          px: 2,
           '&:hover': {
             backgroundColor: 'rgba(255, 255, 255, 0.15)',
           }

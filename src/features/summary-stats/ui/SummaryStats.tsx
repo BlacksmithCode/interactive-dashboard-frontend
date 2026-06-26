@@ -1,6 +1,5 @@
-//import { useNavigate } from "react-router-dom";
-import { Box, Alert, LinearProgress, Typography, 
-  Accordion, AccordionSummary, AccordionDetails, Button } from "@mui/material";
+import { Box, Alert, LinearProgress, Typography,
+  Accordion, AccordionSummary, AccordionDetails, Button, useTheme } from "@mui/material";
 import { DashboardFiltersProvider, useComputedSummaryStats, useDashboardFilters } from "@/features/dashboard";
 import {
   RoleSuccessionOverview,
@@ -14,6 +13,7 @@ import { downloadFile } from "@/shared/lib/download";
 import { useAuth, ROLES } from "@/entities/user";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DownloadIcon from '@mui/icons-material/Download';
+import { colors } from "@/shared/theme/tokens";
 
 export default function SummaryStats() {
   return (
@@ -24,7 +24,8 @@ export default function SummaryStats() {
 }
 
 function SummaryStatsContent() {
-//  const navigate = useNavigate();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const { role } = useAuth();
   const { filters } = useDashboardFilters();
   const {
@@ -69,14 +70,6 @@ function SummaryStatsContent() {
     );
   }
 
-  // Если нужна ссылка на список руководителей, раскомментируйте её ниже.
-  // const handleTotalClick = () => {
-  //   const params = new URLSearchParams();
-  //   if (filters.gradeMin) params.set("gradeMin", String(filters.gradeMin));
-  //   if (filters.domain) params.set("domain", filters.domain);
-  //   navigate(`/dashboard/leaders?${params.toString()}`);
-  // };
-
   return (
     <Box>
       {(sLoading || nLoading) && <LinearProgress />}
@@ -109,36 +102,46 @@ function SummaryStatsContent() {
 
       {mergedCells && nineBox ? (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-          <Box sx={{ backgroundColor: '#0088FF', borderRadius: '12px', overflow: 'hidden' }}>
-            <Typography variant="h6" sx={{ fontWeight: 'bold', textAlign: 'center', color: 'white', pt: 2 }}>
+          <Box sx={{
+            backgroundColor: isDark ? colors.surfaceVariantDark : colors.primary,
+            borderRadius: '12px',
+            overflow: 'hidden',
+            outline: '2px solid transparent',
+            transition: 'outline-color 0.2s ease',
+            '&:hover': { outlineColor: colors.primary },
+          }}>
+            <Typography variant="h6" sx={{ fontWeight: 'bold', textAlign: 'center', color: colors.white, pt: 2 }}>
               Матрица потенциала
             </Typography>
-            <NineBoxMatrix mergedCells={mergedCells} nineBox={nineBox} />
+            <NineBoxMatrix mergedCells={mergedCells} />
           </Box>
           
-          <Accordion 
-            sx={{ 
-              backgroundColor: '#0088FF',
+          <Accordion
+            sx={{
+              backgroundColor: isDark ? colors.surfaceDark : colors.primaryDark,
               borderRadius: '12px !important',
               boxShadow: 'none',
               '&:before': { display: 'none' },
               overflow: 'hidden',
+              outline: '2px solid transparent',
+              transition: 'outline-color 0.2s ease',
+              '&:hover': { outlineColor: colors.primary },
             }}
           >
             <AccordionSummary
-              expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
+              expandIcon={<ExpandMoreIcon sx={{ color: colors.white }} />}
               sx={{
-                backgroundColor: '#1DAFF7',
+                backgroundColor: isDark ? colors.surfaceVariantDark : colors.primary,
                 borderRadius: '12px',
                 '& .MuiAccordionSummary-content': { justifyContent: 'center', margin: '12px 0' },
                 '& .MuiAccordionSummary-expandIconWrapper': { position: 'absolute', right: 16 },
               }}
             >
-              <Typography variant="h6" sx={{ fontWeight: 'bold', textAlign: 'center', color: 'white' }}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', textAlign: 'center', color: colors.white }}>
                 Область потенциала
               </Typography>
             </AccordionSummary>
-            <AccordionDetails sx={{ p: 0, backgroundColor: '#0088FF' }}>
+            <AccordionDetails sx={{ p: 0, backgroundColor: isDark ? colors.surfaceDark : colors.primaryDark }}>
               <PotentialAreaCharts nineBox={nineBox} totalManagers={totalManagers} />
             </AccordionDetails>
           </Accordion> 
@@ -150,13 +153,6 @@ function SummaryStatsContent() {
           </Typography>
         </Box>
       )}
-
-      {/* Если нужна ссылка на список руководителей, раскомментируйте этот блок */}
-      {/* <Box sx={{ mt: 3, textAlign: "center" }}>
-        <Link component="button" variant="body2" onClick={handleTotalClick} sx={{ textDecoration: "underline", cursor: "pointer" }}>
-          Открыть список всех руководителей ({totalManagers}) с текущими фильтрами
-        </Link>
-      </Box> */}
     </Box>
   );
 }

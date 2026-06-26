@@ -5,6 +5,7 @@ import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { useColorMode } from "@/shared/theme/useColorMode";
 import { Logo } from "@/shared/ui/logo/Logo";
 import { useAuth, RoleGuard, ROLES } from "@/entities/user";
+import { colors, transitions } from "@/shared/theme/tokens";
 
 const formatRole = (role: string) => {
   switch (role) {
@@ -25,12 +26,21 @@ export default function Layout() {
   const isAdminPanel = location.pathname.startsWith("/admin");
 
   const displayFullName = fullName || localStorage.getItem("username") || "Пользователь";
+  const isDark = theme.palette.mode === "dark";
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <CssBaseline />
-      <AppBar position="static" sx={{ backgroundColor: "background.paper", boxShadow: 1, transition: "background-color 0.4s" }}>
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+      <AppBar
+        position="static"
+        sx={{
+          background: isDark ? colors.appbarDark : colors.surfaceLight,
+          boxShadow: isDark ? "0 2px 20px rgba(0,0,0,0.4)" : "0 1px 3px rgba(0,0,0,0.06)",
+          borderBottom: isDark ? `1px solid ${colors.grey700}` : `1px solid ${colors.grey100}`,
+          transition: transitions.normal,
+        }}
+      >
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between", minHeight: { xs: 56, sm: 64 } }}>
           {/* Левая часть - Логотип */}
           <Box sx={{ flex: 1, display: "flex", alignItems: "center" }}>
             <Logo type="short" height={35} />
@@ -38,23 +48,47 @@ export default function Layout() {
 
           {/* Центральная часть - Профиль */}
           <Box sx={{ display: { xs: "none", sm: "flex" }, flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: "bold", color: "text.primary" }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: "bold", color: "text.primary", lineHeight: 1.3 }}>
               {displayFullName}
             </Typography>
-            <Typography variant="caption" sx={{ color: "text.secondary", textTransform: "lowercase" }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                textTransform: "lowercase",
+                fontSize: "0.7rem",
+                letterSpacing: "0.04em",
+              }}
+            >
               {formatRole(role || "")}
             </Typography>
           </Box>
 
           {/* Правая часть - Кнопки */}
-          <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 2 }}>
+          <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 1.5 }}>
             <RoleGuard allowedRoles={[ROLES.ADMIN]}>
           {isAdminPanel ? (
-            <Button variant="text" color="primary" onClick={() => navigate("/dashboard")} sx={{ fontWeight: 'bold' }}>
+            <Button
+              variant="text"
+              onClick={() => navigate("/dashboard")}
+              sx={{
+                fontWeight: 700,
+                color: isDark ? colors.primaryLight : colors.primary,
+                "&:hover": { background: isDark ? "rgba(87,113,255,0.12)" : "rgba(87,113,255,0.08)" },
+              }}
+            >
               Дашборд
             </Button>
           ) : (
-            <Button variant="text" color="primary" onClick={() => navigate("/admin")} sx={{ fontWeight: 'bold' }}>
+            <Button
+              variant="text"
+              onClick={() => navigate("/admin")}
+              sx={{
+                fontWeight: 700,
+                color: isDark ? colors.primaryLight : colors.primary,
+                "&:hover": { background: isDark ? "rgba(87,113,255,0.12)" : "rgba(87,113,255,0.08)" },
+              }}
+            >
               Админ-панель
             </Button>
           )}
@@ -63,19 +97,34 @@ export default function Layout() {
               onClick={colorMode.toggleColorMode}
               color="inherit"
               sx={{
-                transition: "transform 0.5s ease-in-out",
-                transform: theme.palette.mode === "dark" ? "rotate(180deg)" : "rotate(0deg)",
+                transition: transitions.spring,
+                transform: isDark ? "rotate(180deg)" : "rotate(0deg)",
+                color: "text.primary",
+                "&:hover": {
+                  background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                },
               }}
             >
-              {theme.palette.mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon sx={{ color: "text.primary" }} />}
+              {isDark ? <Brightness7Icon /> : <Brightness4Icon />}
             </IconButton>
-            <Button variant="outlined" color="inherit" onClick={logout} sx={{ color: "text.primary", borderColor: "divider" }}>
+            <Button
+              variant="text"
+              onClick={logout}
+              sx={{
+                fontWeight: 700,
+                color: isDark ? colors.primaryLight : colors.primary,
+                borderRadius: 1,
+                "&:hover": {
+                  background: isDark ? "rgba(87,113,255,0.12)" : "rgba(87,113,255,0.08)",
+                },
+              }}
+            >
               Выход
             </Button>
           </Box>
         </Toolbar>
       </AppBar>
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, sm: 3 } }}>
         <Outlet />
       </Box>
     </Box>

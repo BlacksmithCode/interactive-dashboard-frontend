@@ -1,45 +1,84 @@
-/* Hairline (100) */
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_hairline.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_hairline.woff') format('woff'); font-weight: 100; font-style: normal; font-display: swap; }
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_hairline_italic.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_hairline_italic.woff') format('woff'); font-weight: 100; font-style: italic; font-display: swap; }
+/* Глобальные классы, анимации и кастомные стили Т1 */
 
-/* Thin (200) */
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_thin.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_thin.woff') format('woff'); font-weight: 200; font-style: normal; font-display: swap; }
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_thin_italic.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_thin_italic.woff') format('woff'); font-weight: 200; font-style: italic; font-display: swap; }
-
-/* Light (300) */
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_light.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_light.woff') format('woff'); font-weight: 300; font-style: normal; font-display: swap; }
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_light_italic.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_light_italic.woff') format('woff'); font-weight: 300; font-style: italic; font-display: swap; }
-
-/* Book (350) */
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_book.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_book.woff') format('woff'); font-weight: 350; font-style: normal; font-display: swap; }
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_book_italic.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_book_italic.woff') format('woff'); font-weight: 350; font-style: italic; font-display: swap; }
-
-/* Regular (400) */
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_regular.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_regular.woff') format('woff'); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_regular_italic.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_regular_italic.woff') format('woff'); font-weight: 400; font-style: italic; font-display: swap; }
-
-/* Medium (500) */
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_medium.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_medium.woff') format('woff'); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_medium_italic.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_medium_italic.woff') format('woff'); font-weight: 500; font-style: italic; font-display: swap; }
-
-/* Bold (700) */
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_bold.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_bold.woff') format('woff'); font-weight: 700; font-style: normal; font-display: swap; }
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_bold_italic.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_bold_italic.woff') format('woff'); font-weight: 700; font-style: italic; font-display: swap; }
-
-/* Black (900) */
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_black.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_black.woff') format('woff'); font-weight: 900; font-style: normal; font-display: swap; }
-@font-face { font-family: 'als_hauss'; src: url('/src/shared/assets/fonts/als_hauss_black_italic.woff2') format('woff2'), url('/src/shared/assets/fonts/als_hauss_black_italic.woff') format('woff'); font-weight: 900; font-style: italic; font-display: swap; }
-
-.MuiTablePagination-root .MuiTablePagination-selectLabel {
-  visibility: hidden;
-  position: relative;
+/* ── Эффект стекла (glassmorphism) ──────────────────── */
+.t1-glass {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(29, 175, 247, 0.25);
 }
-.MuiTablePagination-root .MuiTablePagination-selectLabel::after {
-  content: "Строк на странице:";
-  visibility: visible;
+
+/* ── Градиенты ─────────────────────────────────────── */
+.t1-gradient-primary {
+  background: linear-gradient(135deg, #1daff7 0%, #00aae6 100%);
+}
+
+.t1-gradient-dark {
+  background: linear-gradient(135deg, #030125 0%, #272942 100%);
+}
+
+/* ── Свечение ──────────────────────────────────────── */
+.t1-glow {
+  box-shadow: 0 0 20px rgba(29, 175, 247, 0.25);
+}
+
+.t1-glow-hover:hover {
+  box-shadow: 0 0 30px rgba(29, 175, 247, 0.4);
+}
+
+/* ── Анимация появления ────────────────────────────── */
+.t1-fade-in {
+  animation: t1FadeIn 0.5s ease forwards;
+}
+
+@keyframes t1FadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Скользящий индикатор (для PanelSwitcher) ────── */
+.t1-slide-indicator {
   position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  white-space: nowrap;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: calc(50% - 5px);
+  background: linear-gradient(135deg, #4fc3f7 0%, #1daff7 100%);
+  border-radius: 28px;
+  transition: transform 0.3s ease-in-out;
+  z-index: 0;
+}
+
+.t1-slide-indicator.right {
+  transform: translateX(100%);
+}
+
+/* ── Кастомный скроллбар (Т1-стиль) ───────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(29, 175, 247, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(29, 175, 247, 0.5);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(29, 175, 247, 0.3) transparent;
 }

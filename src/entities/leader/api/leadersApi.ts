@@ -1,5 +1,5 @@
 import { api } from "@/shared/api/apiClient";
-import type { ManagerListItem, PaginatedResponse, PaginationParams, Successor, ManagerDetail, TeamMemberDto } from "../model/types";
+import type { ManagerListItem, PaginatedResponse, ServerPaginationParams, Successor, ManagerDetail, TeamMemberDto } from "../model/types";
 
 export async function fetchLeaders(
   filters: {
@@ -10,7 +10,7 @@ export async function fetchLeaders(
     searchName?: string;
     positionFilter?: string;
   } = {},
-  pagination: PaginationParams = {},
+  pagination: ServerPaginationParams = {},
 ): Promise<PaginatedResponse<ManagerListItem>> {
   const params = new URLSearchParams();
   if (filters.grade !== undefined) params.append("grade", filters.grade.toString());

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchLeaders } from "@/entities/leader";
-import type { PaginatedResponse, ManagerListItem, PaginationParams } from "@/entities/leader";
+import type { PaginatedResponse, ManagerListItem, ServerPaginationParams } from "@/entities/leader";
 
 interface UseLeadersQueryFilters {
   grade?: number;
@@ -23,7 +23,7 @@ interface UseLeadersQueryFilters {
  */
 export function useLeadersQuery(
   filters: UseLeadersQueryFilters = {},
-  pagination: PaginationParams = {},
+  pagination: ServerPaginationParams = {},
 ) {
   const { page, pageSize, sortField, sortOrder } = pagination;
   
