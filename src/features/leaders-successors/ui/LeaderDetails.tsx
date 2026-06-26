@@ -5,6 +5,7 @@ import {
   Alert,
   Button,
   Chip,
+  useTheme,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import type { ManagerListItem, ManagerDetail, Successor, TeamMemberDto } from "@/entities/leader/model/types";
@@ -12,10 +13,6 @@ import { gridLocaleRu } from "@/shared/config/locales/gridLocaleRu";
 import { teamColumns, successorColumns } from "../config/columns";
 import { capitalizeFirstLetter } from "../lib/utils";
 import { colors } from "@/shared/theme/tokens";
-
-const TEAM_HEADER_BG = colors.success;
-const SUCC_HEADER_BG = colors.primary;
-const HEADER_TEXT_COLOR = colors.white;
 
 interface LeaderDetailsProps {
   selectedLeader: ManagerListItem | null;
@@ -48,6 +45,12 @@ export const LeaderDetails = ({
   succError,
   refetchSucc,
 }: LeaderDetailsProps) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const TEAM_HEADER_BG = isDark ? colors.successDark : colors.success;
+  const SUCC_HEADER_BG = isDark ? colors.primaryDark : colors.primary;
+  const HEADER_TEXT_COLOR = colors.white;
+
   const filteredTeam = useMemo(() => {
     if (!team || !successors) return team;
     const successorNames = new Set(successors.map((s) => s.fullName));

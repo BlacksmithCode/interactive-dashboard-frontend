@@ -26,7 +26,7 @@ export function useAuditLogs() {
           setTotalCount(response.totalElements);
         }
       } catch (error) {
-        console.error("Failed to load audit logs:", error);
+        console.error("Не удалось загрузить журнал аудита:", error);
         if (!cancelled) {
           setLogs([]);
           setTotalCount(0);

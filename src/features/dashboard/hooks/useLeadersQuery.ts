@@ -11,16 +11,7 @@ interface UseLeadersQueryFilters {
   positionFilter?: string;
 }
 
-/**
- * Хук для получения списка руководителей с серверной пагинацией.
- * staleTime: 5 минут — данные считаются свежими, повторный запрос не выполняется.
- * Все параметры (фильтры + пагинация + сортировка) включены в queryKey для автоматического перезапроса.
- * 
- * ВАЖНО: placeholderData отключён для корректной работы серверной пагинации DataGrid.
- * keepPreviousData вызывал конфликт между старыми данными и новым paginationModel.
- * 
- * Параметр grade (ранее gradeMin) теперь передаёт точное значение грейда для фильтрации.
- */
+/** Хук для получения списка руководителей с серверной пагинацией. */
 export function useLeadersQuery(
   filters: UseLeadersQueryFilters = {},
   pagination: ServerPaginationParams = {},
@@ -31,6 +22,5 @@ export function useLeadersQuery(
     queryKey: ["leaders", filters, page, pageSize, sortField, sortOrder],
     queryFn: () => fetchLeaders(filters, { page, pageSize, sortField, sortOrder }),
     staleTime: 5 * 60 * 1000,
-    // placeholderData: keepPreviousData — ОТКЛЮЧЕНО для корректной пагинации
   });
 }

@@ -73,7 +73,7 @@ const CustomTick = (props: CustomTickProps) => {
     <text x={x} y={y} textAnchor={textAnchor} dominantBaseline="central">
       <tspan x={x} y={letterY} fill="white" fontSize={14} fontWeight="bold">{payload.value}</tspan>
       {displayValue > 0 && (
-        <tspan x={x} y={valueY} fill={color} fontSize={14} fontWeight="bold" style={{ textShadow: '0 0 6px rgba(255,255,255,0.6)' }}>{displayValue}</tspan>
+        <tspan x={x} y={valueY} fill={color} fontSize={14} fontWeight="bold" stroke="white" strokeWidth={0.5} paintOrder="stroke fill" style={{ filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.6))' }}>{displayValue}</tspan>
       )}
     </text>
   );
@@ -122,7 +122,7 @@ const CustomTooltip = ({ active, payload, label, totalManagers = 0, seriesType, 
             <Box key={other.label} sx={{ display: "flex", alignItems: "center", fontSize: 12, mb: 0.3 }}>
               <Typography sx={{ width: 25, fontWeight: 'bold', color: isDark ? '#fff' : '#000' }}>{other.label}</Typography>
               <Typography sx={{ width: 30, textAlign: 'right', mr: 1, color: isDark ? '#fff' : '#000' }}>{other.value}</Typography>
-              <Typography sx={{ color: other.isGreater ? colors.success : colors.error, fontWeight: 'bold', fontSize: 11, textShadow: '0 0 6px rgba(255,255,255,0.5)' }}>
+              <Typography className="text-stroke-white" sx={{ color: other.isGreater ? colors.success : colors.error, fontWeight: 'bold', fontSize: 11 }}>
                 {other.diff > 0 ? '▲' : other.diff < 0 ? '▼' : '•'} {other.percentDiff}
               </Typography>
             </Box>
@@ -476,7 +476,7 @@ export function PotentialAreaCharts({ nineBox, totalManagers }: PotentialAreaCha
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', px: { xs: 1, md: 4 }, mb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', borderRadius: 1, px: 1.5, py: 0.5, transition: 'all 0.2s ease', border: '1px solid transparent', '&:hover': { bgcolor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.3)' } }}>
             <FormControlLabel
-              control={<Switch checked={unifiedScale} onChange={(e) => setUnifiedScale(e.target.checked)} color="info" size="small" />}
+              control={<Switch checked={unifiedScale} onChange={(e) => setUnifiedScale(e.target.checked)} color={isDark ? 'default' : 'info'} size="small" sx={{ '& .MuiSwitch-thumb': { bgcolor: isDark ? colors.primaryHover : undefined } }} />}
               label={<Typography variant="body2" sx={{ userSelect: 'none', color: isDark ? 'text.primary' : colors.white }}>Единый масштаб</Typography>}
               labelPlacement="start"
             />

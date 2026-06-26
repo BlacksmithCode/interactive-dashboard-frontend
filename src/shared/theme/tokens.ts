@@ -48,6 +48,10 @@ export const colors = {
   info: "#1daff7",
   infoLight: "rgba(29, 175, 247, 0.12)",
 
+  // ── Яркие цвета для графиков и диаграмм ────────────
+  chartGreen: "#00d25b",
+  chartRed: "#ff4757",
+
   // ── Семантические акценты (тёмная тема) ──────────────
   successDark: "#217d5e",
   successDarkLight: "rgba(33, 125, 94, 0.15)",

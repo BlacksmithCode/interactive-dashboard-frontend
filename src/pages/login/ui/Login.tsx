@@ -8,7 +8,7 @@ import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { useColorMode } from "@/shared/theme/useColorMode";
 import { Logo } from "@/shared/ui/logo/Logo";
-import { loginUser } from "@/entities/user";
+import { loginUser, normalizeErrorMessage } from "@/entities/user";
 import { colors, transitions } from "@/shared/theme/tokens";
 
 export default function Login() {
@@ -43,7 +43,8 @@ export default function Login() {
         } else if (backendError.includes('Неверный логин или пароль')) {
           setError("Неверный логин или пароль");
         } else if (backendError) {
-          setError(backendError);
+          // Нормализуем любую неожиданную ошибку от бэкенда
+          setError(normalizeErrorMessage(backendError));
         } else if (error.statusCode === 403) {
           setError("Доступ запрещен");
         } else if (error.statusCode === 401) {

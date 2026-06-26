@@ -196,6 +196,7 @@ export const FiltersBar = ({
         minPossibleGrade={minGrade}
         maxPossibleGrade={maxGrade}
         autoSetDefault={false}
+        sx={{ minWidth: 140, ...commonFilterSx }}
       />
       <Autocomplete
         options={filteredDomainOptions}

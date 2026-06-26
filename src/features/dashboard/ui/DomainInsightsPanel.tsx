@@ -80,7 +80,6 @@ export function DomainInsightsPanel({
 
   const currentGist = useMemo(() => gist || [], [gist]);
 
-  // Надежно собираем доступные домены, даже если они не пришли из общего контекста
   const computedDomains = useMemo(() => {
     const fromGist = gist ? gist.map(d => d.domain) : [];
     return [...new Set([...(availableDomains || []), ...fromGist])].sort();
@@ -95,9 +94,12 @@ export function DomainInsightsPanel({
     return { totalWith, totalWithout };
   }, [currentGist]);
 
+  const bgColor = isDark ? colors.successDark : colors.success;
+  const errColor = isDark ? colors.errorDark : colors.error;
+
   const pieData = [
-    { id: "with", value: chartData.totalWith || 0, color: theme.palette.success.main },
-    { id: "without", value: chartData.totalWithout || 0, color: theme.palette.error.light },
+    { id: "with", value: chartData.totalWith || 0, color: bgColor },
+    { id: "without", value: chartData.totalWithout || 0, color: errColor },
   ];
 
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
@@ -124,13 +126,13 @@ export function DomainInsightsPanel({
             </Typography>
             
             <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-                <GradeFilterInput
-                  value={filters.gradeMin}
-                  onChange={setGradeMin}
-                  defaultMinGrade={minPossibleGrade}
-                  minPossibleGrade={minPossibleGrade}
-                  maxPossibleGrade={maxPossibleGrade}
-                />
+              <GradeFilterInput
+                value={filters.gradeMin}
+                onChange={setGradeMin}
+                defaultMinGrade={minPossibleGrade}
+                minPossibleGrade={minPossibleGrade}
+                maxPossibleGrade={maxPossibleGrade}
+              />
             </Box>
 
             <Box
@@ -155,24 +157,24 @@ export function DomainInsightsPanel({
           </Box>
         </Grid>
 
-        {/* Центральный блок: гистограмма на фоне CARD_BG */}
+        {/* Центральный блок: гистограмма */}
         <Grid size={{ xs: 12, md: 5 }}>
           <RoleGuard allowedRoles={[ROLES.ADMIN, ROLES.HRD_EVALUATION]}>
             <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-            <FormControl size="small" sx={{ minWidth: 160, '& .MuiInputLabel-root': { color: colors.white }, '& .MuiInputLabel-root.Mui-focused': { color: colors.white }, }}>
-              <InputLabel id="domain-select-label" sx={{ color: colors.white }}>Домен</InputLabel>
-              <Select
-                labelId="domain-select-label"
-                value={filters.domain ?? ''}
-                label="Домен"
-              onChange={(e) => {
-                const val = e.target.value;
-                setDomain(val ? String(val) : undefined);
-              }}
-                sx={selectSx}
+              <FormControl size="small" sx={{ minWidth: 160, '& .MuiInputLabel-root': { color: colors.white }, '& .MuiInputLabel-root.Mui-focused': { color: colors.white }, }}>
+                <InputLabel id="domain-select-label" sx={{ color: colors.white }}>Домен</InputLabel>
+                <Select
+                  labelId="domain-select-label"
+                  value={filters.domain ?? ''}
+                  label="Домен"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDomain(val ? String(val) : undefined);
+                  }}
+                  sx={selectSx}
                 >
                   <MenuItem value="">Все домены</MenuItem>
-                {computedDomains.map((d) => (
+                  {computedDomains.map((d) => (
                     <MenuItem key={d} value={d}>{d}</MenuItem>
                   ))}
                 </Select>
@@ -196,16 +198,15 @@ export function DomainInsightsPanel({
                   <YAxis tick={{ fill: colors.white }} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: isDark ? 'rgba(0,0,0,0.4)' : colors.primaryDark }}/>
                   <Legend wrapperStyle={{ bottom: 0 }} formatter={(value) => <span style={{ color: colors.white }}>{value}</span>} />
-                  <Bar dataKey="managersWithSuccessors" name="С преемниками" fill={theme.palette.success.main} className="histogram-bar" />
-                  <Bar dataKey="managersWithoutSuccessors" name="Без преемников" fill={theme.palette.error.main} className="histogram-bar" />
+                  <Bar dataKey="managersWithSuccessors" name="С преемниками" fill={bgColor} className="histogram-bar" />
+                  <Bar dataKey="managersWithoutSuccessors" name="Без преемников" fill={errColor} className="histogram-bar" />
                 </BarChart>
               </ResponsiveContainer>
             </Box>
           )}
         </Grid>
         
-
-        {/* Правый блок: кольцевая диаграмма на фоне CARD_BG */}
+        {/* Правый блок: кольцевая диаграмма */}
         <Grid size={{ xs: 12, md: 3 }}>
           <Box
             sx={{
@@ -225,7 +226,7 @@ export function DomainInsightsPanel({
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
               <Box sx={{ textAlign: 'center', minWidth: 50 }}>
                 <Typography variant="body2" sx={{ color: colors.white }} />
-                <Typography variant="h6" sx={{ color: colors.error, fontWeight: 'bold', textShadow: '0 0 6px rgba(255,255,255,0.5)' }}>
+                <Typography variant="h6" sx={{ color: errColor, fontWeight: 'bold', textShadow: '0 0 2px #fff, 0 0 2px #fff, 0 0 2px #fff, 0 0 2px #fff' }}>
                   {chartData.totalWith + chartData.totalWithout > 0
                     ? Math.round((chartData.totalWithout / (chartData.totalWith + chartData.totalWithout)) * 100)
                     : 0}%
@@ -242,20 +243,21 @@ export function DomainInsightsPanel({
                   height={180}
                   margin={{ top: 0, bottom: 0, left: 0, right: 0 }}
                   onHighlightChange={(id) => setHoveredSlice(id as string | null)}
-                  // @ts-expect-error - 'hidden' работает, но временно отсутствует в типах @mui/x-charts
+                  // @ts-expect-error - 'hidden' works but missing from @mui/x-charts types
                   slotProps={{ legend: { hidden: true } }}
                   sx={{
                     '& path': {
                       stroke: `${colors.white} !important`,
-                      strokeWidth: '2px !important',
-                      transition: 'opacity 0.2s ease',
+                      // strokeWidth: '2px !important',
+                      // transition: 'opacity 0.2s ease',
+                      // opacity: isDark ? 0.6 : 1,
                     }
                   }}
                 />
               </Box>
               <Box sx={{ textAlign: 'center', minWidth: 50 }}>
                 <Typography variant="body2" sx={{ color: colors.white }} />
-                <Typography variant="h6" sx={{ color: colors.success, fontWeight: 'bold', textShadow: '0 0 6px rgba(255,255,255,0.5)' }}>
+                <Typography variant="h6" sx={{ color: bgColor, fontWeight: 'bold', textShadow: '0 0 2px #fff, 0 0 2px #fff, 0 0 2px #fff, 0 0 2px #fff' }}>
                   {chartData.totalWith + chartData.totalWithout > 0
                     ? Math.round((chartData.totalWith / (chartData.totalWith + chartData.totalWithout)) * 100)
                     : 0}%
@@ -283,7 +285,7 @@ export function DomainInsightsPanel({
                 onMouseEnter={() => setHoveredSlice("without")}
                 onMouseLeave={() => setHoveredSlice(null)}
               >
-                <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: theme.palette.error.main }} />
+                <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: errColor }} />
                 <Typography variant="caption" sx={{ color: colors.white, whiteSpace: "nowrap" }}>
                   Без преемников: {chartData.totalWithout}
                 </Typography>
@@ -308,7 +310,7 @@ export function DomainInsightsPanel({
                 onMouseEnter={() => setHoveredSlice("with")}
                 onMouseLeave={() => setHoveredSlice(null)}
               >
-                <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: theme.palette.success.main }} />
+                <Box sx={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: bgColor }} />
                 <Typography variant="caption" sx={{ color: colors.white, whiteSpace: "nowrap" }}>
                   С преемниками: {chartData.totalWith}
                 </Typography>
