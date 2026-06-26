@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, Card, CardContent } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { rowsOrder, potentialLabels, performanceLabels } from "../config/nineBoxMeta";
 import { BoxCell } from "./BoxCell";
 import type { MergedCells } from "../hooks/useMergedCells";
@@ -11,7 +11,7 @@ interface NineBoxMatrixProps {
 export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
   const totalManagers = Object.values(mergedCells).reduce(
     (sum, cell) => sum + (cell?.managers ?? 0),
-    0
+    0,
   );
 
   const maxManagers = Math.max(...Object.values(mergedCells).map((c) => c?.managers ?? 0));
@@ -40,19 +40,19 @@ export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
   }
 
   return (
-    <Box sx={{ p: 2, borderRadius: 2, color: "white" }}>
+    <Box sx={{ p: 2, borderRadius: 3 }}>
       <Box
         sx={{
           display: "grid",
           gridTemplateColumns: "80px 1fr",
           gridTemplateRows: "auto 1fr",
-          gap: 1,
+          gap: 1.5,
         }}
       >
         <Box />
 
         <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+          <Typography variant="caption" sx={{ fontWeight: "bold", color: "common.white", letterSpacing: "0.03em" }}>
             Результативность (вторая оценка) →
           </Typography>
         </Box>
@@ -70,6 +70,8 @@ export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
               transform: "rotate(-90deg)",
               whiteSpace: "nowrap",
               fontWeight: "bold",
+              color: "common.white",
+              letterSpacing: "0.03em",
             }}
           >
             Потенциал (первая оценка) →
@@ -81,18 +83,16 @@ export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
             display: "grid",
             gridTemplateColumns: "80px repeat(3, minmax(0, 1fr))",
             gridTemplateRows: "auto repeat(3, 1fr)",
-            gap: 1,
+            gap: 1.5,
           }}
         >
           <Box />
           {performanceLabels.map((label) => (
-            <Card key={label} sx={{ bgcolor: "transparent", boxShadow: "none" }}>
-              <CardContent sx={{ p: 1, display: "flex", justifyContent: "center" }}>
-                <Typography variant="caption" sx={{ fontWeight: "bold", color: "white" }}>
-                  {label}
-                </Typography>
-              </CardContent>
-            </Card>
+            <Box key={label} sx={{ display: "flex", justifyContent: "center", alignItems: "center", p: 0.5 }}>
+              <Typography variant="caption" sx={{ fontWeight: "bold", color: "common.white" }}>
+                {label}
+              </Typography>
+            </Box>
           ))}
 
           {rowsOrder.map((row, rowIndex) => (
@@ -104,7 +104,7 @@ export function NineBoxMatrix({ mergedCells }: NineBoxMatrixProps) {
                   justifyContent: "center",
                 }}
               >
-                <Typography variant="caption" sx={{ fontWeight: "bold", color: "white" }}>
+                <Typography variant="caption" sx={{ fontWeight: "bold", color: "common.white" }}>
                   {potentialLabels[rowIndex]}
                 </Typography>
               </Box>

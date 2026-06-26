@@ -2,6 +2,7 @@ import { Card, CardContent, Typography, Box, Tooltip } from "@mui/material";
 import type { NineBoxCell, MergedKey } from "@/entities/dashboard";
 import { boxMeta, categoryColor, PERF_MAP, POT_MAP } from "../config/nineBoxMeta";
 import { MERGE_RULES } from "../hooks/useMergedCells";
+import { colors } from "@/shared/theme/tokens";
 
 interface BoxCellProps extends NineBoxCell {
   code: MergedKey;
@@ -20,7 +21,7 @@ export function BoxCell({
   managerPercent,
 }: BoxCellProps) {
   const meta = boxMeta[code] ?? { label: "—", description: "" };
-  const bg = categoryColor[code] ?? "#fff";
+  const bg = categoryColor[code] ?? colors.primary;
 
   const total = managers || 0;
   let succPercent = 0;
@@ -54,116 +55,105 @@ export function BoxCell({
     });
   }
 
-  const tooltipContent = (
-    <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 220 }}>
-      <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
-        {meta.label}: {meta.description}
-      </Typography>
-      <Box sx={{ display: "flex", gap: 2 }}>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="body2" sx={{ fontWeight: "bold", mb: 0.5 }}>
-            Результативность
-          </Typography>
-          {Array.from(perfCounts.entries()).map(([letter, count]) => (
-            <Box key={letter} sx={{ display: "flex", justifyContent: "space-between", whiteSpace: "nowrap" }}>
-              <Typography variant="body2">
-                {letter} ({PERF_MAP[letter] ?? letter})
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: "bold", ml: 1 }}>
-                {count}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="body2" sx={{ fontWeight: "bold", mb: 0.5 }}>
-            Потенциал
-          </Typography>
-          {Array.from(potCounts.entries()).map(([letter, count]) => (
-            <Box key={letter} sx={{ display: "flex", justifyContent: "space-between", whiteSpace: "nowrap" }}>
-              <Typography variant="body2">
-                {letter} ({POT_MAP[letter] ?? letter})
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: "bold", ml: 1 }}>
-                {count}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-      </Box>
-    </Box>
-  );
 
   const displayCode = code.replace("_", " + ");
 
   return (
     <Tooltip
-      title={tooltipContent}
+      title={
+        <Box>
+          <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 0.5 }}>
+            {meta.label}: {meta.description}
+          </Typography>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                Результативность
+              </Typography>
+              {Array.from(perfCounts.entries()).map(([l, c]) => (
+                <Box key={l} sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+                  <Typography variant="caption">{l} ({PERF_MAP[l] ?? l})</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: "bold" }}>{c}</Typography>
+                </Box>
+              ))}
+            </Box>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                Потенциал
+              </Typography>
+              {Array.from(potCounts.entries()).map(([l, c]) => (
+                <Box key={l} sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
+                  <Typography variant="caption">{l} ({POT_MAP[l] ?? l})</Typography>
+                  <Typography variant="caption" sx={{ fontWeight: "bold" }}>{c}</Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        </Box>
+      }
       arrow
       placement="top"
-      slotProps={{
-        tooltip: {
-          sx: { backgroundColor: 'transparent', boxShadow: 'none', userSelect: 'text' },
-        },
-        arrow: {
-          sx: { color: 'rgba(0,0,0,0.75)' },
-        },
-      }}
     >
       <Card
         sx={{
-          bgcolor: bg,
+          background: bg,
           height: "100%",
           display: "flex",
           flexDirection: "column",
           textAlign: "center",
           cursor: "pointer",
           color: "white",
-          transition: "all 0.2s ease",
-          outline: isMax ? "3px solid #fff" : "2px solid transparent",
-          outlineOffset: "-3px",
+          transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          outline: isMax ? `2px solid ${colors.white}` : "none",
+          outlineOffset: isMax ? "-2px" : undefined,
+          border: "none",
+          boxShadow: isMax
+            ? `0 0 20px ${bg}88`
+            : "0 2px 8px rgba(0,0,0,0.15)",
           "&:hover": {
-            outlineColor: isMax ? "#fff" : "rgba(255,255,255,0.6)",
-            opacity: 0.85,
+            transform: "translateY(-4px) scale(1.02)",
+            boxShadow: `0 8px 25px ${bg}66`,
+            outlineColor: colors.white,
+            opacity: 0.95,
           },
         }}
       >
-        <CardContent sx={{ flexGrow: 1, p: 1, display: "flex", flexDirection: "column" }}>
-          <Typography variant="caption" sx={{ alignSelf: "flex-start", fontWeight: "bold", color: "white" }}>
+        <CardContent sx={{ flexGrow: 1, p: 1.5, display: "flex", flexDirection: "column" }}>
+          <Typography variant="caption" sx={{ alignSelf: "flex-start", fontWeight: "bold", color: "white", opacity: 0.9 }}>
             {displayCode}
           </Typography>
-          <Typography variant="subtitle2" sx={{ mt: 0.5, fontWeight: "bold", color: "white" }}>
+          <Typography variant="subtitle2" sx={{ mt: 0.5, fontWeight: "bold", color: "white", fontSize: "0.85rem" }}>
             {meta.label}
           </Typography>
-          <Typography variant="caption" sx={{ mb: 0.5, color: "white" }}>
+          <Typography variant="caption" sx={{ mb: 0.5, color: "white", opacity: 0.85 }}>
             {meta.description}
           </Typography>
           <Box sx={{ mt: "auto", display: "flex", justifyContent: "space-between" }}>
             <Box sx={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
-              <Typography variant="body2">Руководители:</Typography>
-              <Typography variant="body2">Преемники:</Typography>
-              <Typography variant="body2">Не преемники:</Typography>
+              <Typography variant="body2" sx={{ fontSize: "0.72rem" }}>Руководители:</Typography>
+              <Typography variant="body2" sx={{ fontSize: "0.72rem" }}>Преемники:</Typography>
+              <Typography variant="body2" sx={{ fontSize: "0.72rem" }}>Не преемники:</Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "stretch" }}>
               <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", mr: 1 }}>
-                <Typography variant="body2">{managers}</Typography>
-                <Typography variant="body2">{successors}</Typography>
-                <Typography variant="body2">{nonSuccessors}</Typography>
+                <Typography variant="body2" sx={{ fontSize: "0.72rem", fontWeight: 700 }}>{managers}</Typography>
+                <Typography variant="body2" sx={{ fontSize: "0.72rem", fontWeight: 700 }}>{successors}</Typography>
+                <Typography variant="body2" sx={{ fontSize: "0.72rem", fontWeight: 700 }}>{nonSuccessors}</Typography>
               </Box>
               {showPercent && (
                 <Box
                   sx={{
                     borderLeft: "1px solid",
-                    borderColor: "white",
+                    borderColor: "rgba(255,255,255,0.5)",
                     pl: 1,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "flex-end",
                   }}
                 >
-                  <Typography variant="body2">{finalManagerPercent}%</Typography>
-                  <Typography variant="body2">{succPercent}%</Typography>
-                  <Typography variant="body2">{nonSuccPercent}%</Typography>
+                  <Typography variant="body2" sx={{ fontSize: "0.72rem" }}>{finalManagerPercent}%</Typography>
+                  <Typography variant="body2" sx={{ fontSize: "0.72rem" }}>{succPercent}%</Typography>
+                  <Typography variant="body2" sx={{ fontSize: "0.72rem" }}>{nonSuccPercent}%</Typography>
                 </Box>
               )}
             </Box>

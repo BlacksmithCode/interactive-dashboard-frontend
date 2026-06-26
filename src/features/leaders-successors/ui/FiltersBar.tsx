@@ -4,15 +4,21 @@ import {
   TextField,
   Button,
   Stack,
+  useTheme,
 } from "@mui/material";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ClearIcon from "@mui/icons-material/Clear";
 import { useDashboardFilters, GradeFilterInput } from "@/features/dashboard";
 import { colors } from "@/shared/theme/tokens";
 
-// Общие стили для полей фильтров (синий фон, белый текст и рамка)
-const commonFilterSx = {
-  backgroundColor: colors.bluePrimary,
+interface FiltersBarProps {
+  filteredNameOptions: string[];
+  filteredPositionOptions: string[];
+  filteredDomainOptions: string[];
+}
+
+const getFilterSx = (isDark: boolean) => ({
+  backgroundColor: isDark ? 'rgba(39,41,66,0.7)' : colors.primary,
   borderRadius: 1,
   '& .MuiOutlinedInput-root': {
     '& fieldset': {
@@ -40,19 +46,16 @@ const commonFilterSx = {
   '& .MuiSvgIcon-root, & .MuiAutocomplete-clearIndicator, & .MuiAutocomplete-popupIndicator': {
     color: colors.white,
   },
-};
-
-interface FiltersBarProps {
-  filteredNameOptions: string[];
-  filteredPositionOptions: string[];
-  filteredDomainOptions: string[];
-}
+});
 
 export const FiltersBar = ({
   filteredNameOptions,
   filteredPositionOptions,
   filteredDomainOptions,
 }: FiltersBarProps) => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const commonFilterSx = getFilterSx(isDark);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const positionInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,7 +88,7 @@ export const FiltersBar = ({
         mb: 3, 
         flexWrap: "wrap", 
         alignItems: "center",
-        backgroundColor: colors.bluePrimary,
+        backgroundColor: isDark ? 'rgba(39,41,66,0.7)' : colors.primary,
         p: 2,
         borderRadius: 2
       }}

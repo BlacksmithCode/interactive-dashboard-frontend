@@ -18,7 +18,6 @@ interface DomainInsightsPanelProps {
 
 // Стили для Select на общем фоне
 const selectSx = {
-  backgroundColor: colors.blueDark,
   color: colors.white,
   '& .MuiOutlinedInput-notchedOutline': { borderColor: colors.white },
   '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: colors.white },
@@ -29,8 +28,10 @@ const selectSx = {
   '& .MuiInputBase-input': { color: colors.white },
 };
 
-// Кастомный тултип в стиле BoxCell
+// Кастомный тултип с адаптивным фоном под тему
 const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { domain: string; managersWithSuccessors: number; managersWithoutSuccessors: number } }> }) => {
+  const tooltipTheme = useTheme();
+  const isDark = tooltipTheme.palette.mode === 'dark';
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     const withSucc = data.managersWithSuccessors || 0;
@@ -38,7 +39,7 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
     const total = withSucc + withoutSucc;
 
     return (
-      <Box sx={{ backgroundColor: 'rgba(0,0,0,0.75)', color: 'white', p: 1.5, borderRadius: '4px', minWidth: 200, pointerEvents: 'auto', userSelect: 'text' }}>
+      <Box sx={{ backgroundColor: isDark ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.95)', color: isDark ? '#fff' : '#000', p: 1.5, borderRadius: '8px', minWidth: 200, pointerEvents: 'auto', userSelect: 'text', border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}` }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>{data.domain}</Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -49,7 +50,7 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
             <Typography variant="body2">Без преемников:</Typography>
             <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{withoutSucc}</Typography>
           </Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: '1px solid rgba(255,255,255,0.3)', pt: 0.5, mt: 0.5 }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)'}`, pt: 0.5, mt: 0.5 }}>
             <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Всего:</Typography>
             <Typography variant="body2" sx={{ fontWeight: 'bold', ml: 'auto' }}>{total}</Typography>
           </Box>
@@ -66,6 +67,7 @@ export function DomainInsightsPanel({
   maxPossibleGrade,
 }: DomainInsightsPanelProps) {
   const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const { filters, setGradeMin, setDomain, availableDomains, criticalFilter, successorFilter, debouncedSearchName, debouncedPositionFilter } = useDashboardFilters();
   const { data: gist, isLoading, isError } = useDomainGistQuery({ 
     gradeMin: filters.gradeMin, 
@@ -101,18 +103,18 @@ export function DomainInsightsPanel({
   const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
 
   return (
-    <Card variant="outlined" sx={{ mb: 4, backgroundColor: colors.bluePrimary, color: colors.white, borderColor: 'rgba(255, 255, 255, 0.3)' }}>
+    <Card variant="outlined" sx={{ mb: 4, backgroundColor: colors.primary, color: colors.white, borderColor: 'rgba(255, 255, 255, 0.3)' }}>
       <Grid container spacing={3} sx={{ p: 3 }}>
         
-        {/* Левый блок: фон #0088FF */}
+        {/* Левый блок: фон colors.primary */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Box
             sx={{
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",
-              alignItems: "center",      // центрируем по горизонтали
-              height: "100%",            // растягиваем на всю высоту Grid
+              alignItems: "center",
+              height: "100%",
               textAlign: "center",
               color: colors.white,
             }}
@@ -133,7 +135,7 @@ export function DomainInsightsPanel({
 
             <Box
               sx={{
-                backgroundColor: colors.blueDark,
+                backgroundColor: isDark ? colors.surfaceVariantDark : colors.primaryDark,
                 borderRadius: 2,
                 p: 2,
                 display: "inline-block",
@@ -142,7 +144,7 @@ export function DomainInsightsPanel({
                 transition: "all 0.2s ease",
                 outline: "2px solid transparent",
                 "&:hover": {
-                  outlineColor: "rgba(255,255,255,0.6)",
+                  outlineColor: colors.primary,
                 },
               }}
             >
@@ -192,7 +194,7 @@ export function DomainInsightsPanel({
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.2)" />
                   <XAxis dataKey="domain" interval={0} angle={-25} textAnchor="end" tick={{ fontSize: 12, fill: colors.white }} />
                   <YAxis tick={{ fill: colors.white }} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: colors.blueDark }}/>
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: isDark ? 'rgba(0,0,0,0.4)' : colors.primaryDark }}/>
                   <Legend wrapperStyle={{ bottom: 0 }} formatter={(value) => <span style={{ color: colors.white }}>{value}</span>} />
                   <Bar dataKey="managersWithSuccessors" name="С преемниками" fill={theme.palette.success.main} className="histogram-bar" />
                   <Bar dataKey="managersWithoutSuccessors" name="Без преемников" fill={theme.palette.error.main} className="histogram-bar" />
@@ -223,7 +225,7 @@ export function DomainInsightsPanel({
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
               <Box sx={{ textAlign: 'center', minWidth: 50 }}>
                 <Typography variant="body2" sx={{ color: colors.white }} />
-                <Typography variant="h6" sx={{ color: colors.errorMild, fontWeight: 'bold' }}>
+                <Typography variant="h6" sx={{ color: colors.error, fontWeight: 'bold', textShadow: '0 0 6px rgba(255,255,255,0.5)' }}>
                   {chartData.totalWith + chartData.totalWithout > 0
                     ? Math.round((chartData.totalWithout / (chartData.totalWith + chartData.totalWithout)) * 100)
                     : 0}%
@@ -253,7 +255,7 @@ export function DomainInsightsPanel({
               </Box>
               <Box sx={{ textAlign: 'center', minWidth: 50 }}>
                 <Typography variant="body2" sx={{ color: colors.white }} />
-                <Typography variant="h6" sx={{ color: colors.greenPrimary, fontWeight: 'bold' }}>
+                <Typography variant="h6" sx={{ color: colors.success, fontWeight: 'bold', textShadow: '0 0 6px rgba(255,255,255,0.5)' }}>
                   {chartData.totalWith + chartData.totalWithout > 0
                     ? Math.round((chartData.totalWith / (chartData.totalWith + chartData.totalWithout)) * 100)
                     : 0}%

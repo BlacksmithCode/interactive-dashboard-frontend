@@ -1,3 +1,5 @@
+// src/features/dashboard/widgets/LeadersSuccessors.tsx
+
 import { Box, Alert, Button, Typography, Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DataGrid, type GridSortModel, type GridPaginationModel } from "@mui/x-data-grid";
@@ -6,14 +8,15 @@ import { DashboardFiltersProvider, useLeadersSuccessors, useDashboardFilters, FI
 import { downloadExcelExport } from "@/features/dashboard/api/export";
 import { downloadFile } from "@/shared/lib/download";
 import { gridLocaleRu } from "@/shared/config/locales/gridLocaleRu";
-import { leaderColumns } from "../config/columns";
-import { FiltersBar } from "./FiltersBar";
-import { LeaderDetails } from "./LeaderDetails";
+import { leaderColumns } from "@/features/leaders-successors/config/columns";
+import { FiltersBar } from "@/features/leaders-successors/ui/FiltersBar";
+import { LeaderDetails } from "@/features/leaders-successors/ui/LeaderDetails";
 import { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import type { DashboardFilters } from "@/entities/dashboard";
 import DownloadIcon from '@mui/icons-material/Download';
 import { colors } from "@/shared/theme/tokens";
 
+// --- Константы цветов для шапки таблицы ---
 const LEADERS_HEADER_BG = colors.error;
 const HEADER_TEXT_COLOR = colors.white;
 
@@ -35,28 +38,39 @@ export default function LeadersSuccessors() {
 function LeadersSuccessorsContent() {
   const [exportLoading, setExportLoading] = useState(false);
   const {
+    // Список
     leaders,
     totalCount,
     leadersLoading,
     leadersFetching,
     leadersError,
     refetchLeaders,
+
+    // Пагинация
     page,
     setPage,
     pageSize,
     setPageSize,
+
+    // Сортировка
     sortField,
     setSortField,
     sortOrder,
     setSortOrder,
+
+    // Выбор
     selectedLeader,
     handleSelectLeader,
     handleResetSelection,
     isListExpanded,
     setIsListExpanded,
+
+    // Фильтры (для передачи в FiltersBar)
     filteredNameOptions,
     filteredPositionOptions,
     filteredDomainOptions,
+
+    // Детали
     managerDetail,
     detailLoading,
     detailError,
@@ -91,8 +105,10 @@ function LeadersSuccessorsContent() {
     }
   };
 
+  // Модель пагинации — мемоизирована для стабильной ссылки
   const paginationModel = useMemo(() => ({ page, pageSize }), [page, pageSize]);
 
+  // Простой обработчик — DataGrid обрабатывает внутреннюю валидацию сам
   const handlePaginationModelChange = useCallback((model: GridPaginationModel) => {
     if (model.page !== page) {
       setPage(model.page);
@@ -102,6 +118,7 @@ function LeadersSuccessorsContent() {
     }
   }, [page, pageSize, setPage, setPageSize]);
 
+  // Сброс пагинации на страницу 0 при изменении любых фильтров
   const prevFiltersRef = useRef<DashboardFilters | null>(null);
   useEffect(() => {
     const prev = prevFiltersRef.current;
@@ -122,6 +139,7 @@ function LeadersSuccessorsContent() {
     }
   }, [filters, page, setPage]);
 
+  // Модель сортировки
   const sortModel: GridSortModel = sortField
     ? [{ field: sortField, sort: sortOrder ?? "asc" }]
     : [];
@@ -197,12 +215,14 @@ function LeadersSuccessorsContent() {
         gap: 1,
       }}
     >
+      {/* Фильтры */}
       <FiltersBar
         filteredNameOptions={filteredNameOptions}
         filteredPositionOptions={filteredPositionOptions}
         filteredDomainOptions={filteredDomainOptions}
       />
 
+      {/* Кнопка экспорта в Excel */}
       <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
         <Button
           variant="outlined"
@@ -214,8 +234,10 @@ function LeadersSuccessorsContent() {
         </Button>
       </Box>
 
+      {/* Таблица руководителей */}
       <Box sx={{ width: "100%" }}>
         {selectedLeader ? (
+          /* Показываем одну строку с выбранным руководителем */
           <Box>
             <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
               <Button variant="outlined" size="small" onClick={handleResetSelection}>
@@ -237,6 +259,7 @@ function LeadersSuccessorsContent() {
             />
           </Box>
         ) : (
+          /* Полная таблица */
           <DataGrid
             key={`page-${page}`}
             rows={leaders}
@@ -264,6 +287,7 @@ function LeadersSuccessorsContent() {
         )}
       </Box>
 
+      {/* Детали выбранного руководителя */}
       {selectedLeader && (
         <Box>
           <Accordion expanded={isListExpanded} onChange={() => setIsListExpanded(!isListExpanded)}>

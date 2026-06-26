@@ -1,4 +1,3 @@
-// src/pages/Login.tsx
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/entities/user";
@@ -10,6 +9,7 @@ import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { useColorMode } from "@/shared/theme/useColorMode";
 import { Logo } from "@/shared/ui/logo/Logo";
 import { loginUser } from "@/entities/user";
+import { colors, transitions } from "@/shared/theme/tokens";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -22,6 +22,7 @@ export default function Login() {
   const { login } = useAuth();
   const theme = useTheme();
   const { toggleColorMode } = useColorMode();
+  const isDark = theme.palette.mode === "dark";
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -35,16 +36,13 @@ export default function Login() {
       } catch (err) {
         const error = err as { message?: string; statusCode?: number };
         
-        // Маппинг ошибок от бэкенда к пользовательским сообщениям
         const backendError = error.message || '';
         
-        // Проверяем точное сообщение от бэкенда
         if (backendError.includes('Доступ запрещен') || backendError.includes('disabled') || backendError.includes('Disabled')) {
           setError("Доступ запрещен");
         } else if (backendError.includes('Неверный логин или пароль')) {
           setError("Неверный логин или пароль");
         } else if (backendError) {
-          // Показываем реальное сообщение с бэкенда
           setError(backendError);
         } else if (error.statusCode === 403) {
           setError("Доступ запрещен");
@@ -68,11 +66,19 @@ export default function Login() {
         display: "flex",
         flexDirection: "column",
         bgcolor: "background.default",
-        transition: "background-color 0.4s",
+        transition: transitions.normal,
       }}
     >
-      {/* Белая шапка с центрированным логотипом */}
-      <AppBar position="static" sx={{ backgroundColor: "background.paper", boxShadow: 1, transition: "background-color 0.4s" }}>
+      {/* Шапка с логотипом и переключателем темы */}
+      <AppBar
+        position="static"
+        sx={{
+          background: isDark ? colors.gradientDark : colors.surfaceLight,
+          boxShadow: isDark ? "0 2px 20px rgba(0,0,0,0.4)" : "0 1px 3px rgba(0,0,0,0.06)",
+          borderBottom: isDark ? `1px solid ${colors.grey700}` : `1px solid ${colors.grey100}`,
+          transition: transitions.normal,
+        }}
+      >
         <Toolbar sx={{ position: "relative", justifyContent: "center" }}>
           <Logo type="full" height={40} />
           <IconButton
@@ -81,67 +87,120 @@ export default function Login() {
             sx={{
               position: "absolute",
               right: 16,
-              transition: "transform 0.5s ease-in-out",
-              transform: theme.palette.mode === "dark" ? "rotate(180deg)" : "rotate(0deg)",
+              transition: transitions.spring,
+              transform: isDark ? "rotate(180deg)" : "rotate(0deg)",
+              color: "text.primary",
+              "&:hover": {
+                background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+              },
             }}
           >
-            {theme.palette.mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon sx={{ color: "text.primary" }} />}
+            {isDark ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
         </Toolbar>
       </AppBar>
 
-      {/* Контейнер формы, занимающий оставшуюся высоту */}
+      {/* Контейнер формы */}
       <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
-      <Paper
-        elevation={3}
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{
-          p: 4,
-          width: "100%",
-          maxWidth: 400,
-          borderRadius: 3, // Закругленные углы карточки
-        }}
-      >
-        <Typography variant="h5" component="h1" align="center" sx={{ fontWeight: 'bold', mb: 3 }}>
-          Вход в систему
-        </Typography>
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        <TextField
-          label="Логин"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          fullWidth
-          required
-          margin="normal"
-        />
-        <TextField
-          label="Пароль"
-          type={showPassword ? "text" : "password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          fullWidth
-          required
-          margin="normal"
-          slotProps={{
-            input: {
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    edge="end"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+        <Paper
+          elevation={isDark ? 4 : 2}
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{
+            p: 4,
+            width: "100%",
+            maxWidth: 400,
+            borderRadius: 3,
+            border: isDark ? `1px solid ${colors.grey700}` : `1px solid ${colors.grey100}`,
+            background: isDark ? colors.gradientCard : colors.surfaceLight,
+            position: "relative",
+            overflow: "hidden",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 3,
+              background: colors.gradientPrimary,
             },
           }}
-        />
-      <Button type="submit" disabled={isLoading} variant="contained" color="primary" size="large" fullWidth sx={{ mt: 3, py: 1.5, fontWeight: 'bold' }}>
-        {isLoading ? "Вход..." : "Войти"}
-        </Button>
-      </Paper>
+        >
+          <Typography variant="h5" component="h1" align="center" sx={{ fontWeight: 900, mb: 3, letterSpacing: "-0.02em" }}>
+            Вход в систему
+          </Typography>
+          {error && (
+            <Alert
+              severity="error"
+              sx={{ mb: 2, borderRadius: 2, "& .MuiAlert-icon": { color: colors.error } }}
+            >
+              {error}
+            </Alert>
+          )}
+          <TextField
+            label="Логин"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            fullWidth
+            required
+            margin="normal"
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+              },
+            }}
+          />
+          <TextField
+            label="Пароль"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            fullWidth
+            required
+            margin="normal"
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      edge="end"
+                      size="small"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+              },
+            }}
+          />
+          <Button
+            type="submit"
+            disabled={isLoading}
+            variant="contained"
+            color="primary"
+            size="large"
+            fullWidth
+            sx={{
+              mt: 3,
+              py: 1.5,
+              fontWeight: 700,
+              borderRadius: 2,
+              background: colors.gradientPrimary,
+              "&:hover": {
+                background: colors.gradientSecondary,
+                boxShadow: colors.glowPrimaryHover,
+              },
+            }}
+          >
+            {isLoading ? "Вход..." : "Войти"}
+          </Button>
+        </Paper>
       </Box>
     </Box>
   );

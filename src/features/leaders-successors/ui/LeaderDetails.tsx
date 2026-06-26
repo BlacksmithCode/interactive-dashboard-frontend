@@ -13,8 +13,8 @@ import { teamColumns, successorColumns } from "../config/columns";
 import { capitalizeFirstLetter } from "../lib/utils";
 import { colors } from "@/shared/theme/tokens";
 
-const TEAM_HEADER_BG = colors.greenPrimary;
-const SUCC_HEADER_BG = colors.bluePrimary;
+const TEAM_HEADER_BG = colors.success;
+const SUCC_HEADER_BG = colors.primary;
 const HEADER_TEXT_COLOR = colors.white;
 
 interface LeaderDetailsProps {
@@ -153,7 +153,7 @@ export const LeaderDetails = ({
                 fill: HEADER_TEXT_COLOR,
               },
               "& .MuiDataGrid-columnSeparator": {
-                color: colors.greyDivider,
+                color: colors.grey500,
               },
               "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
                 outline: "none",
@@ -219,7 +219,7 @@ export const LeaderDetails = ({
                 fill: HEADER_TEXT_COLOR,
               },
               "& .MuiDataGrid-columnSeparator": {
-                color: colors.greyDivider,
+                color: colors.grey500,
               },
               "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
                 outline: "none",

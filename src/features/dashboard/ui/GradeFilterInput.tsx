@@ -199,7 +199,6 @@ return (
         size="small"
         variant="outlined"
         sx={{
-          backgroundColor: '#0088FF',
           borderRadius: 1,
           // Рамка поля
           '& .MuiOutlinedInput-root': {
