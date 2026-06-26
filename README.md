@@ -1,94 +1,199 @@
 # Interactive Dashboard Frontend
 
-Фронтенд интерактивного дашборда с таблицами, фильтрами и экспортом отчётов.
+Фронтенд интерактивного HR-дашборда для визуализации метрик и управления преемственностью в организации.
 
-## Стек
+## 🚀 Обзор проекта
 
-| Слой | Технология | Назначение |
-|------|-----------|-----------|
-| Язык | TypeScript | Строгая типизация, защита от опечаток |
-| UI | React 18+ | Фундамент интерфейса |
-| Сборщик | Vite | Быстрый запуск и HMR |
-| UI-кит | MUI v5/v6 | Готовые компоненты: таблицы, карточки, фильтры |
-| Таблицы | MUI DataGrid | Сортировка, пагинация, фильтрация |
-| Роутинг | React Router v6 | Страницы: логин, дашборды |
-| API | Axios + TanStack Query | HTTP-клиент, кэширование, управление состоянием |
-| Авторизация | React Context + localStorage | Токен, роли, защита маршрутов |
-| Экспорт | xlsx, jspdf + jspdf-autotable | Скачивание отчётов в Excel/PDF |
-| Даты | date-fns / Intl | Форматирование дат и чисел |
+**Interactive Dashboard Frontend** — современное веб-приложение для HR-специалистов и руководителей, которое предоставляет:
 
-## By Maxim Mestoev
+- 📊 Визуализацию данных о руководителях и их преемниках
+- 🎯 Анализ критичности должностей и готовности кадрового резерва
+- 📄 Экспорт отчетов в Excel и PDF форматы
+- 🔐 Ролевой доступ для разных категорий пользователей
+- 📱 Адаптивный дизайн для всех устройств
 
-# React + TypeScript + Vite
+## 🛠️ Технологический стек
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+| Слой | Технология | Версия | Назначение |
+|------|-----------|--------|-----------|
+| Язык | TypeScript | 5.0+ | Строгая типизация, защита от опечаток |
+| UI | React | 19.2.5 | Фундамент интерфейса |
+| Сборщик | Vite | 6.0+ | Быстрый запуск и HMR |
+| UI-кит | MUI | 9.0.1 | Готовые компоненты: таблицы, карточки, фильтры |
+| Таблицы | MUI DataGrid | 7.0+ | Сортировка, пагинация, фильтрация |
+| Роутинг | React Router | 6.0+ | Страницы: логин, дашборды |
+| API | Axios + TanStack Query | 1.7+ / 5.100+ | HTTP-клиент, кэширование, управление состоянием |
+| Авторизация | JWT + React Context | - | Токен, роли, защита маршрутов |
+| Экспорт | xlsx, jspdf | - | Скачивание отчётов в Excel/PDF |
+| Даты | date-fns / Intl | - | Форматирование дат и чисел |
 
-Currently, two official plugins are available:
+## 🏗️ Архитектура
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Проект следует методологии **Feature-Sliced Design (FSD)**:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── app/           # App слой (инициализация, роутинг)
+├── pages/         # Pages слой (страницы приложения)
+├── widgets/       # Widgets слой (композиции UI)
+├── features/      # Features слой (бизнес-фичи)
+├── entities/      # Entities слой (бизнес-сущности)
+└── shared/        # Shared слой (переиспользуемый код)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Ключевые архитектурные решения
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **Feature-Sliced Design** - четкое разделение ответственности
+- **TanStack Query** - управление серверным состоянием с кэшированием
+- **Material-UI** - UI-фреймворк с кастомной темой Т1
+- **JWT + Context** - безопасная авторизация с ролевым доступом
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🚀 Быстрый старт
+
+### Требования
+
+- Node.js 18+
+- npm 9+
+- Git
+
+### Установка
+
+```bash
+# Клонирование репозитория
+git clone <repository-url>
+cd interactive-dashboard-frontend
+
+# Установка зависимостей
+npm install
+
+# Создание .env файла
+cp .env.example .env
 ```
+
+### Запуск
+
+```bash
+# Dev сервер
+npm run dev
+
+# Сборка для продакшена
+npm run build
+
+# Предпросмотр сборки
+npm run preview
+
+# Линтинг
+npm run lint
+```
+
+### Переменные окружения
+
+```bash
+# .env
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+## 📚 Документация
+
+### Для разработчиков
+
+- 📖 **[Полное руководство программиста](docs/programmers-guide.md)** - основная документация
+- 🔧 **[Руководство по разработке](docs/development-guide.md)** - практические инструкции
+- 🌐 **[Документация API](docs/api.md)** - описание API-интерфейсов
+
+### Архитектурные решения
+
+- 📋 **[ADR](docs/adr/)** - Architecture Decision Records
+- [001. Feature-Sliced Design](docs/adr/001-architecture-fsd.md)
+- [002. TanStack Query](docs/adr/002-state-management-tanstack-query.md)
+- [003. Material-UI](docs/adr/003-ui-framework-material-ui.md)
+- [004. JWT + Context](docs/adr/004-authentication-jwt-context.md)
+
+## 🎯 Основные возможности
+
+### Дашборд
+- 9-box матрица для оценки руководителей
+- Статистика по преемникам и критичным должностям
+- Интерактивные фильтры и поиск
+- Визуализация данных через графики и диаграммы
+
+### Управление руководителями
+- Список руководителей с детальной информацией
+- Управление преемниками
+- Экспорт данных в Excel и PDF
+- Ролевой доступ к функциям
+
+### Администрирование
+- Управление пользователями и ролями
+- Журнал аудита действий
+- Мониторинг системы
+
+## 🔐 Роли пользователей
+
+| Роль | Описание | Права доступа |
+|------|----------|---------------|
+| `ADMIN` | Администратор системы | Полный доступ ко всем функциям |
+| `HRD_EVALUATION` | HRD по оценке | Дашборд, управление руководителями |
+| `HRD_DOMAIN` | HRD по доменам | Просмотр дашборда и данных |
+| `MANAGER` | Руководитель | Просмотр своей команды и дашборда |
+
+## 🧪 Тестирование
+
+```bash
+# Запуск всех тестов
+npm test
+
+# Запуск с покрытием
+npm run test:coverage
+
+# Запуск в watch режиме
+npm run test:watch
+```
+
+## 🐳 Docker
+
+```bash
+# Сборка образа
+docker build -t interactive-dashboard-frontend .
+
+# Запуск контейнера
+docker run -p 80:80 interactive-dashboard-frontend
+```
+
+## 📦 Деплой
+
+Проект использует GitLab CI/CD для автоматического деплоя:
+
+- Линтинг и проверка типов
+- Сборка и тестирование
+- Создание Docker-образа
+- Деплой на продакшен
+
+## 🤝 Contributing
+
+1. Создайте ветку `feature/your-feature-name`
+2. Внесите изменения following FSD архитектуре
+3. Добавьте тесты для новой функциональности
+4. Убедитесь, что все тесты проходят
+5. Создайте Merge Request
+
+## 📄 Лицензия
+
+MIT License - см. файл [LICENSE](LICENSE)
+
+## 👥 Команда
+
+- **Максим Местоев** - Frontend Developer
+- **Команда Т1** - Архитектура и дизайн
+
+---
+
+**Документация обновлена**: 2026-06-26  
+**Версия**: 1.0.0
+
+### Быстрые ссылки
+
+- [📖 Документация](docs/programmers-guide.md)
+- [🔧 API](docs/api.md)
+- [🏗️ ADR](docs/adr/)
+- [🚀 Начать разработку](docs/development-guide.md#быстрый-старт)
