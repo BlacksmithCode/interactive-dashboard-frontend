@@ -10,14 +10,22 @@ import {
   useManagerDetailQuery,
 } from "../hooks";
 import { useAuth, ROLES } from "@/entities/user";
-import type { ManagerListItem, SortField, SortOrder } from "@/entities/leader";
+import type { ManagerListItem, SortField, SortOrder, ServerPaginationParams } from "@/entities/leader";
 
-export const FIELD_MAP: Record<string, SortField> = {
-  fullName: "fullName",
+export const FIELD_MAP: Record<string, string> = {
+  fullName: "full_name",
   grade: "grade",
   domain: "domain",
   position: "position",
   critical: "critical",
+  potential: "potential",
+  performance: "performance",
+  assessment360: "assessment_360",
+  era: "era",
+  box: "box",
+  boxInterpretation: "box_interpretation",
+  developmentProgram: "development_program",
+  careerStatus: "career_status",
 };
 
 export function useLeadersSuccessors() {
@@ -57,7 +65,16 @@ export function useLeadersSuccessors() {
     forceUpdate(0);
   }, [filters.gradeMin, filters.domain, criticalFilter, successorFilter]);
 
-  const paginationParams = useMemo(() => ({ page, pageSize, sortField, sortOrder }), [page, pageSize, sortField, sortOrder]);
+  const paginationParams = useMemo<ServerPaginationParams>(() => {
+    // Маппинг поля DataGrid на поле сервера (camelCase → snake_case)
+    const mappedSortField = sortField ? (FIELD_MAP[sortField] ?? sortField) : undefined;
+    return {
+      page,
+      pageSize,
+      sortField: mappedSortField,
+      sortOrder,
+    };
+  }, [page, pageSize, sortField, sortOrder]);
 
   const leadersQuery = useLeadersQuery(
     {

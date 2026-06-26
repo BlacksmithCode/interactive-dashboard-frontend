@@ -2,7 +2,7 @@ import { Box, Alert, Button, Typography, Accordion, AccordionSummary, AccordionD
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DataGrid, type GridSortModel, type GridPaginationModel } from "@mui/x-data-grid";
 import { useSearchParams } from "react-router-dom";
-import { DashboardFiltersProvider, useLeadersSuccessors, useDashboardFilters, FIELD_MAP } from "@/features/dashboard";
+import { DashboardFiltersProvider, useLeadersSuccessors, useDashboardFilters } from "@/features/dashboard";
 import { downloadExcelExport } from "@/features/dashboard/api/export";
 import { downloadFile } from "@/shared/lib/download";
 import { gridLocaleRu } from "@/shared/config/locales/gridLocaleRu";
@@ -11,6 +11,7 @@ import { FiltersBar } from "./FiltersBar";
 import { LeaderDetails } from "./LeaderDetails";
 import { useMemo, useCallback, useEffect, useRef, useState } from "react";
 import type { DashboardFilters } from "@/entities/dashboard";
+import type { SortField } from "@/entities/leader";
 import DownloadIcon from '@mui/icons-material/Download';
 import { colors } from "@/shared/theme/tokens";
 
@@ -129,11 +130,10 @@ function LeadersSuccessorsContent() {
   const handleSortModelChange = (model: GridSortModel) => {
     if (model.length > 0) {
       const { field, sort } = model[0];
-      const mappedField = FIELD_MAP[field];
-      if (mappedField) {
-        setSortField(mappedField);
-        setSortOrder(sort === "desc" ? "desc" : "asc");
-      }
+      // field — это оригинальное имя из columns.ts (fullName, grade, и т.д.)
+      setSortField(field as SortField);
+      // sort из DataGrid может быть "asc" | "desc" | null — приводим к SortOrder | undefined
+      setSortOrder(sort ?? undefined);
     } else {
       setSortField(undefined);
       setSortOrder(undefined);
