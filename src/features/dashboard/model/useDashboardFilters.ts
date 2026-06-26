@@ -9,7 +9,7 @@ export function useDashboardFilters(): DashboardFiltersState {
   const ctx = useContext(DashboardFiltersContext);
   if (!ctx) {
     throw new Error(
-      "useDashboardFilters must be used within a <DashboardFiltersProvider>"
+      "useDashboardFilters должен использоваться внутри DashboardFiltersProvider"
     );
   }
   return ctx;

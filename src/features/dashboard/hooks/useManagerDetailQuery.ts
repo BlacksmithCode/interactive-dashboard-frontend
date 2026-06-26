@@ -6,7 +6,7 @@ export function useManagerDetailQuery(fullName: string | undefined) {
   return useQuery<ManagerDetail>({
     queryKey: ["managerDetail", fullName],
     queryFn: () => {
-      if (!fullName) throw new Error("fullName is required");
+      if (!fullName) throw new Error("Не указано ФИО руководителя");
       return fetchManagerDetail(fullName);
     },
     enabled: !!fullName,

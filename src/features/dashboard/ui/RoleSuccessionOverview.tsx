@@ -420,6 +420,7 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                           padding: "6px 12px",
                           color: SUCCESS_COLOR,
                           fontWeight: 'bold',
+                          textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff',
                         }}
                       >
                         {item.withSuccessors}
@@ -433,6 +434,7 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                           padding: "6px 12px",
                           color: ERROR_COLOR,
                           fontWeight: 'bold',
+                          textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff',
                         }}
                       >
                         {item.withoutSuccessors}
@@ -468,13 +470,13 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: SUCCESS_COLOR }}
+                    sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: SUCCESS_COLOR, textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}
                   >
                     {criticalPositionsRaw.reduce((sum, item) => sum + item.withSuccessors, 0)}
                   </TableCell>
                   <TableCell
                     align="center"
-                    sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: ERROR_COLOR }}
+                    sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: ERROR_COLOR, textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}
                   >
                     {criticalPositionsRaw.reduce((sum, item) => sum + item.withoutSuccessors, 0)}
                   </TableCell>

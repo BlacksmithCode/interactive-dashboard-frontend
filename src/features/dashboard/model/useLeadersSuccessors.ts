@@ -22,8 +22,8 @@ export const FIELD_MAP: Record<string, string> = {
   performance: "performance",
   assessment360: "assessment_360",
   era: "era",
-  box: "box",
-  boxInterpretation: "box_interpretation",
+  box: "potential",
+  boxInterpretation: "performance",
   developmentProgram: "development_program",
   careerStatus: "career_status",
 };
@@ -47,16 +47,12 @@ export function useLeadersSuccessors() {
   const [sortField, setSortField] = useState<SortField | undefined>(undefined);
   const [sortOrder, setSortOrder] = useState<SortOrder | undefined>(undefined);
 
-  // Аккумулятор уникальных имён и должностей для autocomplete
-  // Храним связи: имя -> должность, должность -> множество имён
   const allNamesRef = useRef<Set<string>>(new Set());
   const allPositionsRef = useRef<Set<string>>(new Set());
   const nameToPositionRef = useRef<Map<string, string>>(new Map());
   const positionToNamesRef = useRef<Map<string, Set<string>>>(new Map());
-  // Счетчик для триггера ре-рендера при изменении accumulator
   const [, forceUpdate] = useState(0);
 
-  // Сбрасываем аккумуляторы при изменении фильтров (кроме текста)
   useEffect(() => {
     allNamesRef.current.clear();
     allPositionsRef.current.clear();
@@ -66,8 +62,7 @@ export function useLeadersSuccessors() {
   }, [filters.gradeMin, filters.domain, criticalFilter, successorFilter]);
 
   const paginationParams = useMemo<ServerPaginationParams>(() => {
-    // Маппинг поля DataGrid на поле сервера (camelCase → snake_case)
-    const mappedSortField = sortField ? (FIELD_MAP[sortField] ?? sortField) : undefined;
+    const mappedSortField = sortField ? (FIELD_MAP[sortField] ?? undefined) : undefined;
     return {
       page,
       pageSize,
@@ -96,18 +91,13 @@ export function useLeadersSuccessors() {
     refetch: refetchLeaders,
   } = leadersQuery;
 
-  // Возвращаем элементы как обычно
   const leaders = useMemo(() => paginatedData?.items ?? [], [paginatedData?.items]);
-  // totalCount для DataGrid — 0 до загрузки (чтобы не было Infinity в UI), реальное значение после
-  // DataGrid разрешает переключение страниц даже с rowCount=0 в режиме server
   const totalCount = useMemo(() => paginatedData?.totalCount ?? 0, [paginatedData?.totalCount]);
 
-  // Аккумулируем уникальные значения из каждой загруженной страницы
   useEffect(() => {
     if (leaders && leaders.length > 0) {
       let changed = false;
       leaders.forEach(leader => {
-        // Аккумулируем имена и должности
         if (leader.fullName && !allNamesRef.current.has(leader.fullName)) {
           allNamesRef.current.add(leader.fullName);
           changed = true;
@@ -116,13 +106,11 @@ export function useLeadersSuccessors() {
           allPositionsRef.current.add(leader.position);
           changed = true;
         }
-        // Связываем имя с должностью
         if (leader.fullName && leader.position) {
           if (!nameToPositionRef.current.has(leader.fullName)) {
             nameToPositionRef.current.set(leader.fullName, leader.position);
             changed = true;
           }
-          // Связываем должность с именами
           if (!positionToNamesRef.current.has(leader.position)) {
             positionToNamesRef.current.set(leader.position, new Set());
           }
@@ -139,13 +127,10 @@ export function useLeadersSuccessors() {
     }
   }, [leaders]);
 
-  // Фильтруем аккумулированные варианты по текущему вводу (для autocomplete)
-  // С учетом каскадной фильтрации: ФИО фильтруются по должности, должность по ФИО
   const filteredNameOptions = useMemo(() => {
     const allNamesArray = Array.from(allNamesRef.current);
     let filtered = allNamesArray;
     
-    // Если выбрана должность - фильтруем имена по этой должности
     if (filters.domain) {
       // domain здесь не помогает, нужен positionFilter
     }
@@ -156,7 +141,6 @@ export function useLeadersSuccessors() {
       });
     }
     
-    // Фильтр по тексту поиска
     if (debouncedSearchName) {
       filtered = filtered.filter(name =>
         name.toLowerCase().includes(debouncedSearchName.toLowerCase())
@@ -170,7 +154,6 @@ export function useLeadersSuccessors() {
     const allPositionsArray = Array.from(allPositionsRef.current);
     let filtered = allPositionsArray;
     
-    // Если есть поиск по ФИО - фильтруем должности по этим именам
     if (debouncedSearchName) {
       const matchingNames = Array.from(allNamesRef.current).filter((name: string) =>
         name.toLowerCase().includes(debouncedSearchName.toLowerCase())
@@ -181,7 +164,6 @@ export function useLeadersSuccessors() {
       filtered = filtered.filter(pos => matchingPositions.has(pos));
     }
     
-    // Фильтр по тексту должности
     if (debouncedPositionFilter) {
       filtered = filtered.filter(pos =>
         pos.toLowerCase().includes(debouncedPositionFilter.toLowerCase())

@@ -1,4 +1,4 @@
-import { Box, Alert, Button, Typography, Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
+import { Box, Alert, Button, Typography, Accordion, AccordionSummary, AccordionDetails, useTheme } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DataGrid, type GridSortModel, type GridPaginationModel } from "@mui/x-data-grid";
 import { useSearchParams } from "react-router-dom";
@@ -14,9 +14,6 @@ import type { DashboardFilters } from "@/entities/dashboard";
 import type { SortField } from "@/entities/leader";
 import DownloadIcon from '@mui/icons-material/Download';
 import { colors } from "@/shared/theme/tokens";
-
-const LEADERS_HEADER_BG = colors.error;
-const HEADER_TEXT_COLOR = colors.white;
 
 export default function LeadersSuccessors() {
   const [searchParams] = useSearchParams();
@@ -34,6 +31,10 @@ export default function LeadersSuccessors() {
 }
 
 function LeadersSuccessorsContent() {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const LEADERS_HEADER_BG = isDark ? colors.errorDark : colors.error;
+  const HEADER_TEXT_COLOR = colors.white;
   const [exportLoading, setExportLoading] = useState(false);
   const {
     leaders,
@@ -130,9 +131,7 @@ function LeadersSuccessorsContent() {
   const handleSortModelChange = (model: GridSortModel) => {
     if (model.length > 0) {
       const { field, sort } = model[0];
-      // field — это оригинальное имя из columns.ts (fullName, grade, и т.д.)
       setSortField(field as SortField);
-      // sort из DataGrid может быть "asc" | "desc" | null — приводим к SortOrder | undefined
       setSortOrder(sort ?? undefined);
     } else {
       setSortField(undefined);
@@ -229,7 +228,6 @@ function LeadersSuccessorsContent() {
               loading={false}
               localeText={{ ...gridLocaleRu, noRowsLabel: "Нет результатов" }}
               rowHeight={40}
-              disableColumnMenu
               disableRowSelectionOnClick
               hideFooterSelectedRowCount
               columnHeaderHeight={46}
@@ -254,8 +252,6 @@ function LeadersSuccessorsContent() {
             sortingMode="server"
             sortModel={sortModel}
             onSortModelChange={handleSortModelChange}
-            disableColumnMenu
-            disableRowSelectionOnClick
             hideFooterSelectedRowCount
             onRowClick={(params) => handleSelectLeader(params.row)}
             columnHeaderHeight={46}

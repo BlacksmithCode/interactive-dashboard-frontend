@@ -90,7 +90,7 @@ export default function AdminPanel() {
               value={newUser.password} 
               onChange={e => setNewUser({...newUser, password: e.target.value})} 
               fullWidth
-              helperText="Мин. 8 символов, буквы и цифры"
+              helperText="Мин. 12 символов: заглавные, строчные, цифры и спецсимволы"
             />
             <Autocomplete
               freeSolo

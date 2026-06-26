@@ -41,6 +41,11 @@
   }
 }
 
+/* ── Белая обводка текста для читаемости на цветных фонах ── */
+.text-stroke-white {
+  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff !important;
+}
+
 /* ── Скользящий индикатор (для PanelSwitcher) ────── */
 .t1-slide-indicator {
   position: absolute;
