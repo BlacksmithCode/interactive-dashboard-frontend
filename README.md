@@ -179,9 +179,9 @@ docker run -p 80:80 interactive-dashboard-frontend
 
 ## 📄 Лицензия
 
-MIT License - см. файл [LICENSE](LICENSE)
+MIT License 
 
-## 👥 Команда
+## 🛠️ Разработчик
 
 - **Максим Местоев** - Frontend Developer
 - **Команда Т1** - Архитектура и дизайн
