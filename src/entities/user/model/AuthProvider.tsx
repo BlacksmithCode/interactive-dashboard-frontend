@@ -1,18 +1,31 @@
-import { useState, useCallback, useEffect, type ReactNode } from "react";
+import { useState, useCallback, useEffect, type ReactNode, useRef } from "react";
 import { AuthContext } from "./AuthContext";
-import { removeAuthToken, isLoggedIn, setAuthToken, getAuthHeader } from "./token";
+import { removeAuthToken, setAuthToken, getAuthHeader, isTokenExpired } from "./token";
 import { setOnUnauthorizedHandler, setTokenProvider } from "@/shared/api/apiClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { logoutUser } from "../api/usersApi";
 
-// Привязываем функцию получения токена к глобальному API-клиенту
 setTokenProvider(getAuthHeader);
 
+/** Очистка локального состояния без запроса к бэкенду */
+function clearLocalAuth(queryClient: ReturnType<typeof useQueryClient>): void {
+  removeAuthToken();
+  localStorage.removeItem("role");
+  localStorage.removeItem("username");
+  localStorage.removeItem("fullName");
+  queryClient.clear();
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [authenticated, setAuthenticated] = useState<boolean>(() => isLoggedIn());
+  const [authenticated, setAuthenticated] = useState<boolean>(() => {
+    const token = getAuthHeader();
+    return !!(token && !isTokenExpired(token.replace("Bearer ", "")));
+  });
   const [role, setRole] = useState<string | null>(() => localStorage.getItem("role"));
   const [fullName, setFullName] = useState<string | null>(() => localStorage.getItem("fullName"));
+  const [isLoading, setIsLoading] = useState(true);
   const queryClient = useQueryClient();
+  const logoutRef = useRef<() => Promise<void>>(async () => {});
 
   const login = useCallback((data: { token: string; username: string; role: string; fullName?: string }) => {
     setAuthToken(data.token);
@@ -28,31 +41,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const logout = useCallback(async () => {
-    // Отправляем запрос на бэкенд для логирования выхода
     await logoutUser();
-    
-    removeAuthToken();
-    localStorage.removeItem("role");
-    localStorage.removeItem("username");
-    localStorage.removeItem("fullName");
+    clearLocalAuth(queryClient);
     setAuthenticated(false);
     setRole(null);
     setFullName(null);
-    queryClient.clear(); // Полностью очищаем кэш данных при выходе
   }, [queryClient]);
 
-  // Подписка на событие 401 от apiClient — разруливает жёсткую связку
-  // между HTTP-клиентом и роутингом (раньше был window.location.href)
+  // Очистка локального состояния без запроса к бэкенду (для истёкших токенов)
+  const clearAuth = useCallback(() => {
+    clearLocalAuth(queryClient);
+    setAuthenticated(false);
+    setRole(null);
+    setFullName(null);
+  }, [queryClient]);
+
+  // Сохраняем ссылку на logout для использования в useEffect без зависимости
+  useEffect(() => {
+    logoutRef.current = logout;
+  }, [logout]);
+
+  // Подписка на событие 401 от apiClient
   useEffect(() => {
     setOnUnauthorizedHandler(() => {
-      logout();
+      logoutRef.current();
       window.location.href = "/login";
     });
     return () => setOnUnauthorizedHandler(null);
-  }, [logout]);
+  }, []);
+
+  // Проверка валидности токена при загрузке страницы
+  useEffect(() => {
+    const validateToken = async () => {
+      const token = getAuthHeader();
+      if (token) {
+        const jwtToken = token.replace("Bearer ", "");
+        if (isTokenExpired(jwtToken)) {
+          clearAuth();
+        }
+      }
+      setIsLoading(false);
+    };
+
+    validateToken();
+  }, [clearAuth]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated: authenticated, role, fullName, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated: authenticated, role, fullName, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

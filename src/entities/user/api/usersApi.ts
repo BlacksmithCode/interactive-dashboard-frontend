@@ -72,7 +72,6 @@ export async function logoutUser(): Promise<void> {
   try {
     await api.post("/api/users/logout");
   } catch (error) {
-    // Игнорируем ошибки при логауте — пользователь всё равно выйдет из системы
     console.warn("Logout API call failed, clearing local state anyway", error);
   }
 }

@@ -338,27 +338,29 @@ function SummaryTable({ data, totalManagers, isDark }: SummaryTableProps) {
         </Box>
 
         <Table sx={{ tableLayout: "fixed", width: "100%" }}>
-          <TableRow sx={{ display: "flex", bgcolor: headerBg }}>
-              <TableCell
-                component="th"
-                scope="row"
-                sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: "white" }}
-              >
-                Итого
-              </TableCell>
-              <TableCell
-                align="center"
-                sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: "white" }}
-              >
-                {total}
-              </TableCell>
-              <TableCell
-                align="center"
-                sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: "white" }}
-              >
-                {totalPercent}%
-              </TableCell>
-            </TableRow>
+          <TableBody>
+            <TableRow sx={{ display: "flex", bgcolor: headerBg }}>
+                <TableCell
+                  component="th"
+                  scope="row"
+                  sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: "white" }}
+                >
+                  Итого
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: "white" }}
+                >
+                  {total}
+                </TableCell>
+                <TableCell
+                  align="center"
+                  sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: "white" }}
+                >
+                  {totalPercent}%
+                </TableCell>
+              </TableRow>
+          </TableBody>
         </Table>
       </Box>
     </Box>

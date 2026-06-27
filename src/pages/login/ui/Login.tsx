@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/entities/user";
 import { TextField, Button, Box, Typography, Alert, Paper, AppBar, Toolbar, IconButton, InputAdornment, useTheme } from "@mui/material";
@@ -19,10 +19,17 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const theme = useTheme();
   const { toggleColorMode } = useColorMode();
   const isDark = theme.palette.mode === "dark";
+
+  // Если пользователь уже аутентифицирован — перенаправляем на дашборд
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

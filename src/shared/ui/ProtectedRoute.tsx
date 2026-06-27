@@ -1,15 +1,36 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import { Box, CircularProgress } from "@mui/material";
 import { useAuth } from "@/entities/user";
 
 /**
  * Компонент‑обёртка для защищённых маршрутов.
- * Если пользователь не аутентифицирован – перенаправляем на страницу входа.
+ * Показывает спиннер пока проверяется токен, затем:
+ * - если не аутентифицирован → редирект на /login
+ * - если аутентифицирован → рендерит children
  */
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
   return <>{children}</>;
 };
