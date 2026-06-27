@@ -460,33 +460,35 @@ export function RoleSuccessionOverview({ stats, criticalLeaders, totalManagers }
 
             {/* ПОДВАЛ С ИТОГАМИ */}
             <Table sx={{ tableLayout: "fixed", width: "100%" }}>
-              <TableRow sx={{ display: "flex", bgcolor: footerBg }}>
-                  <TableCell
-                    component="th"
-                    scope="row"
-                    sx={{ flex: 2, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: "white" }}
-                  >
-                    Всего должностей: {criticalPositionsRaw.length}
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: SUCCESS_COLOR, textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}
-                  >
-                    {criticalPositionsRaw.reduce((sum, item) => sum + item.withSuccessors, 0)}
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: ERROR_COLOR, textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}
-                  >
-                    {criticalPositionsRaw.reduce((sum, item) => sum + item.withoutSuccessors, 0)}
-                  </TableCell>
-                  <TableCell
-                    align="center"
-                    sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: "white" }}
-                  >
-                    {criticalPositionsRaw.reduce((sum, item) => sum + item.count, 0)}
-                  </TableCell>
-                </TableRow>
+              <TableBody>
+                <TableRow sx={{ display: "flex", bgcolor: footerBg }}>
+                    <TableCell
+                      component="th"
+                      scope="row"
+                      sx={{ flex: 2, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: "white" }}
+                    >
+                      Всего должностей: {criticalPositionsRaw.length}
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: SUCCESS_COLOR, textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}
+                    >
+                      {criticalPositionsRaw.reduce((sum, item) => sum + item.withSuccessors, 0)}
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: ERROR_COLOR, textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}
+                    >
+                      {criticalPositionsRaw.reduce((sum, item) => sum + item.withoutSuccessors, 0)}
+                    </TableCell>
+                    <TableCell
+                      align="center"
+                      sx={{ flex: 1, fontWeight: "bold", borderBottom: "none", padding: "6px 12px", whiteSpace: "nowrap", color: "white" }}
+                    >
+                      {criticalPositionsRaw.reduce((sum, item) => sum + item.count, 0)}
+                    </TableCell>
+                  </TableRow>
+              </TableBody>
             </Table>
           </Box>
         </Grid>

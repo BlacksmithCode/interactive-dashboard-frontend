@@ -24,8 +24,13 @@ export const getAdminColumns = ({ onUsersChange, currentUsername, onError }: Adm
       <Select
         value={params.value || ""}
         size="small"
+        disabled={params.row.username === currentUsername}
         onChange={async (e) => {
           try {
+            if (params.row.username === currentUsername) {
+              onError("Нельзя изменить свою собственную роль!");
+              return;
+            }
             await updateUserRole(params.row.id, e.target.value as string);
             onUsersChange();
           } catch (error) {
