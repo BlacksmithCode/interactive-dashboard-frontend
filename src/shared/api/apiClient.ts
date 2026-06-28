@@ -3,9 +3,16 @@ import type { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from "axio
 import type { ApiErrorResponse, NormalizedError } from "../types/errors";
 import {
   mockLoginResponse,
-  mockStats,
-  mockEmployees,
-  mockAuditLogs,
+  mockStatsResponse,
+  mockManagersList,
+  mockNineBoxResponse,
+  mockDomainGist,
+  mockGradeRange,
+  mockDashboardMeta,
+  mockManagerDetail,
+  mockTeam,
+  mockSuccessors,
+  mockAuditLogPage,
 } from "./mockData";
 
 /** Нормализация ошибки Axios в единый формат */
@@ -41,12 +48,25 @@ const baseURL = import.meta.env.PROD && import.meta.env.VITE_API_BASE_URL
 // Если VITE_USE_MOCKS=true, перехватчик подменяет запросы фейковыми данными.
 const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
 
-/** Маппинг URL-путей на моковые данные + случайная задержка 300–400мс */
-const mockEndpointMap: Record<string, unknown> = {
-  "/api/auth/login": mockLoginResponse,
-  "/api/stats": mockStats,
-  "/api/employees": mockEmployees,
-  "/api/audit-log": mockAuditLogs,
+/** Маппинг URL-паттернов на моковые данные.
+ * Ключ — подстрока, которая ищется в config.url через.includes().
+ * Более специфичные пути — выше, т.к. поиск идёт по порядку.
+ * Функция в значении — динамический выбор данных по URL (для /api/employees/{name}/team и т.п.).
+ */
+const mockEndpointMap: Record<string, unknown | ((url: string) => unknown)> = {
+  "/api/users/login": mockLoginResponse,
+  "/api/dashboard/stats": mockStatsResponse,
+  "/api/dashboard/9box": mockNineBoxResponse,
+  "/api/dashboard/gist": mockDomainGist,
+  "/api/dashboard/grade-range": mockGradeRange,
+  "/api/dashboard/meta": mockDashboardMeta,
+  "/api/employees/managers": mockManagersList,
+  "/api/employees/": (url: string) => {
+    if (url.includes("/team")) return mockTeam;
+    if (url.includes("/successors")) return mockSuccessors;
+    return mockManagerDetail;
+  },
+  "/api/users/logs": mockAuditLogPage,
 };
 
 function getMockDelay(): number {
@@ -81,8 +101,13 @@ function isMockEndpoint(url: string): boolean {
 
 /** Получить моковые данные для URL */
 function getMockData(url: string): unknown | null {
-  for (const [endpoint, data] of Object.entries(mockEndpointMap)) {
-    if (url.includes(endpoint)) return data;
+  for (const [endpoint, dataOrFn] of Object.entries(mockEndpointMap)) {
+    if (url.includes(endpoint)) {
+      if (typeof dataOrFn === "function") {
+        return (dataOrFn as (url: string) => unknown)(url);
+      }
+      return dataOrFn;
+    }
   }
   return null;
 }
@@ -115,8 +140,9 @@ export function setTokenProvider(provider: () => string | null) {
 // и возвращает фейковые данные через adapter, не выполняя сетевой запрос.
 if (USE_MOCKS) {
   api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+    // config.url может быть undefined (например, при относительных путях)
     const url = config.url ?? "";
-    if (isMockEndpoint(url)) {
+    if (url && isMockEndpoint(url)) {
       const mockData = getMockData(url);
       if (mockData) {
         config.adapter = createMockAdapter(mockData, getMockDelay());
