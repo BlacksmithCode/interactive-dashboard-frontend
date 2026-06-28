@@ -667,9 +667,12 @@ export function setTokenProvider(provider: () => string | null) {
 
 // ─── Mock Interceptor (всегда зарегистрирован — предотвращает tree-shaking) ──
 api.interceptors.request.use((config) => {
+  // Runtime check — нельзя tree-shake: на GitHub Pages нет бэкенда
+  const isGitHubPages =
+    typeof window !== "undefined" &&
+    window.location.hostname.includes("github.io");
   const useMocks =
-    import.meta.env.VITE_USE_MOCKS === "true" ||
-    import.meta.env.MODE === "preview" ||
+    isGitHubPages ||
     localStorage.getItem("USE_MOCKS") === "true";
   if (!useMocks) return config;
   return handleMockConfig(config);
