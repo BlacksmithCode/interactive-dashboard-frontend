@@ -16,8 +16,6 @@ import type {
 } from "./mockData";
 import type { RegisterRequest, UserResponse } from "@/entities/user";
 import {
-  MOCK_SUCCESSORS,
-  MOCK_TEAMS,
   MOCK_USERS,
 } from "./mockData";
 import {
@@ -29,7 +27,9 @@ import type {
   NineBoxResponse,
   NineBoxKey,
   NineBoxCell,
+  MergedKey,
 } from "@/entities/dashboard/model/types";
+
 
 /** Нормализация ошибки Axios в единый формат */
 function normalizeError(error: AxiosError<ApiErrorResponse>): NormalizedError {
@@ -144,9 +144,31 @@ function toNineBoxKey(
   return `${p}${perf}` as NineBoxKey;
 }
 
-/**
- * Фильтрует массив сотрудников по параметрам запроса.
- */
+/** Маппинг индивидуального ключа 9box → текст интерпретации */
+const INDIVIDUAL_BOX_LABEL: Record<string, string> = {
+  "AA": "Звезда", "AB": "Звезда",
+  "AC": "Профессионал",
+  "AD": "Низкоэффективный", "AE": "Низкоэффективный",
+  "BA": "Эксперт", "BB": "Эксперт",
+  "BC": "Профессионал",
+  "BD": "Низкоэффективный", "BE": "Низкоэффективный",
+  "CA": "Эксперт",
+  "CB": "Профессионал", "CC": "Профессионал",
+  "CD": "Зона риска", "CE": "Зона риска",
+};
+
+/** Вспомогательная функция: добавляет box + boxInterpretation к сотруднику */
+function enrichWithBox<T extends MockEmployee>(emp: T): T & { box: string; boxInterpretation: string } {
+  const boxKey = toNineBoxKey(emp.potential, emp.performance);
+  const boxStr = boxKey || "";
+  return {
+    ...emp,
+    box: boxStr,
+    boxInterpretation: boxStr ? INDIVIDUAL_BOX_LABEL[boxStr] || "" : "",
+  };
+}
+
+
 function filterEmployees(
   employees: MockEmployee[],
   params: Record<string, unknown>
@@ -301,29 +323,65 @@ function calcStats(filtered: MockEmployee[]): StatsResponse {
 }
 
 /**
+ * Правила объединения: MergedKey → массив исходных ключей NineBox
+ * (дубликат MERGE_RULES из useMergedCells для мок-функций)
+ */
+const MERGE_RULES_9BOX: Record<MergedKey, readonly string[]> = {
+  AD_AE: ["AD", "AE"],
+  AC:    ["AC"],
+  AA_AB: ["AA", "AB"],
+  BD_BE: ["BD", "BE"],
+  BC:    ["BC"],
+  BA_BB: ["BA", "BB"],
+  CD_CE: ["CD", "CE"],
+  CB_CC: ["CB", "CC"],
+  CA:    ["CA"],
+};
+
+/**
  * Рассчитывает динамическую 9-box матрицу из отфильтрованного списка сотрудников.
+ * Сначала собирает индивидуальные ячейки (AA, AB, AC...), затем объединяет их
+ * в merged-формат, который ожидает фронтенд (AA_AB, AD_AE...).
  */
 function calcNineBox(filtered: MockEmployee[]): NineBoxResponse {
-  const cells: Record<string, NineBoxCell> = {};
+  const raw: Record<string, NineBoxCell> = {};
 
+  // Шаг 1: считаем по индивидуальным ячейкам
   for (const emp of filtered) {
     const key = toNineBoxKey(emp.potential, emp.performance);
     if (!key) continue; // "Нет оценки" пропускаем
 
-    if (!cells[key]) {
-      cells[key] = { managers: 0, successors: 0, nonSuccessors: 0 };
+    if (!raw[key]) {
+      raw[key] = { managers: 0, successors: 0, nonSuccessors: 0 };
     }
-    cells[key].managers += 1;
+    raw[key].managers += 1;
     if (hasSuccessor(emp)) {
-      cells[key].successors += 1;
+      raw[key].successors += 1;
     } else {
-      cells[key].nonSuccessors += 1;
+      raw[key].nonSuccessors += 1;
     }
+  }
+
+  // Шаг 2: объединяем в merged-формат, как это делает бэкенд
+  const merged: Record<string, NineBoxCell> = {};
+  for (const [mergedKey, individualKeys] of Object.entries(MERGE_RULES_9BOX)) {
+    let managers = 0;
+    let successors = 0;
+    let nonSuccessors = 0;
+    for (const ik of individualKeys) {
+      const cell = raw[ik];
+      if (cell) {
+        managers += cell.managers;
+        successors += cell.successors;
+        nonSuccessors += cell.nonSuccessors;
+      }
+    }
+    merged[mergedKey] = { managers, successors, nonSuccessors };
   }
 
   return {
     totalManagers: filtered.length,
-    cells: cells as Record<NineBoxKey, NineBoxCell>,
+    cells: merged as Record<NineBoxKey, NineBoxCell>,
   };
 }
 
@@ -381,7 +439,7 @@ function extractParams(
 // ─── Mock Interceptor ───────────────────────────────────────────────────────
 
 /**
- * Mock Interceptor: Handles requests when VITE_USE_MOCKS is true.
+ * Mock Interceptor: Handles requests on GitHub Pages or when explicitly enabled.
  * Uses `config.adapter` to bypass network and return mock data directly.
  */
 function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
@@ -492,7 +550,7 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 2. DASHBOARD STATS (динамический расчёт из MOCK_EMPLOYEES)
+  // 2. DASHBOARD STATS
   // ═══════════════════════════════════════════════════════════
   if (url.includes("/api/dashboard/stats")) {
     const filtered = filterEmployees(MOCK_EMPLOYEES, params);
@@ -506,12 +564,10 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
   // 3. DASHBOARD META
   // ═══════════════════════════════════════════════════════════
   if (url.includes("/api/dashboard/meta")) {
-    // Рассчитываем реальный range грейдов из датасета
     const grades = MOCK_EMPLOYEES.map((e) => e.grade);
     const minGrade = Math.min(...grades);
     const maxGrade = Math.max(...grades);
 
-    // Получаем уникальные домены (с учётом фильтра)
     const filtered = filterEmployees(MOCK_EMPLOYEES, params);
     const availableDomains = [...new Set(filtered.map((e) => e.domain))].sort();
 
@@ -524,7 +580,7 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 4. NINE_BOX (динамический расчёт из MOCK_EMPLOYEES)
+  // 4. NINE_BOX
   // ═══════════════════════════════════════════════════════════
   if (url.includes("/api/dashboard/9box")) {
     const filtered = filterEmployees(MOCK_EMPLOYEES, params);
@@ -535,16 +591,14 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 5. MANAGERS LIST (PAGINATED) — с фильтрацией и сортировкой
+  // 5. MANAGERS LIST (PAGINATED) — с фильтрацией, сортировкой, box
   // ═══════════════════════════════════════════════════════════
   if (url.includes("/api/employees/managers")) {
     const page = Number(params.page) || 0;
     const size = Number(params.pageSize) || 20;
 
-    // Фильтрация
     let filtered = filterEmployees(MOCK_EMPLOYEES, params);
 
-    // Сортировка
     if (params.sortField) {
       filtered = sortEmployees(
         filtered,
@@ -556,14 +610,14 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
     const totalCount = filtered.length;
     const pagedItems = paginate(filtered, page, size);
 
-    // Добавляем hasSuccessor к каждому элементу
-    const itemsWithSuccessor = pagedItems.map((emp) => ({
+    const itemsWithMeta = pagedItems.map((emp) => ({
       ...emp,
       hasSuccessor: hasSuccessor(emp),
+      ...enrichWithBox(emp),
     }));
 
-    const response: PageResponse<typeof itemsWithSuccessor[number]> = {
-      items: itemsWithSuccessor,
+    const response: PageResponse<typeof itemsWithMeta[number]> = {
+      items: itemsWithMeta,
       totalCount,
       totalPages: Math.ceil(totalCount / size),
       hasNext: page < Math.ceil(totalCount / size) - 1,
@@ -574,16 +628,21 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 6. EMPLOYEE DETAIL (by fullName)
+  // 6. EMPLOYEE DETAIL (by fullName) — с box + successorsCount
   // ═══════════════════════════════════════════════════════════
-  if (url.includes("/api/employees/") && !url.includes("/team") && !url.includes("/successors")) {
-    const fullName = url.split("/").pop();
+  if (url.includes("/api/employees/") && !url.includes("/team") && !url.includes("/successors") && !url.includes("/managers") && !url.includes("/export")) {
+    const fullName = decodeURIComponent(url.split("/").pop() || "");
     const emp = MOCK_EMPLOYEES.find((e) => e.fullName === fullName);
 
     if (emp) {
       config.adapter = createMockAdapter({
         ...emp,
         hasSuccessor: hasSuccessor(emp),
+        successorsCount: MOCK_EMPLOYEES.filter(
+          (e) => e.managerId === emp.id && e.developmentProgram === "Преемники"
+        ).length,
+        readiness: null,
+        ...enrichWithBox(emp),
       });
     } else {
       config.adapter = createMockAdapter({ message: "Not found" }, 404);
@@ -592,15 +651,18 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 7. TEAM
+  // 7. TEAM (по managerId из MOCK_EMPLOYEES)
   // ═══════════════════════════════════════════════════════════
   if (url.includes("/team")) {
     const parts = url.split("/");
-    const fullName = parts[parts.length - 2];
+    const fullName = decodeURIComponent(parts[parts.length - 2]);
     const manager = MOCK_EMPLOYEES.find((e) => e.fullName === fullName);
 
-    if (manager && MOCK_TEAMS[manager.id]) {
-      config.adapter = createMockAdapter(MOCK_TEAMS[manager.id]);
+    if (manager) {
+      const team = MOCK_EMPLOYEES
+        .filter((e) => e.managerId === manager.id)
+        .map((e) => enrichWithBox(e));
+      config.adapter = createMockAdapter(team);
     } else {
       config.adapter = createMockAdapter([]);
     }
@@ -612,19 +674,22 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
   // ═══════════════════════════════════════════════════════════
   if (url.includes("/successors")) {
     const parts = url.split("/");
-    const fullName = parts[parts.length - 2];
+    const fullName = decodeURIComponent(parts[parts.length - 2]);
     const manager = MOCK_EMPLOYEES.find(
-      (e) => e.fullName === decodeURIComponent(fullName)
+      (e) => e.fullName === fullName
     );
 
     if (manager) {
-      const succs = MOCK_SUCCESSORS
-        .filter((s) => s.managerId === manager.id)
-        .map((s) => {
-          const emp = MOCK_EMPLOYEES.find((e) => e.id === s.employeeId);
-          return { ...s, ...(emp ?? {}) };
-        });
-      config.adapter = createMockAdapter(succs);
+      const successors = MOCK_EMPLOYEES
+        .filter((e) => e.managerId === manager.id && e.developmentProgram === "Преемники")
+        .map((e) => ({
+          ...enrichWithBox(e),
+          successorStatus: "Ready now",
+          readiness: "6-12 months",
+          isApproved: true,
+          approvalDate: "2024-01-15",
+        }));
+      config.adapter = createMockAdapter(successors);
     } else {
       config.adapter = createMockAdapter([]);
     }
@@ -632,7 +697,7 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
   }
 
   // ═══════════════════════════════════════════════════════════
-  // 9. DASHBOARD GIST (динамический расчёт по доменам)
+  // 9. DASHBOARD GIST
   // ═══════════════════════════════════════════════════════════
   if (url.includes("/api/dashboard/gist")) {
     const filtered = filterEmployees(MOCK_EMPLOYEES, params);
@@ -659,7 +724,10 @@ export function setOnUnauthorizedHandler(handler: (() => void) | null) {
 }
 
 // ─── Провайдер токена (Инверсия зависимостей) ─────────────────────────────
-let tokenProvider: (() => string | null) | null = null;
+let tokenProvider: (() => string | null) = () => {
+  const token = localStorage.getItem("jwt_token");
+  return token ? `Bearer ${token}` : null;
+};
 
 export function setTokenProvider(provider: () => string | null) {
   tokenProvider = provider;

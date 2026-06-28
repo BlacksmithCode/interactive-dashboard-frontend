@@ -1040,7 +1040,7 @@ export const MOCK_EMPLOYEES: MockEmployee[] = [
   {
     "id": 69,
     "fullName": "Попов Фёдор Алексеевич",
-    "domain": "Т1 Строй",
+    "domain": "Иннотех",
     "position": "Руководитель отдела",
     "grade": 16,
     "critical": true,

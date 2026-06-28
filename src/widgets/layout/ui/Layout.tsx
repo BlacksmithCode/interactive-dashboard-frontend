@@ -20,7 +20,7 @@ const formatRole = (role: string) => {
 export default function Layout() {
   const theme = useTheme();
   const colorMode = useColorMode();
-  const { logout, role, fullName } = useAuth();
+  const { role, fullName } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isAdminPanel = location.pathname.startsWith("/admin");
@@ -107,20 +107,6 @@ export default function Layout() {
             >
               {isDark ? <Brightness7Icon /> : <Brightness4Icon />}
             </IconButton>
-            <Button
-              variant="text"
-              onClick={logout}
-              sx={{
-                fontWeight: 700,
-                color: isDark ? colors.primaryLight : colors.primary,
-                borderRadius: 1,
-                "&:hover": {
-                  background: isDark ? "rgba(87,113,255,0.12)" : "rgba(87,113,255,0.08)",
-                },
-              }}
-            >
-              Выход
-            </Button>
           </Box>
         </Toolbar>
       </AppBar>

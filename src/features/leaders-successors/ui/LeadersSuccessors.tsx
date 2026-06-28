@@ -2,17 +2,13 @@ import { Box, Alert, Button, Typography, Accordion, AccordionSummary, AccordionD
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { DataGrid, type GridSortModel, type GridPaginationModel } from "@mui/x-data-grid";
 import { useSearchParams } from "react-router-dom";
-import { DashboardFiltersProvider, useLeadersSuccessors, useDashboardFilters } from "@/features/dashboard";
-import { downloadExcelExport } from "@/features/dashboard/api/export";
-import { downloadFile } from "@/shared/lib/download";
+import { DashboardFiltersProvider, useLeadersSuccessors } from "@/features/dashboard";
 import { gridLocaleRu } from "@/shared/config/locales/gridLocaleRu";
 import { leaderColumns } from "../config/columns";
 import { FiltersBar } from "./FiltersBar";
 import { LeaderDetails } from "./LeaderDetails";
-import { useMemo, useCallback, useEffect, useRef, useState } from "react";
-import type { DashboardFilters } from "@/entities/dashboard";
+import { useMemo, useCallback } from "react";
 import type { SortField } from "@/entities/leader";
-import DownloadIcon from '@mui/icons-material/Download';
 import { colors } from "@/shared/theme/tokens";
 
 export default function LeadersSuccessors() {
@@ -35,7 +31,6 @@ function LeadersSuccessorsContent() {
   const isDark = theme.palette.mode === 'dark';
   const LEADERS_HEADER_BG = isDark ? colors.errorDark : colors.error;
   const HEADER_TEXT_COLOR = colors.white;
-  const [exportLoading, setExportLoading] = useState(false);
   const {
     leaders,
     totalCount,
@@ -72,27 +67,6 @@ function LeadersSuccessorsContent() {
     refetchSucc,
   } = useLeadersSuccessors();
 
-  const { filters } = useDashboardFilters();
-
-  const handleExportExcel = async () => {
-    setExportLoading(true);
-    try {
-      const blob = await downloadExcelExport({
-        gradeMin: filters.gradeMin,
-        domain: filters.domain,
-        critical: filters.critical,
-        hasSuccessor: filters.hasSuccessor,
-        searchName: filters.searchName,
-        positionFilter: filters.positionFilter,
-      });
-      downloadFile(blob, "export.xlsx");
-    } catch (err) {
-      console.error("Ошибка при экспорте Excel:", err);
-    } finally {
-      setExportLoading(false);
-    }
-  };
-
   const paginationModel = useMemo(() => ({ page, pageSize }), [page, pageSize]);
 
   const handlePaginationModelChange = useCallback((model: GridPaginationModel) => {
@@ -104,25 +78,6 @@ function LeadersSuccessorsContent() {
     }
   }, [page, pageSize, setPage, setPageSize]);
 
-  const prevFiltersRef = useRef<DashboardFilters | null>(null);
-  useEffect(() => {
-    const prev = prevFiltersRef.current;
-    const current = filters;
-    if (
-      !prev ||
-      prev.gradeMin !== current.gradeMin ||
-      prev.domain !== current.domain ||
-      prev.critical !== current.critical ||
-      prev.hasSuccessor !== current.hasSuccessor ||
-      prev.searchName !== current.searchName ||
-      prev.positionFilter !== current.positionFilter
-    ) {
-      prevFiltersRef.current = current;
-      if (page !== 0) {
-        setPage(0);
-      }
-    }
-  }, [filters, page, setPage]);
 
   const sortModel: GridSortModel = sortField
     ? [{ field: sortField, sort: sortOrder ?? "asc" }]
@@ -201,17 +156,6 @@ function LeadersSuccessorsContent() {
         filteredPositionOptions={filteredPositionOptions}
         filteredDomainOptions={filteredDomainOptions}
       />
-
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1 }}>
-        <Button
-          variant="outlined"
-          startIcon={<DownloadIcon />}
-          onClick={handleExportExcel}
-          disabled={exportLoading || leadersLoading}
-        >
-          {exportLoading ? "Подготовка..." : "Экспорт в Excel"}
-        </Button>
-      </Box>
 
       <Box sx={{ width: "100%" }}>
         {selectedLeader ? (
