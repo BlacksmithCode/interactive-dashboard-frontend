@@ -46,13 +46,11 @@ const baseURL = import.meta.env.PROD && import.meta.env.VITE_API_BASE_URL
 
 // ─── Mock-режим ───────────────────────────────────────────────────────────
 // Если VITE_USE_MOCKS=true, перехватчик подменяет запросы фейковыми данными.
+// ⚠️ Vercel НЕ читает .env.production автоматически!
+// Нужно задать переменную в Vercel Dashboard: Settings → Environment Variables
 const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
 
-/** Маппинг URL-паттернов на моковые данные.
- * Ключ — подстрока, которая ищется в config.url через.includes().
- * Более специфичные пути — выше, т.к. поиск идёт по порядку.
- * Функция в значении — динамический выбор данных по URL (для /api/employees/{name}/team и т.п.).
- */
+/** Маппинг URL-паттернов на моковые данные. */
 const mockEndpointMap: Record<string, unknown | ((url: string) => unknown)> = {
   "/api/users/login": mockLoginResponse,
   "/api/dashboard/stats": mockStatsResponse,
@@ -69,13 +67,17 @@ const mockEndpointMap: Record<string, unknown | ((url: string) => unknown)> = {
   "/api/users/logs": mockAuditLogPage,
 };
 
+/** Сортированный список эндпоинтов (от более специфичных к менее) */
+const mockEndpointsSorted = Object.entries(mockEndpointMap)
+  .sort((a, b) => b[0].length - a[0].length);
+
+/** Получить случайную задержку 300–400мс */
 function getMockDelay(): number {
-  return Math.floor(Math.random() * 101) + 300; // 300–400ms
+  return Math.floor(Math.random() * 101) + 300;
 }
 
 /**
  * Возвращает adapter, который подменяет реальный запрос моковыми данными.
- * Использует config.adapter, чтобы не ломать существующую цепочку axios.
  */
 function createMockAdapter(mockData: unknown, delay: number) {
   return (): Promise<AxiosResponse> =>
@@ -94,14 +96,12 @@ function createMockAdapter(mockData: unknown, delay: number) {
 
 /** Проверка, является ли URL одним из моковых эндпоинтов */
 function isMockEndpoint(url: string): boolean {
-  return Object.keys(mockEndpointMap).some(
-    (endpoint) => url.includes(endpoint)
-  );
+  return mockEndpointsSorted.some(([endpoint]) => url.includes(endpoint));
 }
 
 /** Получить моковые данные для URL */
 function getMockData(url: string): unknown | null {
-  for (const [endpoint, dataOrFn] of Object.entries(mockEndpointMap)) {
+  for (const [endpoint, dataOrFn] of mockEndpointsSorted) {
     if (url.includes(endpoint)) {
       if (typeof dataOrFn === "function") {
         return (dataOrFn as (url: string) => unknown)(url);
