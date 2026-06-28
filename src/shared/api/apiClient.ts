@@ -61,7 +61,6 @@ const baseURL = import.meta.env.PROD && import.meta.env.VITE_API_BASE_URL
   : "";
 
 // ─── Mock-режим ───────────────────────────────────────────────────────────
-const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true" || import.meta.env.MODE === "preview";
 
 /** Helper to simulate network delay */
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -666,12 +665,15 @@ export function setTokenProvider(provider: () => string | null) {
   tokenProvider = provider;
 }
 
-// ─── Mock Interceptor ─────────────────────────────────────────────────────
-if (USE_MOCKS) {
-  api.interceptors.request.use((config) => {
-    return handleMockConfig(config);
-  });
-}
+// ─── Mock Interceptor (всегда зарегистрирован — предотвращает tree-shaking) ──
+api.interceptors.request.use((config) => {
+  const useMocks =
+    import.meta.env.VITE_USE_MOCKS === "true" ||
+    import.meta.env.MODE === "preview" ||
+    localStorage.getItem("USE_MOCKS") === "true";
+  if (!useMocks) return config;
+  return handleMockConfig(config);
+});
 
 // Перехватчик запросов — добавляем Authorization заголовок
 api.interceptors.request.use((config) => {
