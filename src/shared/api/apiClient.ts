@@ -5,14 +5,17 @@ import type {
   InternalAxiosRequestConfig,
 } from "axios";
 import type { ApiErrorResponse, NormalizedError } from "../types/errors";
+import type { MockEmployee } from "./generatedEmployees";
+import { MOCK_EMPLOYEES } from "./generatedEmployees";
 import type {
   DashboardStats,
-  Employee,
+  DomainGistDto,
   LoginResponse,
   PageResponse,
+  Role,
 } from "./mockData";
+import type { RegisterRequest, UserResponse } from "@/entities/user";
 import {
-  MOCK_EMPLOYEES,
   MOCK_SUCCESSORS,
   MOCK_TEAMS,
   MOCK_USERS,
@@ -100,6 +103,75 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
     return config;
   }
 
+  // 1b. GET /api/users — список пользователей
+  if (url.includes("/api/users") && method === "get" && !url.includes("/register")) {
+    const usersResponse: UserResponse[] = MOCK_USERS.map((u) => ({
+      id: u.id,
+      username: u.username,
+      fullName: u.fullName,
+      domain: u.domain ?? "",
+      role: u.role.replace("ROLE_", ""), // Возвращаем без префикса ROLE_
+      active: u.active,
+      createdAt: u.createdAt,
+    }));
+    config.adapter = createMockAdapter(usersResponse);
+    return config;
+  }
+
+  // 1c. POST /api/users/register — регистрация
+  if (url.includes("/api/users/register") && method === "post") {
+    const { username, password, fullName, domain, role } = (config.data ?? {}) as RegisterRequest;
+    
+    // Проверка на дубликат
+    if (MOCK_USERS.some((u) => u.username === username)) {
+      config.adapter = createMockAdapter(
+        { message: "Пользователь с таким логином уже существует" },
+        409,
+      );
+      return config;
+    }
+    
+    // Создаём нового пользователя
+    const newId = Math.max(...MOCK_USERS.map((u) => u.id)) + 1;
+    MOCK_USERS.push({
+      id: newId,
+      username,
+      password: password ?? "password",
+      fullName,
+      domain: domain || null,
+      role: `ROLE_${role}` as Role,
+      active: true,
+      createdAt: new Date().toISOString(),
+    });
+    
+    config.adapter = createMockAdapter({});
+    return config;
+  }
+
+  // 1d. POST /api/users/logout — выход
+  if (url.includes("/api/users/logout") && method === "post") {
+    config.adapter = createMockAdapter({});
+    return config;
+  }
+
+  // 1e. PUT /api/users/{id}/role — обновление роли
+  if (url.match(/\/api\/users\/\d+\/role/) && method === "put") {
+    config.adapter = createMockAdapter({});
+    return config;
+  }
+
+  // 1f. PUT /api/users/{id}/block — блок/разблок пользователя
+  if (url.match(/\/api\/users\/\d+\/block/) && method === "put") {
+    config.adapter = createMockAdapter({});
+    return config;
+  }
+
+  // 1g. DELETE /api/users/{id} — удаление пользователя
+  if (url.match(/\/api\/users\/\d+/) && method === "delete" && !url.includes("/role") && !url.includes("/block")) {
+    config.adapter = createMockAdapter({});
+    return config;
+  }
+
   // 2. DASHBOARD STATS
   if (url.includes("/api/dashboard/stats")) {
     config.adapter = createMockAdapter({
@@ -125,7 +197,7 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
     return config;
   }
 
-  // 4. NINE BOX
+  // 4. NINE_BOX
   if (url.includes("/api/dashboard/9box")) {
     config.adapter = createMockAdapter({
       totalManagers: 5,
@@ -144,7 +216,7 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
   if (url.includes("/api/employees/managers")) {
     const params = (config.params ?? {}) as Record<string, unknown>;
     let filtered = [...MOCK_EMPLOYEES];
-    
+  
     if (params.grade) {
       filtered = filtered.filter((e) => e.grade === Number(params.grade));
     }
@@ -154,7 +226,7 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
     const totalCount = filtered.length;
     const pagedItems = filtered.slice(page * size, (page + 1) * size);
 
-    const response: PageResponse<Employee> = {
+    const response: PageResponse<MockEmployee> = {
       items: pagedItems,
       totalCount,
       totalPages: Math.ceil(totalCount / size),
@@ -183,7 +255,7 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
     const parts = url.split("/");
     const fullName = parts[parts.length - 2];
     const manager = MOCK_EMPLOYEES.find((e) => e.fullName === fullName);
-    
+  
     if (manager && MOCK_TEAMS[manager.id]) {
       config.adapter = createMockAdapter(MOCK_TEAMS[manager.id]);
     } else {
@@ -192,11 +264,11 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
     return config;
   }
 
-  // 8. SUCCESSORS
+  // 8. SUCCESSORS (/api/employees/{fullName}/successors)
   if (url.includes("/successors")) {
     const parts = url.split("/");
     const fullName = parts[parts.length - 2];
-    const manager = MOCK_EMPLOYEES.find((e) => e.fullName === fullName);
+    const manager = MOCK_EMPLOYEES.find((e) => e.fullName === decodeURIComponent(fullName));
     
     if (manager) {
       const succs = MOCK_SUCCESSORS
@@ -212,6 +284,58 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
     return config;
   }
 
+  
+  // 9. DASHBOARD GIST
+  if (url.includes("/api/dashboard/gist")) {
+    // Парсим params: может быть URLSearchParams, Record или объект
+    let rawParams: Record<string, string | string[]> = {};
+    const paramsObj = config.params;
+    if (paramsObj instanceof URLSearchParams) {
+      rawParams = Object.fromEntries(paramsObj.entries());
+    } else if (paramsObj && typeof paramsObj === "object") {
+      rawParams = paramsObj as Record<string, string | string[]>;
+    }
+    
+    // Базовые данные gist — генерируем из MOCK_EMPLOYEES
+    const domainStats = new Map<string, { managersWithSuccessors: number; managersWithoutSuccessors: number }>();
+    for (const emp of MOCK_EMPLOYEES) {
+      if (!domainStats.has(emp.domain)) {
+        domainStats.set(emp.domain, { managersWithSuccessors: 0, managersWithoutSuccessors: 0 });
+      }
+      const stats = domainStats.get(emp.domain)!;
+      const hasSuccessor = MOCK_SUCCESSORS.some((s) => s.managerId === emp.id);
+      if (hasSuccessor) {
+        stats.managersWithSuccessors++;
+      } else {
+        stats.managersWithoutSuccessors++;
+      }
+    }
+    
+    let mockGist: DomainGistDto[] = Array.from(domainStats.entries()).map(
+      ([domain, stats]) => ({ domain, ...stats }),
+    );
+    
+    // Фильтрация по gradeMin
+    if (rawParams.gradeMin) {
+      const gradeMin = Number(rawParams.gradeMin);
+      if (gradeMin > 6) {
+        mockGist = mockGist.map((g) => ({
+          ...g,
+          managersWithSuccessors: Math.max(0, g.managersWithSuccessors - 1),
+          managersWithoutSuccessors: Math.max(0, g.managersWithoutSuccessors - 1),
+        }));
+      }
+    }
+    
+    // Фильтрация по доменам
+    if (rawParams.domains) {
+      const domains = Array.isArray(rawParams.domains) ? rawParams.domains : [rawParams.domains];
+      mockGist = mockGist.filter((g) => domains.includes(g.domain));
+    }
+    
+    config.adapter = createMockAdapter(mockGist);
+    return config;
+  }
   return config; // Not a mock endpoint
 }
 

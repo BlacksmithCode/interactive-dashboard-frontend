@@ -1,11 +1,11 @@
 ﻿// --- Types (Matching Backend Entities) ---
 
-export type Role = 'ADMIN' | 'MANAGER' | 'HRD_DOMAIN' | 'HRD_EVALUATION';
+export type Role = 'ROLE_ADMIN' | 'ROLE_MANAGER' | 'ROLE_HRD_DOMAIN' | 'ROLE_HRD_EVALUATION';
 
 export interface User {
   id: number;
   username: string;
-  password: string; // In real app this is hashed, here we store for mock comparison
+  password: string;
   fullName: string;
   domain: string | null;
   role: Role;
@@ -53,6 +53,12 @@ export interface PageResponse<T> {
   hasNext: boolean;
 }
 
+export interface DomainGistDto {
+  domain: string;
+  managersWithSuccessors: number;
+  managersWithoutSuccessors: number;
+}
+
 export interface DashboardStats {
   managersWithSuccessors: number;
   managersWithoutSuccessors: number;
@@ -62,6 +68,24 @@ export interface DashboardStats {
   nonCriticalRoles: number;
   nonCriticalRolesWithSuccessors: number;
   nonCriticalRolesWithoutSuccessors: number;
+}
+
+export interface UserResponse {
+  id: number;
+  username: string;
+  fullName: string;
+  domain: string;
+  role: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface RegisterRequest {
+  username: string;
+  password?: string;
+  fullName: string;
+  domain: string;
+  role: string;
 }
 
 // --- Mock Data Sources ---
@@ -74,7 +98,7 @@ export const MOCK_USERS: User[] = [
     password: 'password', // Login: admin, Pass: password
     fullName: 'Системный Администратор',
     domain: null,
-    role: 'ADMIN', // Role strictly matching Role.java enum
+    role: 'ROLE_ADMIN',
     active: true,
     createdAt: '2023-01-01T00:00:00',
   },
@@ -84,7 +108,7 @@ export const MOCK_USERS: User[] = [
     password: 'password', // Login: ivanov, Pass: password
     fullName: 'Иванов Иван Иванович',
     domain: 'IT',
-    role: 'MANAGER',
+    role: 'ROLE_MANAGER',
     active: true,
     createdAt: '2023-02-15T10:00:00',
   },
@@ -94,7 +118,7 @@ export const MOCK_USERS: User[] = [
     password: 'password',
     fullName: 'Петрова Анна Сергеевна',
     domain: 'HR',
-    role: 'HRD_EVALUATION',
+    role: 'ROLE_HRD_EVALUATION',
     active: true,
     createdAt: '2023-03-10T10:00:00',
   },
