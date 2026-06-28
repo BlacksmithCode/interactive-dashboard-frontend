@@ -23,7 +23,6 @@ import {
 import {
   setAuthToken,
   removeAuthToken,
-  getAuthHeader,
 } from "@/entities/user/model/token";
 import type {
   StatsResponse,
@@ -62,7 +61,7 @@ const baseURL = import.meta.env.PROD && import.meta.env.VITE_API_BASE_URL
   : "";
 
 // ─── Mock-режим ───────────────────────────────────────────────────────────
-const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
+const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true" || import.meta.env.MODE === "preview";
 
 /** Helper to simulate network delay */
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -91,33 +90,18 @@ const AUTO_LOGIN_ROLE = "ROLE_HRD_EVALUATION" as Role;
 const AUTO_LOGIN_FULL_NAME = "HRD Оценка (авто-вход)";
 
 /**
- * Генерирует валидный фейковый JWT-токен (payload не проверяется бэкендом в mock-режиме).
- * payload истекает через 30 дней.
+ * Безопасный моковый JWT-токен (100% ASCII, валидный формат).
+ * Избегаем btoa() с кириллицей, которая ломает браузер на старте.
  */
-function generateMockJwt(): string {
-  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const payload = btoa(
-    JSON.stringify({
-      sub: AUTO_LOGIN_USERNAME,
-      role: AUTO_LOGIN_ROLE,
-      fullName: AUTO_LOGIN_FULL_NAME,
-      exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // 30 дней
-      iat: Math.floor(Date.now() / 1000),
-    })
-  );
-  // Фейковая подпись (не проверяется в mock-режиме)
-  const signature = btoa("mock-signature-" + Date.now()).replace(/=/g, "");
-  return `${header}.${payload}.${signature}`;
-}
+const AUTO_LOGIN_MOCK_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhdXRvX2hyZCIsInJvbGUiOiJST0xFX0hSRF9FVkFMVUFUSU9OIiwiZnVsbE5hbWUiOiJIUkQgRXZhbCIsImV4cCI6MTkwMDAwMDAwMCwiaWF0IjoxNzAwMDAwMDAwfQ.dGVzdC1zaWduYXR1cmU";
 
 /**
  * Выполняет авто-вход: сохраняет токен в localStorage и возвращает LoginResponse.
  */
 function performAutoLogin(): LoginResponse {
-  const token = generateMockJwt();
-  setAuthToken(token);
+  setAuthToken(AUTO_LOGIN_MOCK_JWT);
   return {
-    token,
+    token: AUTO_LOGIN_MOCK_JWT,
     username: AUTO_LOGIN_USERNAME,
     role: AUTO_LOGIN_ROLE,
     fullName: AUTO_LOGIN_FULL_NAME,
@@ -126,16 +110,7 @@ function performAutoLogin(): LoginResponse {
 
 /** Проверяет, выполнен ли уже авто-вход */
 function isAutoLoggedIn(): boolean {
-  const header = getAuthHeader();
-  if (!header) return false;
-  // Проверяем, что токен принадлежит авто-входу (по username в payload)
-  try {
-    const token = header.replace("Bearer ", "");
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.sub === AUTO_LOGIN_USERNAME;
-  } catch {
-    return false;
-  }
+  return localStorage.getItem("username") === AUTO_LOGIN_USERNAME;
 }
 
 // ─── Dynamic analytics helpers ──────────────────────────────────────────────
@@ -438,20 +413,6 @@ function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequ
   // 1a. LOGIN — авто-вход под ROLE_HRD_EVALUATION
   // ═══════════════════════════════════════════════════════════
   if (url.includes("/api/users/login") && method === "post") {
-    // Если уже залогинен — возвращаем текущий токен
-    if (isAutoLoggedIn()) {
-      const existingHeader = getAuthHeader();
-      const existingToken = existingHeader?.replace("Bearer ", "") ?? generateMockJwt();
-      config.adapter = createMockAdapter({
-        token: existingToken,
-        username: AUTO_LOGIN_USERNAME,
-        role: AUTO_LOGIN_ROLE,
-        fullName: AUTO_LOGIN_FULL_NAME,
-      });
-      return config;
-    }
-
-    // Иначе — авто-логин
     const loginResponse = performAutoLogin();
     config.adapter = createMockAdapter(loginResponse);
     return config;

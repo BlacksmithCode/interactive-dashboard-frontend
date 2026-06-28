@@ -9,25 +9,11 @@ const AUTO_LOGIN_ROLE = "ROLE_HRD_EVALUATION";
 const AUTO_LOGIN_FULL_NAME = "HRD Оценка (авто-вход)";
 const AUTO_LOGIN_USERNAME = "auto_hrd";
 
-/** Генерирует фейковый JWT для авто-входа */
-function generateAutoLoginToken(): { token: string; username: string; role: string; fullName: string } {
-  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const exp = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-  const payload = btoa(JSON.stringify({
-    sub: AUTO_LOGIN_USERNAME,
-    role: AUTO_LOGIN_ROLE,
-    fullName: AUTO_LOGIN_FULL_NAME,
-    exp,
-    iat: Math.floor(Date.now() / 1000),
-  }));
-  const signature = btoa("mock-signature").replace(/=/g, "");
-  return {
-    token: `${header}.${payload}.${signature}`,
-    username: AUTO_LOGIN_USERNAME,
-    role: AUTO_LOGIN_ROLE,
-    fullName: AUTO_LOGIN_FULL_NAME,
-  };
-}
+/**
+ * Безопасный моковый JWT-токен (100% ASCII, валидный формат).
+ * Избегаем btoa() с кириллицей, которая ломает бразуер на старте.
+ */
+const AUTO_LOGIN_MOCK_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhdXRvX2hyZCIsInJvbGUiOiJST0xFX0hSRF9FVkFMVUFUSU9OIiwiZnVsbE5hbWUiOiJIUkQgRXZhbCIsImV4cCI6MTkwMDAwMDAwMCwiaWF0IjoxNzAwMDAwMDAwfQ.dGVzdC1zaWduYXR1cmU";
 
 /**
  * Определяет начальное состояние аутентификации.
@@ -51,17 +37,16 @@ function getInitialAuthState(): {
     };
   }
 
-  // Авто-вход: создаём токен и сохраняем в localStorage
-  const autoToken = generateAutoLoginToken();
-  localStorage.setItem("jwt_token", autoToken.token);
-  localStorage.setItem("username", autoToken.username);
-  localStorage.setItem("role", autoToken.role);
-  localStorage.setItem("fullName", autoToken.fullName);
+  // Авто-вход: сохраняем безопасный ASCII-токен в localStorage
+  localStorage.setItem("jwt_token", AUTO_LOGIN_MOCK_JWT);
+  localStorage.setItem("username", AUTO_LOGIN_USERNAME);
+  localStorage.setItem("role", AUTO_LOGIN_ROLE);
+  localStorage.setItem("fullName", AUTO_LOGIN_FULL_NAME);
 
   return {
     authenticated: true,
-    role: autoToken.role,
-    fullName: autoToken.fullName,
+    role: AUTO_LOGIN_ROLE,
+    fullName: AUTO_LOGIN_FULL_NAME,
   };
 }
 
