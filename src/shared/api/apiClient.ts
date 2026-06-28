@@ -1,18 +1,21 @@
 import axios from "axios";
-import type { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import type {
+  AxiosError,
+  AxiosRequestConfig,
+  InternalAxiosRequestConfig,
+} from "axios";
 import type { ApiErrorResponse, NormalizedError } from "../types/errors";
+import type {
+  DashboardStats,
+  Employee,
+  LoginResponse,
+  PageResponse,
+} from "./mockData";
 import {
-  mockLoginResponse,
-  mockStatsResponse,
-  mockManagersList,
-  mockNineBoxResponse,
-  mockDomainGist,
-  mockGradeRange,
-  mockDashboardMeta,
-  mockManagerDetail,
-  mockTeam,
-  mockSuccessors,
-  mockAuditLogPage,
+  MOCK_EMPLOYEES,
+  MOCK_SUCCESSORS,
+  MOCK_TEAMS,
+  MOCK_USERS,
 } from "./mockData";
 
 /** Нормализация ошибки Axios в единый формат */
@@ -45,71 +48,171 @@ const baseURL = import.meta.env.PROD && import.meta.env.VITE_API_BASE_URL
   : "";
 
 // ─── Mock-режим ───────────────────────────────────────────────────────────
-// Если VITE_USE_MOCKS=true, перехватчик подменяет запросы фейковыми данными.
-// ⚠️ Vercel НЕ читает .env.production автоматически!
-// Нужно задать переменную в Vercel Dashboard: Settings → Environment Variables
 const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === "true";
 
-/** Маппинг URL-паттернов на моковые данные. */
-const mockEndpointMap: Record<string, unknown | ((url: string) => unknown)> = {
-  "/api/users/login": mockLoginResponse,
-  "/api/dashboard/stats": mockStatsResponse,
-  "/api/dashboard/9box": mockNineBoxResponse,
-  "/api/dashboard/gist": mockDomainGist,
-  "/api/dashboard/grade-range": mockGradeRange,
-  "/api/dashboard/meta": mockDashboardMeta,
-  "/api/employees/managers": mockManagersList,
-  "/api/employees/": (url: string) => {
-    if (url.includes("/team")) return mockTeam;
-    if (url.includes("/successors")) return mockSuccessors;
-    return mockManagerDetail;
-  },
-  "/api/users/logs": mockAuditLogPage,
-};
+/** Helper to simulate network delay */
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Сортированный список эндпоинтов (от более специфичных к менее) */
-const mockEndpointsSorted = Object.entries(mockEndpointMap)
-  .sort((a, b) => b[0].length - a[0].length);
-
-/** Получить случайную задержку 300–400мс */
-function getMockDelay(): number {
-  return Math.floor(Math.random() * 101) + 300;
+/** Create a mock adapter that returns predefined data */
+function createMockAdapter(
+  data: unknown,
+  status = 200,
+): AxiosRequestConfig["adapter"] {
+  return () =>
+    delay(300).then(() =>
+      Promise.resolve({
+        data,
+        status,
+        statusText: status === 200 ? "OK" : "Error",
+        headers: {},
+        config: {} as InternalAxiosRequestConfig,
+      }),
+    );
 }
 
 /**
- * Возвращает adapter, который подменяет реальный запрос моковыми данными.
+ * Mock Interceptor: Handles requests when VITE_USE_MOCKS is true.
+ * Uses `config.adapter` to bypass network and return mock data directly.
  */
-function createMockAdapter(mockData: unknown, delay: number) {
-  return (): Promise<AxiosResponse> =>
-    new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          data: mockData,
-          status: 200,
-          statusText: "OK",
-          headers: {} as never,
-          config: { headers: {} as never },
-        });
-      }, delay);
-    });
-}
+function handleMockConfig(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
+  const url = config.url ?? "";
+  const method = config.method?.toLowerCase() ?? "get";
 
-/** Проверка, является ли URL одним из моковых эндпоинтов */
-function isMockEndpoint(url: string): boolean {
-  return mockEndpointsSorted.some(([endpoint]) => url.includes(endpoint));
-}
-
-/** Получить моковые данные для URL */
-function getMockData(url: string): unknown | null {
-  for (const [endpoint, dataOrFn] of mockEndpointsSorted) {
-    if (url.includes(endpoint)) {
-      if (typeof dataOrFn === "function") {
-        return (dataOrFn as (url: string) => unknown)(url);
-      }
-      return dataOrFn;
+  // 1. LOGIN
+  if (url.includes("/api/users/login") && method === "post") {
+    const { username, password } = (config.data ?? {}) as { username?: string; password?: string };
+    const user = MOCK_USERS.find((u) => u.username === username && u.password === password);
+    
+    if (user) {
+      const loginResponse: LoginResponse = {
+        token: `mock_jwt_${Date.now()}`,
+        username: user.username,
+        role: user.role,
+        fullName: user.fullName,
+      };
+      config.adapter = createMockAdapter(loginResponse);
+    } else {
+      config.adapter = createMockAdapter(
+        { message: "Invalid credentials" },
+        401,
+      );
     }
+    return config;
   }
-  return null;
+
+  // 2. DASHBOARD STATS
+  if (url.includes("/api/dashboard/stats")) {
+    config.adapter = createMockAdapter({
+      managersWithSuccessors: 2,
+      managersWithoutSuccessors: 3,
+      criticalRoles: 4,
+      criticalRolesWithSuccessors: 2,
+      criticalRolesWithoutSuccessors: 2,
+      nonCriticalRoles: 1,
+      nonCriticalRolesWithSuccessors: 0,
+      nonCriticalRolesWithoutSuccessors: 1,
+    } satisfies DashboardStats);
+    return config;
+  }
+
+  // 3. DASHBOARD META
+  if (url.includes("/api/dashboard/meta")) {
+    config.adapter = createMockAdapter({
+      minGrade: 5,
+      maxGrade: 8,
+      availableDomains: ["IT", "HR", "Finance", "Sales"],
+    });
+    return config;
+  }
+
+  // 4. NINE BOX
+  if (url.includes("/api/dashboard/9box")) {
+    config.adapter = createMockAdapter({
+      totalManagers: 5,
+      cells: {
+        HH: { managers: 2, successors: 1, nonSuccessors: 1 },
+        HM: { managers: 1, successors: 0, nonSuccessors: 1 },
+        MH: { managers: 1, successors: 1, nonSuccessors: 0 },
+        ML: { managers: 1, successors: 0, nonSuccessors: 1 },
+        LL: { managers: 0, successors: 0, nonSuccessors: 0 },
+      },
+    });
+    return config;
+  }
+
+  // 5. MANAGERS LIST (PAGINATED)
+  if (url.includes("/api/employees/managers")) {
+    const params = (config.params ?? {}) as Record<string, unknown>;
+    let filtered = [...MOCK_EMPLOYEES];
+    
+    if (params.grade) {
+      filtered = filtered.filter((e) => e.grade === Number(params.grade));
+    }
+
+    const page = Number(params.page) || 0;
+    const size = Number(params.pageSize) || 20;
+    const totalCount = filtered.length;
+    const pagedItems = filtered.slice(page * size, (page + 1) * size);
+
+    const response: PageResponse<Employee> = {
+      items: pagedItems,
+      totalCount,
+      totalPages: Math.ceil(totalCount / size),
+      hasNext: page < Math.ceil(totalCount / size) - 1,
+    };
+    
+    config.adapter = createMockAdapter(response);
+    return config;
+  }
+
+  // 6. EMPLOYEE DETAIL (by fullName)
+  if (url.includes("/api/employees/") && !url.includes("/team") && !url.includes("/successors")) {
+    const fullName = url.split("/").pop();
+    const emp = MOCK_EMPLOYEES.find((e) => e.fullName === fullName);
+    
+    if (emp) {
+      config.adapter = createMockAdapter(emp);
+    } else {
+      config.adapter = createMockAdapter({ message: "Not found" }, 404);
+    }
+    return config;
+  }
+
+  // 7. TEAM
+  if (url.includes("/team")) {
+    const parts = url.split("/");
+    const fullName = parts[parts.length - 2];
+    const manager = MOCK_EMPLOYEES.find((e) => e.fullName === fullName);
+    
+    if (manager && MOCK_TEAMS[manager.id]) {
+      config.adapter = createMockAdapter(MOCK_TEAMS[manager.id]);
+    } else {
+      config.adapter = createMockAdapter([]);
+    }
+    return config;
+  }
+
+  // 8. SUCCESSORS
+  if (url.includes("/successors")) {
+    const parts = url.split("/");
+    const fullName = parts[parts.length - 2];
+    const manager = MOCK_EMPLOYEES.find((e) => e.fullName === fullName);
+    
+    if (manager) {
+      const succs = MOCK_SUCCESSORS
+        .filter((s) => s.managerId === manager.id)
+        .map((s) => {
+          const emp = MOCK_EMPLOYEES.find((e) => e.id === s.employeeId);
+          return { ...s, ...(emp ?? {}) };
+        });
+      config.adapter = createMockAdapter(succs);
+    } else {
+      config.adapter = createMockAdapter([]);
+    }
+    return config;
+  }
+
+  return config; // Not a mock endpoint
 }
 
 export const api = axios.create({
@@ -119,11 +222,8 @@ export const api = axios.create({
 });
 
 // ─── Обработчик неавторизованного доступа (401) ──────────────────────────
-// Позволяет внешнему коду (AuthProvider) подписаться на события 401,
-// не создавая жёсткой связки apiClient с роутингом или React-контекстом.
 let onUnauthorizedHandler: (() => void) | null = null;
 
-/** Установить callback для обработки 401 (вызывается из AuthProvider) */
 export function setOnUnauthorizedHandler(handler: (() => void) | null) {
   onUnauthorizedHandler = handler;
 }
@@ -136,24 +236,14 @@ export function setTokenProvider(provider: () => string | null) {
 }
 
 // ─── Mock Interceptor ─────────────────────────────────────────────────────
-// Если VITE_USE_MOCKS=true, перехватывает запросы к моковым эндпоинтам
-// и возвращает фейковые данные через adapter, не выполняя сетевой запрос.
 if (USE_MOCKS) {
-  api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-    // config.url может быть undefined (например, при относительных путях)
-    const url = config.url ?? "";
-    if (url && isMockEndpoint(url)) {
-      const mockData = getMockData(url);
-      if (mockData) {
-        config.adapter = createMockAdapter(mockData, getMockDelay());
-      }
-    }
-    return config;
+  api.interceptors.request.use((config) => {
+    return handleMockConfig(config);
   });
 }
 
-// Перехватчик запросов — добавляем Basic Auth заголовок
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+// Перехватчик запросов — добавляем Authorization заголовок
+api.interceptors.request.use((config) => {
   if (tokenProvider) {
     const authHeader = tokenProvider();
     if (authHeader) config.headers.set("Authorization", authHeader);
@@ -167,10 +257,7 @@ api.interceptors.response.use(
   (error: AxiosError<ApiErrorResponse>) => {
     const normalized = normalizeError(error);
 
-    // Убрали реакцию на 403, так как 403 — это нормальный ответ при проверке ролей (RBAC).
-    // Иначе менеджера будет выкидывать из аккаунта при любой попытке доступа к чужой аналитике.
     if (normalized.statusCode === 401) {
-      // Не вызываем логаут, если ошибка пришла именно с формы входа
       if (error.config && !error.config.url?.includes("/api/users/login")) {
         onUnauthorizedHandler?.();
       }
